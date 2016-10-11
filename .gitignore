@@ -1,0 +1,6 @@
+.buildlog
+.packages
+.project
+.pub/
+build/
+**/packages/

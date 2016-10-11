@@ -1,0 +1,13 @@
+name: bazel
+description: Bazel support for Dart
+
+# NOTE: We require a generated .packages file in order to use this package.
+environment:
+  sdk: "> 1.19.0"
+
+dependencies:
+  args: "^0.13.6"
+  meta: "^1.0.4"
+
+dev_dependencies:
+  test: "^0.12.15+2"
