@@ -50,7 +50,7 @@ class NewLocalRepository {
     for (var dep in deps) {
       buffer.writeln('        "$dep",');
     }
-    buffer..writeln('    ],')..writeln(')');
+    buffer..writeln('    ],')..writeln(')')..writeln();
     return buffer.toString();
   }
 
@@ -87,6 +87,7 @@ class NewLocalRepository {
 Stream<NewLocalRepository> pubBazelRepos(Map<String, Uri> packages) async* {
   for (var name in packages.keys) {
     var files = packages[name].toString();
+    if (files == 'lib/') continue;
     files = files.substring(0, files.length - '/lib/'.length);
     var pubspec = Uri.parse(path.join(files, 'pubspec.yaml'));
     yield new NewLocalRepository(
@@ -124,7 +125,7 @@ Future<String> generateBzl(
     await new File(buildFile).writeAsString(repo.getBuild());
   }
   await new File(path.join(workspaceDir, 'BUILD'))
-      .writeAsString(r'# Automatically generated and left blank by Bazelify');
+      .writeAsString('# Automatically generated and left blank by Bazelify\n');
   await new File(path.join(workspaceDir, 'WORKSPACE'))
       .writeAsString(_workspace);
   await new File(path.join(workspaceDir, 'packages.bzl'))
