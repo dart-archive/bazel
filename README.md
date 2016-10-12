@@ -15,8 +15,9 @@ your_package        (a folder, your _actual_ package, for now)
 pubspec.yaml        (like a normal pub package)
 WORKSPACE           (see below)
 ```
-
-To setup a workspace, follow this template:
+ 
+Write to `WORKSPACE`, following this template (we will handle this
+automatically in a future release):
 
 ```BUILD
 # Dart SDK.
@@ -33,7 +34,7 @@ load("//:packages.bzl", "bazelify")
 bazelify()
 ```
 
-Then run `bazelify`:
+Then run `bazelify`, which will fill in the `packages.bzl` referenced above:
 
 ```bash
 $ pub global activate --source path path_to_this_package
