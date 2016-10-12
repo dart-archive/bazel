@@ -16,13 +16,16 @@ pubspec.yaml        (like a normal pub package)
 WORKSPACE           (see below)
 ```
 
-To setup a workspace, follow this template:
+You need to `git clone git@github.com:dart-lang/rules_dart.git` repository
+somewhere. We will handle this automatically in a future release.
+
+Write to `WORKSPACE`, following this template:
 
 ```BUILD
 # Dart SDK.
 local_repository(
     name = "io_bazel_rules_dart",
-    path = "/your/path/to/rules_dart",
+    path = "/YOUR/PATH/TO/rules_dart",
 )
 load(
     "@io_bazel_rules_dart//dart/build_rules:repositories.bzl",
@@ -35,11 +38,8 @@ load("//:packages.bzl", "bazelify")
 bazelify()
 ```
 
-You'll need to `git clone` the `rules_dart` directory, and hook it up
-where you see `/your/path/to/rules_dart` above. We will handle this
-automatically in a future release.
-
-Then run `bazelify`:
+Then run `bazelify`, which will fill in the `packages.bzl` file referenced
+above:
 
 ```bash
 $ pub global activate --source path path_to_this_package
