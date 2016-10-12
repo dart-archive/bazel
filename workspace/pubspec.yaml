@@ -1,0 +1,4 @@
+name: bazel_workspace
+
+dependencies:
+  angular2:
