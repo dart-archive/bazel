@@ -8,6 +8,8 @@ environment:
 dependencies:
   args: "^0.13.6"
   meta: "^1.0.4"
+  which:
+  yaml:
 
 dev_dependencies:
   test: "^0.12.15+2"
