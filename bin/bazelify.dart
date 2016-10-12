@@ -52,7 +52,7 @@ Future<Null> main(List<String> args) async {
   );
 
   final absolute = path.absolute(arguments.pubPackageDir);
-  print('Generated pacakges.bzl and BUILD files for $absolute');
+  print('Generated pacakges.bzl, WORKSPACE, BUILD files for $absolute');
 }
 
 void _printArgumentError(ArgumentError e) {
