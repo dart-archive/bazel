@@ -15,16 +15,16 @@ class BazelifyArguments {
   static final ArgParser _argParser = new ArgParser()
     ..addOption(
       'bazel',
-      help: 'A path to the "bazel" executable.',
+      help: 'A path to the "bazel" executable. Defauls to your PATH.',
     )
     ..addOption(
       'pub',
-      help: 'A path to the "pub" executable.',
+      help: 'A path to the "pub" executable. Defaults to your PATH.',
     )
     ..addOption(
       'package',
       abbr: 'p',
-      help: 'A directory where "pubspec.yaml" is present.',
+      help: 'A directory where "pubspec.yaml" is present. Defaults to CWD.',
     );
 
   /// Returns the proper usage for arguments.
@@ -58,21 +58,17 @@ class BazelifyArguments {
   /// Options:
   /// - [bazelExecutable]: Where to find `bazel`. Defaults to your PATH.
   /// - [pubExecutable]: Where to find `pub`. Defaults to your PATH.
-  /// - [pubPackageDir]: Where a package with a `pubspec.yaml` is. Required.
+  /// - [pubPackageDir]: Where a package with a `pubspec.yaml` is. Defaults to
+  ///   the current working directory.
   BazelifyArguments({
     this.bazelExecutable,
     this.pubExecutable,
-    @required this.pubPackageDir,
+    this.pubPackageDir,
   });
 
   /// Returns a new [BazelifyArguments] by parsing [args].
-  ///
-  /// Throws an [ArgumentError] if an argument is invalid or missing.
   factory BazelifyArguments.parse(List<String> args) {
     final result = _argParser.parse(args);
-    if (!result.wasParsed('package')) {
-      throw new ArgumentError.value(null, 'package');
-    }
     return new BazelifyArguments(
       bazelExecutable: result['bazel'],
       pubExecutable: result['pub'],
@@ -80,10 +76,13 @@ class BazelifyArguments {
     );
   }
 
-  /// Whether [bazelExecutable] and [pubExecutable] are set.
+  /// Whether all properties are set.
   ///
-  /// If `false`, use [resolve] to find them on the PATH.
-  bool get isResolved => bazelExecutable != null && pubExecutable != null;
+  /// If `false`, use [resolve] to find them on the PATH/CWD.
+  bool get isResolved =>
+      pubPackageDir != null &&
+      bazelExecutable != null &&
+      pubExecutable != null;
 
   /// Returns a [Future] that completes with a new [BazelifyArguments].
   ///
@@ -109,14 +108,18 @@ class BazelifyArguments {
         throw new StateError('No "pub" found at "$pubResolved"');
       }
     }
-    var pubspec = path.join(pubPackageDir, 'pubspec.yaml');
+    String workspaceResolved = path.normalize(pubPackageDir);
+    if (workspaceResolved == null) {
+      workspaceResolved = path.current;
+    }
+    var pubspec = path.join(workspaceResolved, 'pubspec.yaml');
     if (!await FileSystemEntity.isFile(pubspec)) {
       throw new StateError('No "pubspec" found at "${path.absolute(pubspec)}"');
     }
     return new BazelifyArguments(
       bazelExecutable: bazelResolved,
       pubExecutable: pubResolved,
-      pubPackageDir: pubPackageDir,
+      pubPackageDir: workspaceResolved,
     );
   }
 }
