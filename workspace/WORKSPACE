@@ -1,7 +1,8 @@
 # Dart SDK.
-local_repository(
+git_repository(
     name = "io_bazel_rules_dart",
-    path = "/Users/matanl/Github/rules_dart",
+    remote = "https://github.com/dart-lang/rules_dart",
+    tag = "0.0.0-alpha",
 )
 load("@io_bazel_rules_dart//dart/build_rules:repositories.bzl", "dart_repositories")
 dart_repositories()
