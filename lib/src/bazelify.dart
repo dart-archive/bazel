@@ -123,6 +123,8 @@ Future<String> generateBzl(
     var buildFile = path.join(workspaceDir, '.bazelify', '${repo.name}.BUILD');
     await new File(buildFile).writeAsString(repo.getBuild());
   }
+  await new File(path.join(workspaceDir, 'BUILD'))
+      .writeAsString(r'# Automatically generated and left blank by Bazelify');
   await new File(path.join(workspaceDir, 'packages.bzl'))
       .writeAsString(buffer.toString());
   return buffer.toString();

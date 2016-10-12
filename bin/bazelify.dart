@@ -41,7 +41,7 @@ Future<Null> main(List<String> args) async {
   }
 
   // Write a packages.bzl file and a .bazelify directory.
-  final bzl = await generateBzl(
+  await generateBzl(
     arguments.pubPackageDir,
     pubBazelRepos(
       parse(

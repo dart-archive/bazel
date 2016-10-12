@@ -38,3 +38,10 @@ bazelify()
 You'll need to `git clone` the `rules_dart` directory, and hook it up
 where you see `/your/path/to/rules_dart` above. We will handle this
 automatically in a future release.
+
+Then run `bazelify`:
+
+```bash
+$ pub global activate --source path path_to_this_package
+$ pub global run bazel:bazelify -p path_to_your_workspace
+```

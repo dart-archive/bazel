@@ -13,3 +13,6 @@ dependencies:
 
 dev_dependencies:
   test: "^0.12.15+2"
+
+executables:
+  bazelify: bazelify
