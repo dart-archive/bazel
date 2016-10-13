@@ -6,7 +6,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:path/path.dart' as path;
+import 'package:path/path.dart' as p;
 import 'package:which/which.dart';
 
 /// Arguments when running `bazelify`, which adds Bazel support on top of pub.
@@ -109,13 +109,13 @@ class BazelifyArguments {
     if (pubPackageDir == null) {
       throw new ArgumentError.value(null, 'package', 'package must be set');
     }
-    String workspaceResolved = path.normalize(pubPackageDir);
+    String workspaceResolved = p.normalize(pubPackageDir);
     if (workspaceResolved == null) {
-      workspaceResolved = path.current;
+      workspaceResolved = p.current;
     }
-    var pubspec = path.join(workspaceResolved, 'pubspec.yaml');
+    var pubspec = p.join(workspaceResolved, 'pubspec.yaml');
     if (!await FileSystemEntity.isFile(pubspec)) {
-      throw new StateError('No "pubspec" found at "${path.absolute(pubspec)}"');
+      throw new StateError('No "pubspec" found at "${p.absolute(pubspec)}"');
     }
     return new BazelifyArguments(
       bazelExecutable: bazelResolved,
