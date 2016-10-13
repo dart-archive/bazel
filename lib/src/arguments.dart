@@ -106,10 +106,7 @@ class BazelifyArguments {
       }
     }
 
-    if (pubPackageDir == null) {
-      throw new ArgumentError.value(null, 'package', 'package must be set');
-    }
-    String workspaceResolved = p.normalize(pubPackageDir);
+    String workspaceResolved = p.normalize(pubPackageDir ?? p.current);
     if (workspaceResolved == null) {
       workspaceResolved = p.current;
     }
