@@ -8,7 +8,7 @@ import 'package:yaml/yaml.dart';
 /// Turns a local directory into a Bazel repository.
 ///
 /// See: https://www.bazel.io/versions/master/docs/be/workspace.html#new_local_repository
-class NewLocalRepository {
+class LocalRepository {
   /// Name of the repository.
   final String name;
 
@@ -19,7 +19,7 @@ class NewLocalRepository {
   final List<String> deps;
 
   /// Create a `new_local_repository` macro.
-  NewLocalRepository({
+  LocalRepository({
     @required this.name,
     @required this.path,
     Iterable<String> deps: const [],
@@ -57,7 +57,7 @@ class NewLocalRepository {
 
   @override
   String toString() =>
-      'NewLocalRepository {' +
+      'LocalRepository {' +
       {
         'name': name,
         'path': name,
@@ -76,7 +76,7 @@ class NewLocalRepository {
 ///
 /// Returns (as a stream):
 ///     [
-///       new NewLocalRepository(
+///       new LocalRepository(
 ///         name: 'args',
 ///         path: 'file:///.../.pub-cache/hosted/pub.dart.lang.org/args-0.13.6',
 ///         deps: [
@@ -85,13 +85,13 @@ class NewLocalRepository {
 ///         ],
 ///       ),
 ///     ]
-Stream<NewLocalRepository> pubBazelRepos(Map<String, Uri> packages) async* {
+Stream<LocalRepository> pubBazelRepos(Map<String, Uri> packages) async* {
   for (var name in packages.keys) {
     var files = packages[name].toString();
     if (files == 'lib/') continue;
     files = files.substring(0, files.length - '/lib/'.length);
     var pubspec = Uri.parse(path.join(files, 'pubspec.yaml'));
-    yield new NewLocalRepository(
+    yield new LocalRepository(
       name: name,
       path: new File.fromUri(Uri.parse(files)).absolute.path,
       deps: pubBazelDeps(
@@ -106,7 +106,7 @@ Stream<NewLocalRepository> pubBazelRepos(Map<String, Uri> packages) async* {
 /// Returns a [Future] that completes with the file contents when done.
 Future<String> generateBzl(
   String workspaceDir,
-  Stream<NewLocalRepository> repositories,
+  Stream<LocalRepository> repositories,
 ) async {
   var pubspec = path.join(workspaceDir, 'pubspec.yaml');
   var pubPackageName = loadYaml(await new File(pubspec).readAsString())['name'];
