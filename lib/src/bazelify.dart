@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as path;
 
+import 'build_file.dart';
 import 'pubspec.dart';
 
 /// Turns a local directory into a Bazel repository.
@@ -31,22 +32,7 @@ class LocalRepository {
   }
 
   /// Returns the contents of a suitable BUILD file for the repository.
-  String getBuild() {
-    var buffer = new StringBuffer()
-      ..writeln(
-          'load("@io_bazel_rules_dart//dart/build_rules:core.bzl", "dart_library")')
-      ..writeln('package(default_visibility = ["//visibility:public"])')
-      ..writeln()
-      ..writeln('dart_library(')
-      ..writeln('    name = "${pubspec.packageName}",')
-      ..writeln('    srcs = glob(["lib/**"]),')
-      ..writeln('    deps = [');
-    for (var dep in pubspec.deps) {
-      buffer.writeln('        "$dep",');
-    }
-    buffer..writeln('    ],')..writeln(')')..writeln();
-    return buffer.toString();
-  }
+  String getBuild() => new BuildFile(pubspec).forRepository();
 
   @override
   String toString() =>
