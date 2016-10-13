@@ -3,36 +3,29 @@ import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as path;
-import 'package:yaml/yaml.dart';
+
+import 'pubspec.dart';
 
 /// Turns a local directory into a Bazel repository.
 ///
 /// See: https://www.bazel.io/versions/master/docs/be/workspace.html#new_local_repository
 class LocalRepository {
-  /// Name of the repository.
-  final String name;
+  /// A parsed pubspec.yaml for the package.
+  final Pubspec pubspec;
 
   /// Local file path.
   final String path;
 
-  /// Dependencies (usually from [pubBazelDeps]).
-  final List<String> deps;
-
   /// Create a `new_local_repository` macro.
-  LocalRepository({
-    @required this.name,
-    @required this.path,
-    Iterable<String> deps: const [],
-  })
-      : this.deps = new List<String>.unmodifiable(deps);
+  LocalRepository(this.pubspec, {@required this.path});
 
   /// Returns the contents of a suitable section of a .bzl file.
   String getRepository() {
     var buffer = new StringBuffer()
       ..writeln('native.new_local_repository(')
-      ..writeln('    name = "$name",')
+      ..writeln('    name = "${pubspec.packageName}",')
       ..writeln('    path = "$path",')
-      ..writeln('    build_file = ".bazelify/$name.BUILD",')
+      ..writeln('    build_file = ".bazelify/${pubspec.packageName}.BUILD",')
       ..writeln(')');
     return buffer.toString();
   }
@@ -45,10 +38,10 @@ class LocalRepository {
       ..writeln('package(default_visibility = ["//visibility:public"])')
       ..writeln()
       ..writeln('dart_library(')
-      ..writeln('    name = "$name",')
+      ..writeln('    name = "${pubspec.packageName}",')
       ..writeln('    srcs = glob(["lib/**"]),')
       ..writeln('    deps = [');
-    for (var dep in deps) {
+    for (var dep in pubspec.deps) {
       buffer.writeln('        "$dep",');
     }
     buffer..writeln('    ],')..writeln(')')..writeln();
@@ -59,9 +52,9 @@ class LocalRepository {
   String toString() =>
       'LocalRepository {' +
       {
-        'name': name,
-        'path': name,
-        'deps': deps,
+        'name': pubspec.packageName,
+        'path': pubspec.packageName,
+        'deps': pubspec.deps,
       }.toString() +
       '}';
 }
@@ -74,29 +67,19 @@ class LocalRepository {
 ///     path:file:///.../.pub-cache/hosted/pub.dartlang.org/path-1.4.0/lib/
 ///     ```
 ///
-/// Returns (as a stream):
-///     [
-///       new LocalRepository(
-///         name: 'args',
-///         path: 'file:///.../.pub-cache/hosted/pub.dart.lang.org/args-0.13.6',
-///         deps: [
-///           '@dep_one:dep_one',
-///           '@dep_two:dep_two',
-///         ],
-///       ),
-///     ]
+/// Returns (as a stream) a LocalRepository from the pubspec.yaml for each
+/// package.
 Stream<LocalRepository> pubBazelRepos(Map<String, Uri> packages) async* {
   for (var name in packages.keys) {
     var files = packages[name].toString();
     if (files == 'lib/') continue;
     files = files.substring(0, files.length - '/lib/'.length);
-    var pubspec = Uri.parse(path.join(files, 'pubspec.yaml'));
+    var pubspecUri = Uri.parse(path.join(files, 'pubspec.yaml'));
+    var pubspec =
+        new Pubspec(await new File.fromUri(pubspecUri).readAsString());
     yield new LocalRepository(
-      name: name,
+      pubspec,
       path: new File.fromUri(Uri.parse(files)).absolute.path,
-      deps: pubBazelDeps(
-        loadYaml(await new File.fromUri(pubspec).readAsString()),
-      ),
     );
   }
 }
@@ -108,15 +91,15 @@ Future<String> generateBzl(
   String workspaceDir,
   Stream<LocalRepository> repositories,
 ) async {
-  var pubspec = path.join(workspaceDir, 'pubspec.yaml');
-  var pubPackageName = loadYaml(await new File(pubspec).readAsString())['name'];
+  var pubspecPath = path.join(workspaceDir, 'pubspec.yaml');
+  var pubspec = new Pubspec(await new File(pubspecPath).readAsString());
   var bazelifyDir = new Directory(path.join(workspaceDir, '.bazelify'));
   if (await bazelifyDir.exists()) {
     await bazelifyDir.delete(recursive: true);
   }
   await bazelifyDir.create(recursive: true);
   var buffer = new StringBuffer();
-  buffer.writeln('''PUB_PACKAGE_NAME = "$pubPackageName"
+  buffer.writeln('''PUB_PACKAGE_NAME = "${pubspec.packageName}"
 
 def bazelify():''');
   await for (var repo in repositories) {
@@ -126,7 +109,8 @@ def bazelify():''');
         .map((line) => ' ' * 4 + line)
         .join('\n');
     buffer.writeln(repoRule);
-    var buildFile = path.join(workspaceDir, '.bazelify', '${repo.name}.BUILD');
+    var buildFile = path.join(
+        workspaceDir, '.bazelify', '${repo.pubspec.packageName}.BUILD');
     await new File(buildFile).writeAsString(repo.getBuild());
   }
   await new File(path.join(workspaceDir, 'BUILD'))
@@ -157,22 +141,3 @@ dart_repositories()
 load("//:packages.bzl", "bazelify")
 bazelify()
 ''';
-
-/// Generate a list of dependencies for a Bazel library from [pubspecContents].
-///
-/// For the following input:
-///     ```yaml
-///     dependencies:
-///       args:
-///       path:
-///     ```
-///
-/// Returns:
-///     [
-///       '@args:args',
-///       '@path:path',
-///     ]
-Iterable<String> pubBazelDeps(Map pubspecContents) {
-  final dependencies = pubspecContents['dependencies'] ?? const {};
-  return (dependencies as Map).keys.map((d) => '@$d//:$d');
-}
