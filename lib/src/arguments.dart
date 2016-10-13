@@ -80,9 +80,7 @@ class BazelifyArguments {
   ///
   /// If `false`, use [resolve] to find them on the PATH/CWD.
   bool get isResolved =>
-      pubPackageDir != null &&
-      bazelExecutable != null &&
-      pubExecutable != null;
+      pubPackageDir != null && bazelExecutable != null && pubExecutable != null;
 
   /// Returns a [Future] that completes with a new [BazelifyArguments].
   ///
