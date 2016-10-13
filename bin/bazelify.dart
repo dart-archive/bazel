@@ -2,9 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bazel/src/arguments.dart';
-import 'package:bazel/src/bazelify.dart';
-import 'package:package_config/packages_file.dart';
-import 'package:path/path.dart' as path;
+import 'package:bazel/src/bin.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 Future<Null> main(List<String> args) async {
@@ -22,46 +20,11 @@ Future<Null> main(List<String> args) async {
     exit(1);
   }
 
-  await Chain.capture(() => _work(arguments), onError: (error, chain) {
+  await Chain.capture(() => work(arguments), onError: (error, chain) {
     print(error);
     print(chain.terse);
     exitCode = 1;
   });
-}
-
-Future<Null> _work(BazelifyArguments arguments) async {
-  // Massage the arguments based on defaults.
-  arguments = await arguments.resolve();
-
-  // Store and change the CWD.
-  var previousCurrent = Directory.current;
-  Directory.current = new Directory(arguments.pubPackageDir);
-
-  // Run "pub get".
-  await Process.run(arguments.pubExecutable, const ['get']);
-
-  // Revert back to the old CWD
-  Directory.current = previousCurrent;
-
-  // Read the ".packages" file.
-  final packages = new File(path.join(arguments.pubPackageDir, '.packages'));
-  if (!await packages.exists()) {
-    throw new StateError('No .packages found at "${packages.absolute.path}"');
-  }
-
-  // Write a packages.bzl file and a .bazelify directory.
-  await generateBzl(
-    arguments.pubPackageDir,
-    pubBazelRepos(
-      parse(
-        await packages.readAsBytes(),
-        packages.uri,
-      ),
-    ),
-  );
-
-  final absolute = path.absolute(arguments.pubPackageDir);
-  print('Generated pacakges.bzl, WORKSPACE, BUILD files for $absolute');
 }
 
 void _printArgumentError(ArgumentError e) {
