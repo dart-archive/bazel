@@ -116,7 +116,7 @@ Future<String> generateBzl(
   }
   await bazelifyDir.create(recursive: true);
   var buffer = new StringBuffer();
-  buffer.writeln('''PUB_PACKAGE_NAME = $pubPackageName
+  buffer.writeln('''PUB_PACKAGE_NAME = "$pubPackageName"
 
 def bazelify():''');
   await for (var repo in repositories) {
