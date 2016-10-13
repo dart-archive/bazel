@@ -10,6 +10,8 @@ Future<Null> main(List<String> args) async {
   BazelifyArguments arguments;
   try {
     arguments = new BazelifyArguments.parse(args);
+    // Massage the arguments based on defaults.
+    arguments = await arguments.resolve();
   } on ArgumentError catch (e) {
     if (e.name != null) {
       _printArgumentError(e);

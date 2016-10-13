@@ -105,6 +105,10 @@ class BazelifyArguments {
         throw new StateError('No "pub" found at "$pubResolved"');
       }
     }
+
+    if (pubPackageDir == null) {
+      throw new ArgumentError.value(null, 'package', 'package must be set');
+    }
     String workspaceResolved = path.normalize(pubPackageDir);
     if (workspaceResolved == null) {
       workspaceResolved = path.current;

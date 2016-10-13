@@ -8,9 +8,6 @@ import 'arguments.dart';
 import 'bazelify.dart';
 
 Future<Null> work(BazelifyArguments arguments) async {
-  // Massage the arguments based on defaults.
-  arguments = await arguments.resolve();
-
   // Store and change the CWD.
   var previousCurrent = Directory.current;
   Directory.current = new Directory(arguments.pubPackageDir);
