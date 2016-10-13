@@ -17,7 +17,8 @@ Future<Null> main(List<String> args) async {
       rethrow;
     }
     _printUsage();
-    exit(1);
+    exitCode = 64;
+    return;
   }
 
   await Chain.capture(() => work(arguments), onError: (error, chain) {
