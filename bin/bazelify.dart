@@ -5,6 +5,7 @@ import 'package:bazel/src/arguments.dart';
 import 'package:bazel/src/bazelify.dart';
 import 'package:package_config/packages_file.dart';
 import 'package:path/path.dart' as path;
+import 'package:stack_trace/stack_trace.dart';
 
 Future<Null> main(List<String> args) async {
   // Parse into an object.
@@ -21,6 +22,14 @@ Future<Null> main(List<String> args) async {
     exit(1);
   }
 
+  await Chain.capture(() => _work(arguments), onError: (error, chain) {
+    print(error);
+    print(chain.terse);
+    exitCode = 1;
+  });
+}
+
+Future<Null> _work(BazelifyArguments arguments) async {
   // Massage the arguments based on defaults.
   arguments = await arguments.resolve();
 
