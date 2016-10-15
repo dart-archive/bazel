@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:bazel/src/arguments.dart';
-import 'package:bazel/src/bin.dart';
+import 'package:bazel/src/bazelify/arguments.dart';
+import 'package:bazel/src/bazelify/generate.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 Future<Null> main(List<String> args) async {
@@ -23,7 +23,7 @@ Future<Null> main(List<String> args) async {
     return;
   }
 
-  await Chain.capture(() => work(arguments), onError: (error, chain) {
+  await Chain.capture(() => generate(arguments), onError: (error, chain) {
     print(error);
     print(chain.terse);
     exitCode = 1;

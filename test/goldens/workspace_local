@@ -2,10 +2,9 @@
 # DO NOT MODIFY BY HAND
 
 # Include the Dart SDK and language extensions for Bazel.
-git_repository(
+local_repository(
     name = "io_bazel_rules_dart",
-    remote = "https://github.com/dart-lang/rules_dart",
-    tag = "0.0.1-alpha",
+    path = "/usr/somebody/git/rules_dart",
 )
 load(
     "@io_bazel_rules_dart//dart/build_rules:repositories.bzl",
