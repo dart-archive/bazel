@@ -13,7 +13,7 @@ import 'workspace.dart';
 /// Runs `bazelify` as specified in [arguments].
 Future<Null> generate(BazelifyArguments arguments) async {
   // Start timing.
-  final timings = <String, Duration> {};
+  final timings = <String, Duration>{};
   final stopwatch = new Stopwatch()..start();
 
   // Store and change the CWD.

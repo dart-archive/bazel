@@ -11,9 +11,10 @@ class BazelMacroFile {
   ///
   /// Uses [resolvePath] to determine the local path for a given package.
   factory BazelMacroFile.fromPackages(
-      String workspacePackage,
-      Iterable<String> packages,
-      String resolvePath(String packageName),) {
+    String workspacePackage,
+    Iterable<String> packages,
+    String resolvePath(String packageName),
+  ) {
     final repos = packages.map/*<NewLocalRepository>*/((d) {
       return new NewLocalRepository(
         name: d,
