@@ -1,5 +1,4 @@
 load("@io_bazel_rules_dart//dart/build_rules:vm.bzl", "dart_vm_binary")
-load("@io_bazel_rules_dart//dart/build_rules:web.bzl", "dart_web_application")
 
 dart_vm_binary(
     name = "get_cwd",

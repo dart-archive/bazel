@@ -17,6 +17,18 @@ class BazelifyArguments {
       help: 'A path to the "bazel" executable. Defauls to your PATH.',
     )
     ..addOption(
+      'rules-commit',
+      help: 'A commit SHA on dart-lang/rules_dart to use.',
+    )
+    ..addOption(
+      'rules-local',
+      help: 'The path to a local version of rules_dart.',
+    )
+    ..addOption(
+      'rules-tag',
+      help: 'A tagged version on dart-lang/rules_dart to use.',
+    )
+    ..addOption(
       'pub',
       help: 'A path to the "pub" executable. Defaults to your PATH.',
     )
@@ -33,6 +45,9 @@ class BazelifyArguments {
   ///
   /// If `null` implicitly defaults to your PATH.
   final String bazelExecutable;
+
+  /// A configured [DartRulesSource] for a `WORKSPACE`.
+  final DartRulesSource dartRulesSource;
 
   /// A path to find 'pub'.
   ///
@@ -61,6 +76,7 @@ class BazelifyArguments {
   ///   the current working directory.
   BazelifyArguments({
     this.bazelExecutable,
+    this.dartRulesSource: DartRulesSource.stable,
     this.pubExecutable,
     this.pubPackageDir,
   });
@@ -68,8 +84,17 @@ class BazelifyArguments {
   /// Returns a new [BazelifyArguments] by parsing [args].
   factory BazelifyArguments.parse(List<String> args) {
     final result = _argParser.parse(args);
+    var source = DartRulesSource.stable;
+    if (result.wasParsed('rules-commit')) {
+      source = new DartRulesSource.commit(result['rules-commit']);
+    } else if (result.wasParsed('rules-tag')) {
+      source = new DartRulesSource.tag(result['rules-tag']);
+    } else if (result.wasParsed('rules-local')) {
+      source = new DartRulesSource.local(result['rules-local']);
+    }
     return new BazelifyArguments(
       bazelExecutable: result['bazel'],
+      dartRulesSource: source,
       pubExecutable: result['pub'],
       pubPackageDir: result['package'],
     );
@@ -120,4 +145,58 @@ class BazelifyArguments {
       pubPackageDir: workspaceResolved,
     );
   }
+}
+
+/// Where to retrieve the `rules_dart`.
+abstract class DartRulesSource {
+  /// The default version of [DartRulesSource] if not otherwise specified.
+  static const DartRulesSource stable =
+      const DartRulesSource.tag('0.0.1-alpha');
+
+  /// Use a git [commit].
+  const factory DartRulesSource.commit(String commit) = _GitCommitRulesSource;
+
+  /// Use a file [path].
+  const factory DartRulesSource.local(String path) = _LocalRulesSource;
+
+  /// Use a git [tag].
+  const factory DartRulesSource.tag(String tag) = _GitTagRulesSource;
+}
+
+class _LocalRulesSource implements DartRulesSource {
+  final String _path;
+
+  const _LocalRulesSource(this._path);
+
+  @override
+  String toString() => 'local_repository(\n'
+      '    name = "io_bazel_rules_dart",\n'
+      '    path = "$_path",\n'
+      ')\n';
+}
+
+class _GitCommitRulesSource implements DartRulesSource {
+  final String _commit;
+
+  const _GitCommitRulesSource(this._commit);
+
+  @override
+  String toString() => 'git_repository(\n'
+      '    name = "io_bazel_rules_dart",\n'
+      '    remote = "https://github.com/dart-lang/rules_dart",\n'
+      '    commit = "$_commit",\n'
+      ')\n';
+}
+
+class _GitTagRulesSource implements DartRulesSource {
+  final String _tag;
+
+  const _GitTagRulesSource(this._tag);
+
+  @override
+  String toString() => 'git_repository(\n'
+      '    name = "io_bazel_rules_dart",\n'
+      '    remote = "https://github.com/dart-lang/rules_dart",\n'
+      '    tag = "$_tag",\n'
+      ')\n';
 }
