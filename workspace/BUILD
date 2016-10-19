@@ -16,4 +16,5 @@ dart_library(
     name = "bazel_workspace",
     srcs = glob(["lib/**"]),
     deps = _PUB_DEPS,
+    pub_pkg_name = "bazel_workspace",
 )
