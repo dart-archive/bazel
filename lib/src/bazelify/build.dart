@@ -49,6 +49,8 @@ class BuildFile {
   }
 
   static const _coreBzl = '@io_bazel_rules_dart//dart/build_rules:core.bzl';
+  static const _devBzl =
+      '@io_bazel_rules_dart//dart/build_rules:dev_server.bzl';
   static const _webBzl = '@io_bazel_rules_dart//dart/build_rules:web.bzl';
   static const _vmBzl = '@io_bazel_rules_dart//dart/build_rules:vm.bzl';
 
@@ -125,6 +127,7 @@ class BuildFile {
     if (webApplications.isNotEmpty) {
       buffer.writeln('# Bazelify: ${webApplications.length} web apps.');
       buffer.writeln('load("$_webBzl", "dart_web_application")');
+      buffer.writeln('load("$_devBzl", "dev_server")');
       buffer.writeln();
     }
     if (binaries.isNotEmpty) {
@@ -282,14 +285,21 @@ class DartWebApplication implements DartBuildRule {
         '    script_file = "$scriptFile",\n'
         '    deps = _PUB_DEPS';
     if (includeLibraries.isEmpty) {
-      return '$buffer,\n)';
+      buffer = '$buffer,\n)';
     } else {
-      return buffer +
-          ' + [\n' +
+      buffer += ' + [\n' +
           includeLibraries
               .map/*<String>*/((l) => '        ":${l.name}",\n')
               .join() +
           '    ],\n)';
     }
+    buffer += '\ndev_server(\n'
+        '    name = "${name}_serve",\n'
+        '    deps = _PUB_DEPS + [\n' +
+        includeLibraries.map((l) => '        ":${l.name}",\n').join() +
+        '    ],\n'
+        '    data = glob(["web/**"]),\n'
+        ')';
+    return buffer;
   }
 }
