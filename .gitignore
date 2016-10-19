@@ -8,3 +8,4 @@ build/
 bazel-*
 workspace/pubspec.lock
 workspace/packages.bzl
+pubspec.lock
