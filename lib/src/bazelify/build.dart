@@ -31,7 +31,8 @@ class BuildFile {
       return new DartVmBinary(
         name: p.basenameWithoutExtension(scriptFile),
         package: package,
-        scriptFile: p.relative(scriptFile, from: p.normalize(p.join(bin, '../'))),
+        scriptFile:
+            p.relative(scriptFile, from: p.normalize(p.join(bin, '../'))),
       );
     });
   }
@@ -41,7 +42,8 @@ class BuildFile {
       return new DartWebApplication(
         name: p.basenameWithoutExtension(scriptFile),
         package: package,
-        scriptFile: p.relative(scriptFile, from: p.normalize(p.join(web, '../'))),
+        scriptFile:
+            p.relative(scriptFile, from: p.normalize(p.join(web, '../'))),
       );
     });
   }
@@ -73,11 +75,13 @@ class BuildFile {
     final webDir = new Directory(p.join(path, 'web'));
     Iterable<DartVmBinary> binaries = const [];
     if (await binDir.exists()) {
-      binaries = await _findBinaries(pubspec.pubPackageName, binDir.path).toList();
+      binaries =
+          await _findBinaries(pubspec.pubPackageName, binDir.path).toList();
     }
     Iterable<DartWebApplication> webApps = const [];
     if (await webDir.exists()) {
-      webApps = await _findWebApps(pubspec.pubPackageName, webDir.path).toList();
+      webApps =
+          await _findWebApps(pubspec.pubPackageName, webDir.path).toList();
     }
     return new BuildFile(
       binaries: binaries,

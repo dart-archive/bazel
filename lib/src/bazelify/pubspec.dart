@@ -49,7 +49,8 @@ class Pubspec {
   ///       '@args:args',
   ///       '@path:path',
   ///     ]
-  Iterable<String> get depsAsBazelTargets => pubPackagesToBazelTargets(dependencies);
+  Iterable<String> get depsAsBazelTargets =>
+      pubPackagesToBazelTargets(dependencies);
 
   /// Development dependencies for a Bazel library.
   ///

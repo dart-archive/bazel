@@ -26,12 +26,11 @@ void main() {
 
   test('should emit a "packages.bzl" file', () async {
     final packagesBzl = new BazelMacroFile.fromPackages(
-        'silly_monkey', 
+        'silly_monkey',
         [
           'path',
-        ], 
-        (package) => 'some/path/to/.pub_cache/$package-0.0.0'
-    );
+        ],
+        (package) => 'some/path/to/.pub_cache/$package-0.0.0');
     expect(
       packagesBzl.toString(),
       loadGolden('packages_bzl'),

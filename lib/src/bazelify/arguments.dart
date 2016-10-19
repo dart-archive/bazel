@@ -150,7 +150,8 @@ class BazelifyArguments {
 /// Where to retrieve the `rules_dart`.
 abstract class DartRulesSource {
   /// The default version of [DartRulesSource] if not otherwise specified.
-  static const DartRulesSource stable = const DartRulesSource.tag('0.0.1-alpha');
+  static const DartRulesSource stable =
+      const DartRulesSource.tag('0.0.1-alpha');
 
   /// Use a git [commit].
   const factory DartRulesSource.commit(String commit) = _GitCommitRulesSource;
