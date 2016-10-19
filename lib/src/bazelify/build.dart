@@ -31,7 +31,7 @@ class BuildFile {
       return new DartVmBinary(
         name: p.basenameWithoutExtension(scriptFile),
         package: package,
-        scriptFile: scriptFile,
+        scriptFile: p.relative(scriptFile, from: p.normalize(p.join(bin, '../'))),
       );
     });
   }
@@ -41,7 +41,7 @@ class BuildFile {
       return new DartWebApplication(
         name: p.basenameWithoutExtension(scriptFile),
         package: package,
-        scriptFile: scriptFile,
+        scriptFile: p.relative(scriptFile, from: p.normalize(p.join(web, '../'))),
       );
     });
   }
