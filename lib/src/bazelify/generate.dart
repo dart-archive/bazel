@@ -62,7 +62,7 @@ Future<Null> generate(BazelifyArguments arguments) async {
 
   // Create a packages.bzl file and write to disk.
   final macroFile = new BazelMacroFile.fromPackages(
-    pubspec.package,
+    pubspec.pubPackageName,
     packages.keys,
     (package) => packageToPath[package],
   );

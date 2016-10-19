@@ -4,7 +4,7 @@
 PUB_PACKAGE_NAME = "silly_monkey"
 
 # Generated automatically for package:silly_monkey|pubspec.yaml
-def packages():
+def bazelify():
     native.new_local_repository(
         name = "path",
         path = "some/path/to/.pub_cache/path-0.0.0",

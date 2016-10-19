@@ -26,10 +26,12 @@ void main() {
   });
 
   test('should emit a "packages.bzl" file', () async {
-    final packagesBzl = new BazelMacroFile.fromPubspec(
-      await Pubspec
-          .fromPackageDir(p.normalize('test/projects/simple_with_deps')),
-      (package) => 'some/path/to/.pub_cache/$package-0.0.0',
+    final packagesBzl = new BazelMacroFile.fromPackages(
+        'silly_monkey', 
+        [
+          'path',
+        ], 
+        (package) => 'some/path/to/.pub_cache/$package-0.0.0'
     );
     expect(
       packagesBzl.toString(),

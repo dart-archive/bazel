@@ -65,7 +65,7 @@ class BuildFile {
   /// Resolve and return new [BuildFile] by looking at [path].
   ///
   /// The general rule of thumb is:
-  /// - Every package generates a dart_library
+  /// - Every package generates _exactly one_ dart_library
   /// - Some packages generate 1 or more dart_vm_binary or dart_web_application
   static Future<BuildFile> fromPackageDir(String path) async {
     final pubspec = await Pubspec.fromPackageDir(path);
@@ -73,22 +73,22 @@ class BuildFile {
     final webDir = new Directory(p.join(path, 'web'));
     Iterable<DartVmBinary> binaries = const [];
     if (await binDir.exists()) {
-      binaries = await _findBinaries(pubspec.package, binDir.path).toList();
+      binaries = await _findBinaries(pubspec.pubPackageName, binDir.path).toList();
     }
     Iterable<DartWebApplication> webApps = const [];
     if (await webDir.exists()) {
-      webApps = await _findWebApps(pubspec.package, webDir.path).toList();
+      webApps = await _findWebApps(pubspec.pubPackageName, webDir.path).toList();
     }
     return new BuildFile(
       binaries: binaries,
       libraries: [
         new DartLibrary(
-          name: pubspec.package,
-          package: pubspec.package,
+          name: pubspec.pubPackageName,
+          package: pubspec.pubPackageName,
         ),
       ],
       webApps: webApps,
-      deps: pubPackagesToBazelTargets(pubspec.deps),
+      deps: pubPackagesToBazelTargets(pubspec.dependencies),
     );
   }
 

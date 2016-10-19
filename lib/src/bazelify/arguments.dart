@@ -76,7 +76,7 @@ class BazelifyArguments {
   ///   the current working directory.
   BazelifyArguments({
     this.bazelExecutable,
-    this.dartRulesSource: DartRulesSource.defaultSource,
+    this.dartRulesSource: DartRulesSource.stable,
     this.pubExecutable,
     this.pubPackageDir,
   });
@@ -84,7 +84,7 @@ class BazelifyArguments {
   /// Returns a new [BazelifyArguments] by parsing [args].
   factory BazelifyArguments.parse(List<String> args) {
     final result = _argParser.parse(args);
-    DartRulesSource source = DartRulesSource.defaultSource;
+    var source = DartRulesSource.stable;
     if (result.wasParsed('rules-commit')) {
       source = new DartRulesSource.commit(result['rules-commit']);
     } else if (result.wasParsed('rules-tag')) {
@@ -150,8 +150,7 @@ class BazelifyArguments {
 /// Where to retrieve the `rules_dart`.
 abstract class DartRulesSource {
   /// The default version of [DartRulesSource] if not otherwise specified.
-  static const DartRulesSource defaultSource =
-      const DartRulesSource.tag('0.0.1-alpha');
+  static const DartRulesSource stable = const DartRulesSource.tag('0.0.1-alpha');
 
   /// Use a git [commit].
   const factory DartRulesSource.commit(String commit) = _GitCommitRulesSource;

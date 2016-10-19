@@ -27,12 +27,12 @@ class Pubspec {
 
   /// Dependencies for a pub package.
   ///
-  /// Maps directly to the `directories` list in `pubspec.yaml`.
-  Iterable<String> get deps => _deps('dependencies');
+  /// Maps directly to the `dependencies` list in `pubspec.yaml`.
+  Iterable<String> get dependencies => _deps('dependencies');
 
-  /// Developer dependencies for a pub package.
+  /// Development dependencies for a pub package.
   ///
-  /// Maps directly to the `directories` list in `pubspec.yaml`.
+  /// Maps directly to the `dev_dependencies` list in `pubspec.yaml`.
   Iterable<String> get devDependencies => _deps('dev_dependencies');
 
   /// Dependencies for a Bazel library.
@@ -49,14 +49,14 @@ class Pubspec {
   ///       '@args:args',
   ///       '@path:path',
   ///     ]
-  Iterable<String> get depsAsBazelTargets => pubPackagesToBazelTargets(deps);
+  Iterable<String> get depsAsBazelTargets => pubPackagesToBazelTargets(dependencies);
 
   /// Development dependencies for a Bazel library.
   ///
   /// These are not required to use the library, but rather to develop it. One
   /// example would be a testing library (such as `package:test`).
   ///
-  /// See also: [deps].
+  /// See also: [dependencies].
   Iterable<String> get devDepsAsBazelTargets =>
       pubPackagesToBazelTargets(devDependencies);
 
@@ -65,5 +65,5 @@ class Pubspec {
       (_pubspecContents[flavor] ?? const {}).keys as Iterable<String>;
 
   /// Name of the package.
-  String get package => _pubspecContents['name'];
+  String get pubPackageName => _pubspecContents['name'];
 }
