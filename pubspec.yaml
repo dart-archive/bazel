@@ -1,5 +1,6 @@
 name: bazel
 description: Bazel support for Dart
+version: 1.0.0-alpha
 
 # NOTE: We require a generated .packages file in order to use this package.
 environment:
