@@ -18,6 +18,7 @@ dart_library(
     name = "silly_monkey",
     srcs = glob(["lib/**"]),
     deps = _PUB_DEPS,
+    pub_pkg_name = "silly_monkey",
 )
 # Generated automatically for package:silly_monkey|bin/main.dart
 dart_vm_binary(

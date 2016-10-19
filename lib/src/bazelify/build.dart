@@ -225,6 +225,7 @@ class DartLibrary implements DartBuildRule {
       '    name = "$name",\n'
       '    srcs = glob(["lib/**"]),\n'
       '    deps = _PUB_DEPS,\n'
+      '    pub_pkg_name = "$name",\n'
       ')';
 }
 
