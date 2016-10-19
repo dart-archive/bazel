@@ -48,11 +48,13 @@ class BuildFile {
     });
   }
 
-  static const _coreBzl = '@io_bazel_rules_dart//dart/build_rules:core.bzl';
-  static const _devBzl =
-      '@io_bazel_rules_dart//dart/build_rules:dev_server.bzl';
-  static const _webBzl = '@io_bazel_rules_dart//dart/build_rules:web.bzl';
-  static const _vmBzl = '@io_bazel_rules_dart//dart/build_rules:vm.bzl';
+  static const _rulesSource = '@io_bazel_rules_dart//dart/build_rules';
+  static const _coreBzl = '$_rulesSource:core.bzl';
+  static const _devBzl = '$_rulesSource:dev_server.bzl';
+  static const _ddcBzl = '$_rulesSource:ddc.bzl';
+  static const _pubBzl = '$_rulesSource:pub.bzl';
+  static const _webBzl = '$_rulesSource:web.bzl';
+  static const _vmBzl = '$_rulesSource:vm.bzl';
 
   /// Dependencies shared across targets in the BUILD file.
   final List<String> deps;
@@ -126,8 +128,9 @@ class BuildFile {
     }
     if (webApplications.isNotEmpty) {
       buffer.writeln('# Bazelify: ${webApplications.length} web apps.');
-      buffer.writeln('load("$_webBzl", "dart_web_application")');
+      buffer.writeln('load("$_ddcBzl", "dart_ddc_bundle")');
       buffer.writeln('load("$_devBzl", "dev_server")');
+      buffer.writeln('load("$_webBzl", "dart_web_application")');
       buffer.writeln();
     }
     if (binaries.isNotEmpty) {
@@ -294,10 +297,22 @@ class DartWebApplication implements DartBuildRule {
           '    ],\n)';
     }
     buffer += '\ndev_server(\n'
-        '    name = "${name}_serve",\n'
+        '    name = "${name}_dartium_serve",\n'
         '    deps = _PUB_DEPS + [\n' +
         includeLibraries.map((l) => '        ":${l.name}",\n').join() +
         '    ],\n'
+        '    data = glob(["web/**"]),\n'
+        ')';
+    buffer += '\ndart_ddc_bundle(\n'
+        '    name = "${name}_ddc_bundle",\n'
+        '    entry_library = "$scriptFile",\n'
+        '    entry_module = ":$package",\n'
+        '    input_html = "web/index.html",\n'
+        '    output_dir = "web",\n'
+        ')';
+    buffer += '\ndev_server(\n'
+        '    name = "${name}_ddc_serve",\n'
+        '    deps = [":${name}_ddc_bundle"],\n'
         '    data = glob(["web/**"]),\n'
         ')';
     return buffer;
