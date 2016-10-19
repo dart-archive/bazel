@@ -18,7 +18,7 @@ _PUB_DEPS = []
 # Generated automatically for package:silly_monkey
 dart_library(
     name = "silly_monkey",
-    srcs = glob(["lib/**"]),
+    srcs = glob(["lib/**", "web/**"]),
     deps = _PUB_DEPS,
     pub_pkg_name = "silly_monkey",
 )
@@ -47,6 +47,5 @@ dart_ddc_bundle(
 )
 dev_server(
     name = "main_web_ddc_serve",
-    deps = [":main_web_ddc_bundle"],
-    data = glob(["web/**"]),
+    data = [":main_web_ddc_bundle"],
 )

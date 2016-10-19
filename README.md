@@ -1,5 +1,3 @@
-# bazel
-
 [Bazel][bazel] extension support for [Dart][dart].
 
 Bazel is a _correct, reproducible, and fast_ build tool used internally at
@@ -59,7 +57,8 @@ my_new_package/
 ```
 
 ```bash
-pub global run bazel:bazelify -p my_new_package
+$ cd my_new_package
+$ pub global run bazel:bazelify
 ```
 
 If you don't have a project, you can use our `workspace` folder of examples.
@@ -105,11 +104,11 @@ WORKSPACE
 ```
 
 You may also want to exclude the `bazel-*` folders from the Dart analyzer
-using an `analysis_options.yaml` file. This prevents the Dart analyzer from
+using an `.analysis_options` file. This prevents the Dart analyzer from
 accidentally "seeing" generated and copied code and needlessly analyzing it.
 
 ```
 analyzer:
   exclude:
-    - bazel-*/
+    - 'bazel-*/**'
 ```

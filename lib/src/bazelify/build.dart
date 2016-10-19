@@ -52,7 +52,6 @@ class BuildFile {
   static const _coreBzl = '$_rulesSource:core.bzl';
   static const _devBzl = '$_rulesSource:dev_server.bzl';
   static const _ddcBzl = '$_rulesSource:ddc.bzl';
-  static const _pubBzl = '$_rulesSource:pub.bzl';
   static const _webBzl = '$_rulesSource:web.bzl';
   static const _vmBzl = '$_rulesSource:vm.bzl';
 
@@ -155,7 +154,10 @@ class BuildFile {
     }
 
     // Now, define some build rules.
-    libraries.map/*<String>*/((r) => r.toRule()).forEach(buffer.writeln);
+    libraries
+        .map/*<String>*/(
+            (r) => r.toRule(includeWeb: webApplications.isNotEmpty))
+        .forEach(buffer.writeln);
     webApplications
         .map/*<String>*/((r) => r.toRule(includeLibraries: libraries))
         .forEach(buffer.writeln);
@@ -220,10 +222,11 @@ class DartLibrary implements DartBuildRule {
   const DartLibrary({this.name, this.package});
 
   @override
-  String toRule() => '# Generated automatically for package:$package\n'
+  String toRule({bool includeWeb: false}) =>
+      '# Generated automatically for package:$package\n'
       'dart_library(\n'
       '    name = "$name",\n'
-      '    srcs = glob(["lib/**"]),\n'
+      '    srcs = ${includeWeb ? 'glob(["lib/**", "web/**"])' : 'glob(["lib/**"])'},\n'
       '    deps = _PUB_DEPS,\n'
       '    pub_pkg_name = "$name",\n'
       ')';
@@ -313,8 +316,7 @@ class DartWebApplication implements DartBuildRule {
         ')';
     buffer += '\ndev_server(\n'
         '    name = "${name}_ddc_serve",\n'
-        '    deps = [":${name}_ddc_bundle"],\n'
-        '    data = glob(["web/**"]),\n'
+        '    data = [":${name}_ddc_bundle"],\n'
         ')';
     return buffer;
   }

@@ -6,13 +6,18 @@ import 'package:path/path.dart' as p;
 main() {
   // Run bazelify.
   print('Running bazelify...');
-  Process.runSync('dart', ['bin/bazelify.dart', '-p workspace']);
+  var result = Process.runSync('dart', ['bin/bazelify.dart', '-p', 'workspace']);
+  if (result.stderr.isNotEmpty) {
+    print('ERROR: ${result.stderr}');
+    exit(1);
+  }
+  print(result.stdout);
 
   // Change the CWD.
   print('Changing CWD...');
   Directory.current = p.join(p.current, 'workspace');
 
-  var result = bazel(['version']);
+  result = bazel(['version']);
   print(result.stdout);
 
   print('Cleaning...');
