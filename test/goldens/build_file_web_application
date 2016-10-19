@@ -28,3 +28,10 @@ dart_web_application(
         ":silly_monkey",
     ],
 )
+dev_server(
+    name = "main_web_serve",
+    deps = _PUB_DEPS + [
+        ":silly_monkey",
+    ],
+    data = glob(["web/**"]),
+)
