@@ -48,4 +48,8 @@ dart_ddc_bundle(
 dev_server(
     name = "main_web_ddc_serve",
     data = [":main_web_ddc_bundle"],
+    script_args = [
+        "--package-spec=main_web_ddc_bundle.packages",
+        "--uri-substitution=web/index.html:web/main_web_ddc_bundle.html",
+    ],
 )
