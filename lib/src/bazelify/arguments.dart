@@ -141,6 +141,7 @@ class BazelifyArguments {
     }
     return new BazelifyArguments(
       bazelExecutable: bazelResolved,
+      dartRulesSource: dartRulesSource,
       pubExecutable: pubResolved,
       pubPackageDir: workspaceResolved,
     );
