@@ -317,6 +317,10 @@ class DartWebApplication implements DartBuildRule {
     buffer += '\ndev_server(\n'
         '    name = "${name}_ddc_serve",\n'
         '    data = [":${name}_ddc_bundle"],\n'
+        '    script_args = [\n'
+        '        "--package-spec=${name}_ddc_bundle.packages",\n'
+        '        "--uri-substitution=web/index.html:web/${name}_ddc_bundle.html",\n'
+        '    ],\n'
         ')';
     return buffer;
   }
