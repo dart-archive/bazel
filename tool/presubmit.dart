@@ -6,7 +6,8 @@ import 'package:path/path.dart' as p;
 main() {
   // Run bazelify.
   print('Running bazelify...');
-  var result = Process.runSync('dart', ['bin/bazelify.dart', '-p', 'workspace']);
+  var result =
+      Process.runSync('dart', ['bin/bazelify.dart', '-p', 'workspace']);
   if (result.stderr.isNotEmpty) {
     print('ERROR: ${result.stderr}');
     exit(1);
