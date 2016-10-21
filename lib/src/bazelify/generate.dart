@@ -10,7 +10,7 @@ import 'macro.dart';
 import 'pubspec.dart';
 import 'workspace.dart';
 
-/// Runs `bazelify` as specified in [arguments].
+/// Runs `bazelify init` as specified in [arguments].
 Future<Null> generate(BazelifyInitArguments arguments) async {
   // Start timing.
   final timings = <String, Duration>{};

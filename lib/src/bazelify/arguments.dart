@@ -11,7 +11,6 @@ import 'package:which/which.dart';
 
 /// Shared arguments between all bazelify commands.
 class BazelifyArguments {
-  /// The parser for shared arguments
   static final ArgParser _argParser = () {
     var parser = new ArgParser()
       ..addOption(
@@ -36,7 +35,8 @@ class BazelifyArguments {
 
   BazelifyArguments._({this.bazelExecutable, this.pubPackageDir});
 
-  /// Returns a [Future<BazelifyArguments>] impl by parsing [args].
+  /// Returns a concrete subtype of [BazelifyArguments] based on the command
+  /// found in [args].
   static Future<BazelifyArguments> parse(List<String> args) async {
     final result = _argParser.parse(args);
 
@@ -55,8 +55,6 @@ class BazelifyArguments {
     if (workspaceResolved == null) {
       workspaceResolved = p.current;
     }
-    workspaceResolved = p.relative(workspaceResolved);
-    if (workspaceResolved == '.') workspaceResolved = '';
 
     var pubspec = p.join(workspaceResolved, 'pubspec.yaml');
     if (!await FileSystemEntity.isFile(pubspec)) {
@@ -110,7 +108,8 @@ class BazelifyArguments {
   final String pubPackageDir;
 }
 
-/// Arguments when running `bazelify`, which adds Bazel support on top of pub.
+/// Arguments when running `bazelify init`, which adds Bazel support on top of
+/// pub.
 class BazelifyInitArguments extends BazelifyArguments {
   /// The name of this command.
   static const command = 'init';
@@ -142,7 +141,7 @@ class BazelifyInitArguments extends BazelifyArguments {
   /// If `null` implicitly defaults to your PATH.
   final String pubExecutable;
 
-  /// Create a new set of arguments for how to run `bazelify`.
+  /// Create a new set of arguments for how to run `bazelify init`.
   ///
   /// Will be executed locally to where [pubPackageDir] is. For example,
   /// assuming the following directory structure, the directory could be
@@ -177,7 +176,7 @@ class BazelifyServeArguments extends BazelifyArguments {
     ..addOption('watch',
         allowMultiple: true,
         defaultsTo: 'web,lib,pubspec.lock',
-        help: 'A list of folders/directories to watch for changes and trigger '
+        help: 'A list of files/directories to watch for changes and trigger '
             ' builds')
     ..addOption('target',
         defaultsTo: 'main_ddc_serve',
