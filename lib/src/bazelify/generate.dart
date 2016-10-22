@@ -1,14 +1,166 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:path/path.dart' as p;
+import 'package:args/command_runner.dart';
 import 'package:package_config/packages_file.dart';
+import 'package:path/path.dart' as p;
+import 'package:which/which.dart';
 
 import 'arguments.dart';
 import 'build.dart';
 import 'macro.dart';
 import 'pubspec.dart';
 import 'workspace.dart';
+
+/// Arguments when running `bazelify init`, which adds Bazel support on top of
+/// pub.
+class BazelifyInitArguments extends BazelifyArguments {
+  /// A configured [DartRulesSource] for a `WORKSPACE`.
+  final DartRulesSource dartRulesSource;
+
+  /// A path to find 'pub'.
+  ///
+  /// If `null` implicitly defaults to your PATH.
+  final String pubExecutable;
+
+  /// Create a new set of arguments for how to run `bazelify init`.
+  ///
+  /// Will be executed locally to where [pubPackageDir] is. For example,
+  /// assuming the following directory structure, the directory could be
+  /// `projects/foo_bar`:
+  ///
+  ///   ```
+  ///   - projects
+  ///     - foo_bar
+  ///       pubspec.yaml
+  ///   ```
+  ///
+  /// Options:
+  /// - [bazelExecutable]: Where to find `bazel`. Defaults to your PATH.
+  /// - [pubExecutable]: Where to find `pub`. Defaults to your PATH.
+  /// - [pubPackageDir]: Where a package with a `pubspec.yaml` is. Defaults to
+  ///   the current working directory.
+  BazelifyInitArguments._({
+    String bazelExecutable,
+    this.dartRulesSource: DartRulesSource.stable,
+    this.pubExecutable,
+    String pubPackageDir,
+  })
+      : super(bazelExecutable: bazelExecutable, pubPackageDir: pubPackageDir);
+}
+
+class InitCommand extends Command {
+  InitCommand() {
+    argParser
+      ..addOption(
+        'rules-commit',
+        help: 'A commit SHA on dart-lang/rules_dart to use.',
+      )
+      ..addOption(
+        'rules-local',
+        help: 'A path to a local version of rules_dart.',
+      )
+      ..addOption(
+        'rules-tag',
+        help: 'A tagged version on dart-lang/rules_dart to use.',
+      )
+      ..addOption(
+        'pub',
+        help: 'A path to the "pub" executable. Defaults to your PATH.',
+      );
+  }
+
+  @override
+  String get name => 'init';
+
+  @override
+  String get description => 'TBD';
+
+  @override
+  Future<Null> run() async {
+    var commonArgs = await sharedArguments(globalResults);
+
+    var source = DartRulesSource.stable;
+    if (argResults.command?.wasParsed('rules-commit') == true) {
+      source = new DartRulesSource.commit(argResults.command['rules-commit']);
+    } else if (argResults.command?.wasParsed('rules-tag') == true) {
+      source = new DartRulesSource.tag(argResults.command['rules-tag']);
+    } else if (argResults.command?.wasParsed('rules-local') == true) {
+      source = new DartRulesSource.local(argResults.command['rules-local']);
+    }
+
+    String pubResolved =
+        argResults.command != null ? argResults.command['pub'] : null;
+    if (pubResolved == null) {
+      pubResolved = await which('pub');
+    } else {
+      if (!await FileSystemEntity.isFile(pubResolved)) {
+        throw new StateError('No "pub" found at "$pubResolved"');
+      }
+    }
+
+    var initArgs = new BazelifyInitArguments._(
+        bazelExecutable: commonArgs.bazelExecutable,
+        dartRulesSource: source,
+        pubExecutable: pubResolved,
+        pubPackageDir: commonArgs.pubPackageDir);
+
+    return await generate(initArgs);
+  }
+}
+
+/// Where to retrieve the `rules_dart`.
+abstract class DartRulesSource {
+  /// The default version of [DartRulesSource] if not otherwise specified.
+  static const DartRulesSource stable = const DartRulesSource.tag('0.1.1');
+
+  /// Use a git [commit].
+  const factory DartRulesSource.commit(String commit) = _GitCommitRulesSource;
+
+  /// Use a file [path].
+  const factory DartRulesSource.local(String path) = _LocalRulesSource;
+
+  /// Use a git [tag].
+  const factory DartRulesSource.tag(String tag) = _GitTagRulesSource;
+}
+
+class _LocalRulesSource implements DartRulesSource {
+  final String _path;
+
+  const _LocalRulesSource(this._path);
+
+  @override
+  String toString() => 'local_repository(\n'
+      '    name = "io_bazel_rules_dart",\n'
+      '    path = "$_path",\n'
+      ')\n';
+}
+
+class _GitCommitRulesSource implements DartRulesSource {
+  final String _commit;
+
+  const _GitCommitRulesSource(this._commit);
+
+  @override
+  String toString() => 'git_repository(\n'
+      '    name = "io_bazel_rules_dart",\n'
+      '    remote = "https://github.com/dart-lang/rules_dart",\n'
+      '    commit = "$_commit",\n'
+      ')\n';
+}
+
+class _GitTagRulesSource implements DartRulesSource {
+  final String _tag;
+
+  const _GitTagRulesSource(this._tag);
+
+  @override
+  String toString() => 'git_repository(\n'
+      '    name = "io_bazel_rules_dart",\n'
+      '    remote = "https://github.com/dart-lang/rules_dart",\n'
+      '    tag = "$_tag",\n'
+      ')\n';
+}
 
 /// Runs `bazelify init` as specified in [arguments].
 Future<Null> generate(BazelifyInitArguments arguments) async {

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:bazel/src/bazelify/arguments.dart';
+import 'package:bazel/src/bazelify/generate.dart';
 import 'package:bazel/src/bazelify/workspace.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';

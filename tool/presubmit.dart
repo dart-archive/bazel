@@ -7,7 +7,7 @@ main() {
   // Run bazelify.
   print('Running bazelify...');
   var result =
-      Process.runSync('dart', ['bin/bazelify.dart', '-p', 'workspace']);
+      Process.runSync('dart', ['bin/bazelify.dart', 'init', '-p', 'workspace']);
   if (result.stderr.isNotEmpty) {
     print('ERROR: ${result.stderr}');
     exit(1);
