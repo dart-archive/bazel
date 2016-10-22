@@ -80,13 +80,36 @@ class InitCommand extends Command {
   Future<Null> run() async {
     var commonArgs = await sharedArguments(globalResults);
 
-    var source = DartRulesSource.stable;
-    if (argResults.command?.wasParsed('rules-commit') == true) {
-      source = new DartRulesSource.commit(argResults.command['rules-commit']);
-    } else if (argResults.command?.wasParsed('rules-tag') == true) {
-      source = new DartRulesSource.tag(argResults.command['rules-tag']);
-    } else if (argResults.command?.wasParsed('rules-local') == true) {
-      source = new DartRulesSource.local(argResults.command['rules-local']);
+    var rulesTypes = ['rules-commit', 'rules-tag', 'rules-local'];
+    var setRules = <String, String>{};
+    for (var type in rulesTypes) {
+      if (argResults.wasParsed(type)) {
+        setRules[type] = argResults[type];
+      }
+    }
+
+    DartRulesSource source;
+    if (setRules.isEmpty) {
+      source = DartRulesSource.stable;
+    } else if (setRules.length == 1) {
+      var key = setRules.keys.single;
+      var value = setRules[key];
+      switch (key) {
+        case 'rules-commit':
+          source = new DartRulesSource.commit(value);
+          break;
+        case 'rules-tag':
+          source = new DartRulesSource.tag(value);
+          break;
+        case 'rules-local':
+          source = new DartRulesSource.tag(value);
+          break;
+        default:
+          throw new UnsupportedError('No clue how this happened');
+      }
+    } else {
+      this.usageException(
+          'No more than one can be used: ${rulesTypes.join(', ')}');
     }
 
     String pubResolved =
