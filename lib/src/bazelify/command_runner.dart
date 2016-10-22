@@ -1,6 +1,6 @@
 import 'package:args/command_runner.dart';
 
-import 'generate.dart' show InitCommand;
+import 'initialize.dart' show InitCommand;
 import 'serve.dart' show ServeCommand;
 
 class BazelifyCommandRunner extends CommandRunner {

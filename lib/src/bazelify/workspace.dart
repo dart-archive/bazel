@@ -1,4 +1,4 @@
-import 'generate.dart';
+import 'initialize.dart';
 
 /// Generates a `WORKSPACE` file.
 class Workspace {

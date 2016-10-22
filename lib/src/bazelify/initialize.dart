@@ -105,7 +105,7 @@ class InitCommand extends Command {
         pubExecutable: pubResolved,
         pubPackageDir: commonArgs.pubPackageDir);
 
-    return await generate(initArgs);
+    return await initalize(initArgs);
   }
 }
 
@@ -163,7 +163,7 @@ class _GitTagRulesSource implements DartRulesSource {
 }
 
 /// Runs `bazelify init` as specified in [arguments].
-Future<Null> generate(BazelifyInitArguments arguments) async {
+Future<Null> initalize(BazelifyInitArguments arguments) async {
   // Start timing.
   final timings = <String, Duration>{};
   final stopwatch = new Stopwatch()..start();
