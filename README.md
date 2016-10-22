@@ -10,9 +10,9 @@ for building software and maintaining code.
 ## Why Bazel
 
 Large applications in Google like [AdWords Next][blog-awn] and
-[AdSense](blog-ads) have used Dart and [Angular Dart][angular-dart] in
+[AdSense][blog-ads] have used Dart and [Angular Dart][angular-dart] in
 production with Bazel for a while, and now we want to share Bazel with the rest
-of the community. 
+of the community.
 
 [blog-awn]: http://news.dartlang.org/2016/03/the-new-adwords-ui-uses-dart-we-asked.html
 [blow-ads]: http://news.dartlang.org/2016/10/google-adsense-angular-dart.html
@@ -26,15 +26,19 @@ of the community.
 > iterating on a good stable solution for end users that are used to primarily
 > working with pub and `pubspec.yaml` files.
 >
-> Have a suggestion to make this better? [File an issue][file_issue].
+> Have a suggestion to make this better? [File an issue][file-issue].
 
-[file_issue]: https://github.com/dart-lang/bazel/issues/new
+[file-issue]: https://github.com/dart-lang/bazel/issues/new
 
 Our Bazel package publishes a `bazelify` command that takes an existing pub
 package and automatically generates a Bazel worskpace: full of extensions,
 macros, rules, and more.
 
 ### Installation
+
+> **NOTE**: bazelify requires an existing installation of [bazel][install-bazel]
+
+[install-bazel]: https://www.bazel.io/versions/master/docs/install.html
 
 If you're familiar with [`pub run`][pub_run], then `bazelify` is easy:
 
