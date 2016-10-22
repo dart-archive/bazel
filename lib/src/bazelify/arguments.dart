@@ -9,13 +9,26 @@ import 'package:args/args.dart';
 import 'package:path/path.dart' as p;
 import 'package:which/which.dart';
 
+const _installBazel = 'Please install bazel - '
+    'https://www.bazel.io/versions/master/docs/install.html';
+
 Future<BazelifyArguments> sharedArguments(ArgResults result) async {
   String bazelResolved = result['bazel'];
   if (bazelResolved == null) {
-    bazelResolved = await which('bazel');
+    try {
+      bazelResolved = await which('bazel');
+    } catch (_) {
+      print('Could not find the command `bazel`\n');
+      print(_installBazel);
+      exitCode = 127;
+      return null;
+    }
   } else {
     if (!await FileSystemEntity.isFile(bazelResolved)) {
-      throw new StateError('No "bazel" found at "$bazelResolved"');
+      print('`bazel` does not exist at $bazelResolved\n');
+      print(_installBazel);
+      exitCode = 127;
+      return null;
     }
   }
 

@@ -79,6 +79,7 @@ class InitCommand extends Command {
   @override
   Future<Null> run() async {
     var commonArgs = await sharedArguments(globalResults);
+    if (commonArgs == null) return;
 
     var rulesTypes = ['rules-commit', 'rules-tag', 'rules-local'];
     var setRules = <String, String>{};
@@ -128,7 +129,7 @@ class InitCommand extends Command {
         pubExecutable: pubResolved,
         pubPackageDir: commonArgs.pubPackageDir);
 
-    return await initalize(initArgs);
+    await initalize(initArgs);
   }
 }
 
