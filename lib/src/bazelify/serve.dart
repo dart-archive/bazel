@@ -29,6 +29,7 @@ class ServeCommand extends Command {
   @override
   Future<Null> run() async {
     var commonArgs = await sharedArguments(globalResults);
+    if (commonArgs == null) return;
 
     var serveArgs = new BazelifyServeArguments._(
         bazelExecutable: commonArgs.bazelExecutable,
