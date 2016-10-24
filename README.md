@@ -15,11 +15,13 @@ production with Bazel for a while, and now we want to share Bazel with the rest
 of the community.
 
 [blog-awn]: http://news.dartlang.org/2016/03/the-new-adwords-ui-uses-dart-we-asked.html
-[blow-ads]: http://news.dartlang.org/2016/10/google-adsense-angular-dart.html
+[blog-ads]: http://news.dartlang.org/2016/10/google-adsense-angular-dart.html
 [angular-dart]: https://angular.io/dart
 
 
 ## Getting Started
+
+[file-issue]: https://github.com/dart-lang/bazel/issues/new
 
 > **WARNING**: This package is highly experimental. While the underlying
 > framework (such as BUILD rules and extensions) are stable, we're still
@@ -28,17 +30,16 @@ of the community.
 >
 > Have a suggestion to make this better? [File an issue][file-issue].
 
-[file-issue]: https://github.com/dart-lang/bazel/issues/new
-
 Our Bazel package publishes a `bazelify` command that takes an existing pub
 package and automatically generates a Bazel worskpace: full of extensions,
 macros, rules, and more.
 
 ### Installation
 
+[install-bazel]: https://www.bazel.io/versions/master/docs/install.html
+
 > **NOTE**: bazelify requires an existing installation of [bazel][install-bazel]
 
-[install-bazel]: https://www.bazel.io/versions/master/docs/install.html
 
 If you're familiar with [`pub run`][pub_run], then `bazelify` is easy:
 
