@@ -129,7 +129,7 @@ class InitCommand extends Command {
         pubExecutable: pubResolved,
         pubPackageDir: commonArgs.pubPackageDir);
 
-    await initalize(initArgs);
+    await new _Initialize(initArgs).run();
   }
 }
 
@@ -186,80 +186,104 @@ class _GitTagRulesSource implements DartRulesSource {
       ')\n';
 }
 
-/// Runs `bazelify init` as specified in [arguments].
-Future<Null> initalize(BazelifyInitArguments arguments) async {
-  // Start timing.
-  final timings = <String, Duration>{};
-  final stopwatch = new Stopwatch()..start();
+class _Initialize {
+  final BazelifyInitArguments arguments;
 
-  // Store and change the CWD.
-  var previousCurrent = Directory.current;
-  Directory.current = new Directory(arguments.pubPackageDir);
+  _Initialize(this.arguments);
 
-  // Run "pub get".
-  await Process.run(arguments.pubExecutable, const ['get']);
-  timings['pub get'] = stopwatch.elapsed;
-  stopwatch.reset();
-
-  // Revert back to the old CWD
-  Directory.current = previousCurrent;
-
-  // Read the package's pubspec and the generated .packages file.
-  final pubspec = await Pubspec.fromPackageDir(arguments.pubPackageDir);
-  final packagesFilePath = p.join(arguments.pubPackageDir, '.packages');
-  final packages = parse(
-    await new File(packagesFilePath).readAsBytes(),
-    Uri.parse(packagesFilePath),
-  );
-
-  // Clean and re-build the .bazelify folder.
-  final bazelifyPath = p.join(arguments.pubPackageDir, '.bazelify');
-  final bazelifyDir = new Directory(bazelifyPath);
-  if (await bazelifyDir.exists()) {
-    await bazelifyDir.delete(recursive: true);
+  Future<Null> run() async {
+    final timings = <String, Duration>{};
+    final stopwatch = new Stopwatch()..start();
+    await _pubGetInPackage();
+    timings['pub get'] = stopwatch.elapsed;
+    stopwatch.reset();
+    final buildFilePaths = await _createBazelifyDir();
+    timings['create .bazelify'] = stopwatch.elapsed;
+    stopwatch.reset();
+    await _writeBazelFiles(buildFilePaths);
+    timings['create packages.bzl, build, and workspace'] = stopwatch.elapsed;
+    _printTiming(timings);
   }
-  await bazelifyDir.create(recursive: true);
 
-  // Store the current path.
-  final packageToPath = <String, String>{};
-  for (final package in packages.keys) {
-    // Get ready to create a <name>.BUILD.
-    final buildFilePath = p.join(bazelifyPath, '$package.BUILD');
-    var localPath = packages[package].toFilePath();
-    localPath = localPath.substring(0, localPath.length - 'lib/'.length);
-    packageToPath[package] = localPath;
-
-    // Create a new build file for this directory and write to disk.
-    final newBuildFile = await BuildFile.fromPackageDir(localPath);
-    await new File(buildFilePath).writeAsString(newBuildFile.toString());
+  Future<Null> _pubGetInPackage() async {
+    final previousDirectory = Directory.current;
+    Directory.current = new Directory(arguments.pubPackageDir);
+    await Process.run(arguments.pubExecutable, const ['get']);
+    Directory.current = previousDirectory;
   }
-  timings['create .bazelify'] = stopwatch.elapsed;
-  stopwatch.reset();
 
-  // Create a packages.bzl file and write to disk.
-  final macroFile = new BazelMacroFile.fromPackages(
-    pubspec.pubPackageName,
-    packages.keys,
-    (package) => packageToPath[package],
-  );
-  final packagesBzl = p.join(arguments.pubPackageDir, 'packages.bzl');
-  await new File(packagesBzl).writeAsString(macroFile.toString());
+  Future<Map<String, String>> _createBazelifyDir() async {
+    final packages = await _readPackages();
+    final bazelifyPath = p.join(arguments.pubPackageDir, '.bazelify');
+    await _createEmptyDir(bazelifyPath);
+    final buildFilePaths =
+        await _writePackageBuildFiles(bazelifyPath, packages);
+    return buildFilePaths;
+  }
 
-  // Create a WORKSPACE file.
-  final workspaceFile = p.join(arguments.pubPackageDir, 'WORKSPACE');
-  final workspace = new Workspace.fromDartSource(arguments.dartRulesSource);
-  await new File(workspaceFile).writeAsString(workspace.toString());
+  Future<Null> _writeBazelFiles(Map<String, String> buildFilePaths) async {
+    await _writePackagesBzl(buildFilePaths);
+    await _writeWorkspaceFile();
+    await _writeBuildFile();
+  }
 
-  // Create a BUILD file.
-  final rootBuild = await BuildFile.fromPackageDir(arguments.pubPackageDir);
-  final rootBuildPath = p.join(arguments.pubPackageDir, 'BUILD');
-  await new File(rootBuildPath).writeAsString(rootBuild.toString());
+  Future<Map<String, Uri>> _readPackages() async {
+    final packagesFilePath = p.join(arguments.pubPackageDir, '.packages');
+    return parse(
+      await new File(packagesFilePath).readAsBytes(),
+      Uri.parse(packagesFilePath),
+    );
+  }
 
-  // Done!
-  timings['create packages.bzl, build, and workspace'] = stopwatch.elapsed;
+  Future<Null> _createEmptyDir(String dirPath) async {
+    final dir = new Directory(dirPath);
+    if (await dir.exists()) {
+      await dir.delete(recursive: true);
+    }
+    await dir.create(recursive: true);
+  }
 
-  // Print timings.
-  timings.forEach((name, duration) {
-    print('$name took ${duration.inMilliseconds}ms');
-  });
+  Future<Map<String, String>> _writePackageBuildFiles(
+      String bazelifyPath, Map<String, Uri> packages) async {
+    final packageToPath = <String, String>{};
+    for (final package in packages.keys) {
+      final buildFilePath = p.join(bazelifyPath, '$package.BUILD');
+      var localPath = packages[package].toFilePath();
+      localPath = localPath.substring(0, localPath.length - 'lib/'.length);
+      packageToPath[package] = localPath;
+
+      final newBuildFile = await BuildFile.fromPackageDir(localPath);
+      await new File(buildFilePath).writeAsString('$newBuildFile');
+    }
+    return packageToPath;
+  }
+
+  Future<Null> _writePackagesBzl(Map<String, String> buildFilePaths) async {
+    final pubspec = await Pubspec.fromPackageDir(arguments.pubPackageDir);
+    final macroFile = new BazelMacroFile.fromPackages(
+      pubspec.pubPackageName,
+      buildFilePaths.keys,
+      (package) => buildFilePaths[package],
+    );
+    final packagesBzl = p.join(arguments.pubPackageDir, 'packages.bzl');
+    await new File(packagesBzl).writeAsString('$macroFile');
+  }
+
+  Future<Null> _writeWorkspaceFile() async {
+    final workspaceFile = p.join(arguments.pubPackageDir, 'WORKSPACE');
+    final workspace = new Workspace.fromDartSource(arguments.dartRulesSource);
+    await new File(workspaceFile).writeAsString('$workspace');
+  }
+
+  Future<Null> _writeBuildFile() async {
+    final rootBuild = await BuildFile.fromPackageDir(arguments.pubPackageDir);
+    final rootBuildPath = p.join(arguments.pubPackageDir, 'BUILD');
+    await new File(rootBuildPath).writeAsString('$rootBuild');
+  }
+
+  void _printTiming(Map<String, Duration> timings) {
+    timings.forEach((name, duration) {
+      print('$name took ${duration.inMilliseconds}ms');
+    });
+  }
 }
