@@ -43,7 +43,7 @@ Future<BazelifyArguments> sharedArguments(ArgResults result) async {
   if (!await FileSystemEntity.isFile(pubspec)) {
     print('Could not find a pubspec at ${p.absolute(pubspec)}');
     print('Please run from within a pub package directory '
-        'or pass the --package option');
+        'or specify a directory with the --package option');
     exitCode = 64;
     return null;
   }
