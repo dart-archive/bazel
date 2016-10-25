@@ -5,6 +5,7 @@ import 'package:args/command_runner.dart';
 import 'package:package_config/packages_file.dart';
 import 'package:path/path.dart' as p;
 import 'package:which/which.dart';
+import 'package:yaml/yaml.dart';
 
 import 'arguments.dart';
 import 'build.dart';
@@ -202,6 +203,9 @@ class _Initialize {
     stopwatch.reset();
     await _writeBazelFiles(buildFilePaths);
     timings['create packages.bzl, build, and workspace'] = stopwatch.elapsed;
+    stopwatch.reset();
+    await _suggestAnalyzerExcludes();
+    timings['scan for analysis options'] = stopwatch.elapsed;
     _printTiming(timings);
   }
 
@@ -279,6 +283,66 @@ class _Initialize {
     final rootBuild = await BuildFile.fromPackageDir(arguments.pubPackageDir);
     final rootBuildPath = p.join(arguments.pubPackageDir, 'BUILD');
     await new File(rootBuildPath).writeAsString('$rootBuild');
+  }
+
+  /// Checks for the presence of an analysis_options which excludes bazel
+  /// generated directories.
+  ///
+  /// If no analysis options exist, a sane default will be created. If an
+  /// analysis options exist but does not include 'bazel-*' in the excluded
+  /// files a help message will be printed.
+  Future<Null> _suggestAnalyzerExcludes() async {
+    final analysisOptionsFile = await _findAnalysisOptions();
+    final exampleExclude = '''
+analyzer:
+  strong-mode: true
+  exclude:
+    - bazel-*
+''';
+    if (analysisOptionsFile == null) {
+      final analysisOptionsPath =
+          p.join(arguments.pubPackageDir, 'analysis_options.yaml');
+      await new File(analysisOptionsPath).writeAsString(exampleExclude);
+    } else {
+      final analysisOptions =
+          loadYaml(await analysisOptionsFile.readAsString());
+      final analyzerConfig = analysisOptions['analyzer'];
+      final excludes =
+          analyzerConfig == null ? null : analyzerConfig['exclude'];
+      if (excludes == null || !excludes.contains('bazel-*')) {
+        print('Bazel will create directories with symlinked dart files which '
+            'will impact the analysis server.\n'
+            'We recommend you add `bazel-*` to the excluded files in your '
+            'analysis options.\n'
+            'Found analysis options at:\n'
+            '${p.absolute(analysisOptionsFile.path)}\n\nFor example:\n'
+            '$exampleExclude');
+      }
+    }
+  }
+
+  /// Searchs up in directories starting with the pubPackageDir until a
+  /// '.analysis_options' or 'analysis_options.yaml' is found, or null if no
+  /// such file exists.
+  Future<File> _findAnalysisOptions() async {
+    File analysisOptionsFile;
+    var searchPath = arguments.pubPackageDir;
+    while (analysisOptionsFile == null) {
+      analysisOptionsFile ??=
+          await _findExistingFile(p.join(searchPath, '.analysis_options'));
+      analysisOptionsFile ??=
+          await _findExistingFile(p.join(searchPath, 'analysis_options.yaml'));
+      if (searchPath == p.dirname(searchPath)) break;
+      searchPath = p.dirname(searchPath);
+    }
+    return analysisOptionsFile;
+  }
+
+  /// Returns a [File] if it exists at [path], otherwise return null.
+  Future<File> _findExistingFile(String path) async {
+    var file = new File(path);
+    if (await file.exists()) return file;
+    return null;
   }
 
   void _printTiming(Map<String, Duration> timings) {
