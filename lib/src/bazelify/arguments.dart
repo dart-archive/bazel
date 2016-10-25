@@ -41,7 +41,11 @@ Future<BazelifyArguments> sharedArguments(ArgResults result) async {
 
   var pubspec = p.join(workspaceResolved, 'pubspec.yaml');
   if (!await FileSystemEntity.isFile(pubspec)) {
-    throw new StateError('No "pubspec" found at "${p.absolute(pubspec)}"');
+    print('Could not find a pubspec at ${p.absolute(pubspec)}');
+    print('Please run from within a pub package directory '
+        'or specify a directory with the --package option');
+    exitCode = 64;
+    return null;
   }
 
   return new BazelifyArguments(
