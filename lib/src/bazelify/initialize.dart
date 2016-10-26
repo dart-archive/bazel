@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:package_config/packages_file.dart';
+import 'package:package_config/packages_file.dart' as packages_file;
 import 'package:path/path.dart' as p;
 import 'package:which/which.dart';
 import 'package:yaml/yaml.dart';
@@ -233,7 +233,7 @@ class _Initialize {
 
   Future<Map<String, Uri>> _readPackages() async {
     final packagesFilePath = p.join(arguments.pubPackageDir, '.packages');
-    return parse(
+    return packages_file.parse(
       await new File(packagesFilePath).readAsBytes(),
       Uri.parse(packagesFilePath),
     );
