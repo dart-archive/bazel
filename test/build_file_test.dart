@@ -50,7 +50,8 @@ void main() {
         new DartWebApplication(
           name: 'main_web',
           package: 'silly_monkey',
-          scriptFile: 'web/main.dart',
+          entryPoint: new HtmlEntryPoint(
+              htmlFile: 'web/index.html', dartFile: 'web/main.dart'),
         )
       ],
     );

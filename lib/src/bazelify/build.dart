@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:html/dom.dart' as dom;
+import 'package:html/parser.dart' as html;
 import 'package:path/path.dart' as p;
 
 import 'pubspec.dart';
@@ -37,13 +39,39 @@ class BuildFile {
     });
   }
 
+  static Stream<HtmlEntryPoint> _findHtmlEntryPoints(String searchDir) async* {
+    final files = new Directory(searchDir)
+        .list(recursive: true, followLinks: false)
+        .where((entity) => entity is File && entity.path.endsWith('.html'));
+    await for (final File file in files) {
+      var document = html.parse(await file.readAsString());
+      dom.Element dartScriptTag =
+          document.querySelector('script[type="application/dart"]');
+      if (dartScriptTag == null) continue;
+      var src = dartScriptTag.attributes['src'];
+      if (src == null) continue;
+      if (p.isAbsolute(src)) {
+        print('Only relative paths are supported for web entry point scripts, '
+            'found ${dartScriptTag.outerHtml} in ${file.path} which refers to '
+            'an absolute path. Entry point will be skipped.');
+        continue;
+      }
+      // Path relative to the package root.
+      var relativeFilePath = p.relative(file.path,
+          from: p.normalize(p.join(searchDir, '../')));
+      var relativeSrcPath = p.join(p.dirname(relativeFilePath), src);
+      yield new HtmlEntryPoint(
+          htmlFile: relativeFilePath,
+          dartFile: relativeSrcPath);
+    }
+  }
+
   static Stream<DartWebApplication> _findWebApps(String package, String web) {
-    return _findMains(web).map/*<DartWebApplication>*/((scriptFile) {
+    return _findHtmlEntryPoints(web).map/*<DartWebApplication>*/((entryPoint) {
       return new DartWebApplication(
-        name: p.basenameWithoutExtension(scriptFile),
+        name: p.basenameWithoutExtension(entryPoint.htmlFile),
         package: package,
-        scriptFile:
-            p.relative(scriptFile, from: p.normalize(p.join(web, '../'))),
+        entryPoint: entryPoint,
       );
     });
   }
@@ -276,11 +304,17 @@ class DartWebApplication implements DartBuildRule {
   @override
   final String package;
 
-  /// A file with a `main` function to execute as the entry-point.
-  final String scriptFile;
+  /// An html application entry point.
+  final HtmlEntryPoint entryPoint;
 
-  /// Create a new `dart_web_application` named [name] executing [scriptFile].
-  const DartWebApplication({this.name, this.package, this.scriptFile});
+  /// Helper which returns [entryPoint.htmlFile].
+  String get htmlFile => entryPoint.htmlFile;
+
+  /// Helper which returns [entryPoint.dartFile].
+  String get scriptFile => entryPoint.dartFile;
+
+  /// Create a new `dart_web_application` named [name] executing [entryPoint].
+  const DartWebApplication({this.name, this.package, this.entryPoint});
 
   @override
   String toRule({Iterable<DartLibrary> includeLibraries: const []}) {
@@ -311,7 +345,7 @@ class DartWebApplication implements DartBuildRule {
         '    name = "${name}_ddc_bundle",\n'
         '    entry_library = "$scriptFile",\n'
         '    entry_module = ":$package",\n'
-        '    input_html = "web/index.html",\n'
+        '    input_html = "$htmlFile",\n'
         '    output_dir = "web",\n'
         ')';
     buffer += '\ndev_server(\n'
@@ -319,9 +353,20 @@ class DartWebApplication implements DartBuildRule {
         '    data = [":${name}_ddc_bundle"],\n'
         '    script_args = [\n'
         '        "--package-spec=${name}_ddc_bundle.packages",\n'
-        '        "--uri-substitution=web/index.html:web/${name}_ddc_bundle.html",\n'
+        '        "--uri-substitution=$htmlFile:web/${name}_ddc_bundle.html",\n'
         '    ],\n'
         ')';
     return buffer;
+  }
+}
+
+/// Simple class representing an html file and its corresponding dart script.
+class HtmlEntryPoint {
+  final String dartFile;
+  final String htmlFile;
+
+  HtmlEntryPoint({this.dartFile, this.htmlFile}) {
+    assert(dartFile != null);
+    assert(htmlFile != null);
   }
 }
