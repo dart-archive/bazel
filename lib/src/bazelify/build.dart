@@ -57,12 +57,11 @@ class BuildFile {
         continue;
       }
       // Path relative to the package root.
-      var relativeFilePath = p.relative(file.path,
-          from: p.normalize(p.join(searchDir, '../')));
+      var relativeFilePath =
+          p.relative(file.path, from: p.normalize(p.join(searchDir, '../')));
       var relativeSrcPath = p.join(p.dirname(relativeFilePath), src);
       yield new HtmlEntryPoint(
-          htmlFile: relativeFilePath,
-          dartFile: relativeSrcPath);
+          htmlFile: relativeFilePath, dartFile: relativeSrcPath);
     }
   }
 
@@ -76,10 +75,11 @@ class BuildFile {
     });
   }
 
-  static const _rulesSource = '@io_bazel_rules_dart//dart/build_rules';
+  static const ddcServeAllName = '__ddc_serve_all';
   static const _coreBzl = '$_rulesSource:core.bzl';
   static const _devBzl = '$_rulesSource:dev_server.bzl';
   static const _ddcBzl = '$_rulesSource:ddc.bzl';
+  static const _rulesSource = '@io_bazel_rules_dart//dart/build_rules';
   static const _webBzl = '$_rulesSource:web.bzl';
   static const _vmBzl = '$_rulesSource:vm.bzl';
 
@@ -189,6 +189,14 @@ class BuildFile {
     webApplications
         .map/*<String>*/((r) => r.toRule(includeLibraries: libraries))
         .forEach(buffer.writeln);
+
+    // The general dev server target.
+    if (webApplications.isNotEmpty) {
+      buffer.writeln(
+          new DdcDevServer(name: ddcServeAllName, webApps: webApplications)
+              .toRule());
+    }
+
     binaries
         .map/*<String>*/((r) => r.toRule(includeLibraries: libraries))
         .forEach(buffer.writeln);
@@ -307,10 +315,16 @@ class DartWebApplication implements DartBuildRule {
   /// An html application entry point.
   final HtmlEntryPoint entryPoint;
 
-  /// Helper which returns [entryPoint.htmlFile].
+  String get ddcBundleName => '${name}_ddc_bundle';
+
+  String get ddcBundleOutputHtmlPath => 'web/$ddcBundleName.html';
+
+  String get ddcServeName => '${name}_ddc_serve';
+
   String get htmlFile => entryPoint.htmlFile;
 
-  /// Helper which returns [entryPoint.dartFile].
+  String get packageSpecName => '${name}_ddc_bundle.packages';
+
   String get scriptFile => entryPoint.dartFile;
 
   /// Create a new `dart_web_application` named [name] executing [entryPoint].
@@ -342,20 +356,14 @@ class DartWebApplication implements DartBuildRule {
         '    data = glob(["web/**"]),\n'
         ')';
     buffer += '\ndart_ddc_bundle(\n'
-        '    name = "${name}_ddc_bundle",\n'
+        '    name = "$ddcBundleName",\n'
         '    entry_library = "$scriptFile",\n'
         '    entry_module = ":$package",\n'
         '    input_html = "$htmlFile",\n'
         '    output_dir = "web",\n'
-        ')';
-    buffer += '\ndev_server(\n'
-        '    name = "${name}_ddc_serve",\n'
-        '    data = [":${name}_ddc_bundle"],\n'
-        '    script_args = [\n'
-        '        "--package-spec=${name}_ddc_bundle.packages",\n'
-        '        "--uri-substitution=$htmlFile:web/${name}_ddc_bundle.html",\n'
-        '    ],\n'
-        ')';
+        ')\n';
+    buffer += new DdcDevServer(name: ddcServeName, webApps: [this]).toRule();
+    buffer += '\n';
     return buffer;
   }
 }
@@ -368,5 +376,49 @@ class HtmlEntryPoint {
   HtmlEntryPoint({this.dartFile, this.htmlFile}) {
     assert(dartFile != null);
     assert(htmlFile != null);
+  }
+}
+
+/// A `dev_server` definition for one or more ddc web apps.
+class DdcDevServer implements DartBuildRule {
+  @override
+  final String name;
+
+  @override
+  String get package =>
+      throw new UnimplementedError('DdcDevServer doesn\'t need a package');
+
+  /// one or more web applications this server serves
+  final List<DartWebApplication> webApps;
+
+  /// Create a new `dev_server` named [name] executing [webApps].
+  const DdcDevServer({this.name, this.webApps});
+
+  @override
+  String toRule() {
+    var buffer = new StringBuffer();
+    if (webApps.isNotEmpty) {
+      buffer.writeln('# A ddc specific dev_server target which serves '
+          '${webApps.map((app) => app.name).join(', ')}');
+      buffer.writeln('dev_server(\n'
+          '    name = "$name",\n'
+          '    data = [');
+      for (var webApp in webApps) {
+        buffer.writeln('        ":${webApp.ddcBundleName}",');
+      }
+      // Note: the package spec is the same for all targets, we just grab the
+      // first one.
+      buffer.writeln('    ],\n'
+          '    script_args = [\n'
+          '        "--package-spec='
+          '${webApps.first.packageSpecName}",');
+      for (var webApp in webApps) {
+        buffer.writeln('        "--uri-substitution='
+            '${webApp.htmlFile}:${webApp.ddcBundleOutputHtmlPath}",');
+      }
+      buffer.write('    ],\n'
+          ')');
+    }
+    return buffer.toString();
   }
 }
