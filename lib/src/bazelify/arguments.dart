@@ -9,6 +9,8 @@ import 'package:args/args.dart';
 import 'package:path/path.dart' as p;
 import 'package:which/which.dart';
 
+import 'exceptions.dart';
+
 const _installBazel = 'Please install bazel - '
     'https://www.bazel.io/versions/master/docs/install.html';
 
@@ -18,17 +20,17 @@ Future<BazelifyArguments> sharedArguments(ArgResults result) async {
     try {
       bazelResolved = await which('bazel');
     } catch (_) {
-      print('Could not find the command `bazel`\n');
-      print(_installBazel);
-      exitCode = 127;
-      return null;
+      throw new ApplicationFailedException(
+          '''Could not find the command `bazel`
+$_installBazel''',
+          127);
     }
   } else {
     if (!await FileSystemEntity.isFile(bazelResolved)) {
-      print('`bazel` does not exist at $bazelResolved\n');
-      print(_installBazel);
-      exitCode = 127;
-      return null;
+      throw new ApplicationFailedException(
+          '''`bazel` does not exist at $bazelResolved
+$_installBazel''',
+          127);
     }
   }
 
@@ -41,11 +43,11 @@ Future<BazelifyArguments> sharedArguments(ArgResults result) async {
 
   var pubspec = p.join(workspaceResolved, 'pubspec.yaml');
   if (!await FileSystemEntity.isFile(pubspec)) {
-    print('Could not find a pubspec at ${p.absolute(pubspec)}');
-    print('Please run from within a pub package directory '
-        'or specify a directory with the --package option');
-    exitCode = 64;
-    return null;
+    throw new ApplicationFailedException(
+        '''Could not find a pubspec at ${p.absolute(pubspec)}
+Please run from within a pub package directory
+or specify a directory with the --package option''',
+        64);
   }
 
   return new BazelifyArguments(

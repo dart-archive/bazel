@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' hide exitCode;
 
 import 'package:args/command_runner.dart';
 import 'package:path/path.dart' as p;
 
 import 'arguments.dart';
+import 'exceptions.dart';
 
 class ServeCommand extends Command {
   ServeCommand() {
@@ -59,10 +60,10 @@ class BazelifyServeArguments extends BazelifyArguments {
 
 Future serve(BazelifyServeArguments args) async {
   if (p.relative(args.pubPackageDir) != '.') {
-    print('bazelify serve only supports running from your top level package '
-        'directory.');
-    exitCode = 1;
-    return;
+    throw new ApplicationFailedException(
+        'bazelify serve only supports running from your top level package '
+        'directory.',
+        1);
   }
 
   print('Building server via bazel...\n');
@@ -76,8 +77,8 @@ Future serve(BazelifyServeArguments args) async {
   stderr.addStream(bazelBuildProcess.stderr);
   var bazelExitCode = await bazelBuildProcess.exitCode;
   if (bazelExitCode != 0) {
-    exitCode = bazelExitCode;
-    return;
+    throw new ApplicationFailedException(
+        'bazel failed with a non-zero exit code.', bazelExitCode);
   }
   print('\nInitial build finished, starting server...\n');
 
