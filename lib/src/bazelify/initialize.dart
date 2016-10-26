@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:which/which.dart';
 import 'package:yaml/yaml.dart';
 
+import '../step_timer.dart';
 import 'arguments.dart';
 import 'build.dart';
 import 'macro.dart';
@@ -193,20 +194,14 @@ class _Initialize {
   _Initialize(this.arguments);
 
   Future<Null> run() async {
-    final timings = <String, Duration>{};
-    final stopwatch = new Stopwatch()..start();
-    await _pubGetInPackage();
-    timings['pub get'] = stopwatch.elapsed;
-    stopwatch.reset();
-    final buildFilePaths = await _createBazelifyDir();
-    timings['create .bazelify'] = stopwatch.elapsed;
-    stopwatch.reset();
-    await _writeBazelFiles(buildFilePaths);
-    timings['create packages.bzl, build, and workspace'] = stopwatch.elapsed;
-    stopwatch.reset();
-    await _suggestAnalyzerExcludes();
-    timings['scan for analysis options'] = stopwatch.elapsed;
-    _printTiming(timings);
+    final timer = new StepTimer();
+    await timer.run('pub get', _pubGetInPackage);
+    final buildFilepaths =
+        await timer.run('create .bazelify', _createBazelifyDir);
+    await timer.run('create packages.bzl, build, and workspace',
+        () => _writeBazelFiles(buildFilepaths));
+    await timer.run('scan for analysis options', _suggestAnalyzerExcludes);
+    timer.printTimings();
   }
 
   Future<Null> _pubGetInPackage() async {
@@ -343,11 +338,5 @@ analyzer:
     var file = new File(path);
     if (await file.exists()) return file;
     return null;
-  }
-
-  void _printTiming(Map<String, Duration> timings) {
-    timings.forEach((name, duration) {
-      print('$name took ${duration.inMilliseconds}ms');
-    });
   }
 }
