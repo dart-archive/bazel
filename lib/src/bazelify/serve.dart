@@ -5,6 +5,7 @@ import 'package:args/command_runner.dart';
 import 'package:path/path.dart' as p;
 
 import 'arguments.dart';
+import 'build.dart';
 import 'exceptions.dart';
 
 class ServeCommand extends Command {
@@ -16,7 +17,7 @@ class ServeCommand extends Command {
           help: 'A list of files/directories to watch for changes and trigger '
               ' builds')
       ..addOption('target',
-          defaultsTo: 'main_ddc_serve',
+          defaultsTo: '${BuildFile.ddcServeAllName}',
           help: 'The name of the server build target to run.',
           hide: true);
   }
