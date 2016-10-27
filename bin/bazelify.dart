@@ -22,7 +22,7 @@ Future<Null> main(List<String> args) async {
       return;
     } else {
       print('Whoops! You may have discovered a bug in `bazelify` :(.\n'
-          'Please file a bug at http://github.com/dart-lang/bazel');
+          'Please file an issue at http://github.com/dart-lang/bazel');
       print(error);
       print(chain.terse);
       exitCode = 1;
