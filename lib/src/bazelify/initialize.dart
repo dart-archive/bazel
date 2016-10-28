@@ -105,7 +105,7 @@ class InitCommand extends Command {
           source = new DartRulesSource.tag(value);
           break;
         case 'rules-local':
-          source = new DartRulesSource.tag(value);
+          source = new DartRulesSource.local(value);
           break;
         default:
           throw new UnsupportedError('No clue how this happened');
