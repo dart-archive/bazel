@@ -63,7 +63,7 @@ my_new_package/
 
 ```bash
 $ cd my_new_package
-$ pub global run bazel:bazelify
+$ pub global run bazel:bazelify init
 ```
 
 If you don't have a project, you can use our `workspace` folder of examples.
