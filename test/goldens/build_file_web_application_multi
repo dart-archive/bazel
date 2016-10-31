@@ -31,13 +31,6 @@ dart_web_application(
         ":silly_monkey",
     ],
 )
-dev_server(
-    name = "main_web_dartium_serve",
-    deps = _PUB_DEPS + [
-        ":silly_monkey",
-    ],
-    data = glob(["web/**"]),
-)
 dart_ddc_bundle(
     name = "main_web_ddc_bundle",
     entry_library = "web/main.dart",
@@ -65,13 +58,6 @@ dart_web_application(
     deps = _PUB_DEPS + [
         ":silly_monkey",
     ],
-)
-dev_server(
-    name = "secondary_web_dartium_serve",
-    deps = _PUB_DEPS + [
-        ":silly_monkey",
-    ],
-    data = glob(["web/**"]),
 )
 dart_ddc_bundle(
     name = "secondary_web_ddc_bundle",
