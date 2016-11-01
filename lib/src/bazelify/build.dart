@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html;
 import 'package:path/path.dart' as p;
+import 'package:yaml/yaml.dart';
 
 import 'pubspec.dart';
 
@@ -101,7 +102,15 @@ class BuildFile {
   /// - Every package generates _exactly one_ dart_library
   /// - Some packages generate 1 or more dart_vm_binary or dart_web_application
   static Future<BuildFile> fromPackageDir(String path) async {
-    final pubspec = await Pubspec.fromPackageDir(path);
+    Pubspec pubspec;
+    try {
+      pubspec = await Pubspec.fromPackageDir(path);
+    } on YamlException catch (e) {
+      throw new YamlException(
+          '$path/pubspec.yaml: Unable to parse YAML\n'
+          'Original exception: ${e.message}',
+          e.source);
+    }
     final binDir = new Directory(p.join(path, 'bin'));
     final webDir = new Directory(p.join(path, 'web'));
     Iterable<DartVmBinary> binaries = const [];
