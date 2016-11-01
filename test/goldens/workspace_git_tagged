@@ -13,13 +13,6 @@ load(
 )
 dart_repositories()
 
-# Pub package dependencies that are needed by the Dart BUILD rules.
-load(
-    "@io_bazel_rules_dart//dart/build_rules:pub.bzl",
-    "pub_repositories",
-)
-pub_repositories()
-
 # Include the packages resolved from pubspec.yaml.
 load(
     "//:packages.bzl",
