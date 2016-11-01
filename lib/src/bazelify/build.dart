@@ -77,8 +77,6 @@ class BuildFile {
 
   static const ddcServeAllName = '__ddc_serve_all';
   static const _coreBzl = '$_rulesSource:core.bzl';
-  static const _devBzl = '$_rulesSource:dev_server.bzl';
-  static const _ddcBzl = '$_rulesSource:ddc.bzl';
   static const _rulesSource = '@io_bazel_rules_dart//dart/build_rules';
   static const _webBzl = '$_rulesSource:web.bzl';
   static const _vmBzl = '$_rulesSource:vm.bzl';
@@ -155,9 +153,8 @@ class BuildFile {
     }
     if (webApplications.isNotEmpty) {
       buffer.writeln('# Bazelify: ${webApplications.length} web apps.');
-      buffer.writeln('load("$_ddcBzl", "dart_ddc_bundle")');
-      buffer.writeln('load("$_devBzl", "dev_server")');
-      buffer.writeln('load("$_webBzl", "dart_web_application")');
+      buffer.writeln('load(\n    "$_webBzl",\n    "dart_web_application",');
+      buffer.writeln('    "dev_server",\n    "dart_ddc_bundle"\n)');
       buffer.writeln();
     }
     if (binaries.isNotEmpty) {
