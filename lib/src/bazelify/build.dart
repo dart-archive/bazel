@@ -348,13 +348,6 @@ class DartWebApplication implements DartBuildRule {
               .join() +
           '    ],\n)';
     }
-    buffer += '\ndev_server(\n'
-        '    name = "${name}_dartium_serve",\n'
-        '    deps = _PUB_DEPS + [\n' +
-        includeLibraries.map((l) => '        ":${l.name}",\n').join() +
-        '    ],\n'
-        '    data = glob(["web/**"]),\n'
-        ')';
     buffer += '\ndart_ddc_bundle(\n'
         '    name = "$ddcBundleName",\n'
         '    entry_library = "$scriptFile",\n'
