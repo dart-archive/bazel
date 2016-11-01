@@ -1,3 +1,11 @@
+## 0.2.0
+
+* Refactor of rules_dart with a smaller public surface area of skylark rules
+* Doc improvements
+* More friendly error handling
+* Added check for analyzer ignores
+* Improved discovery of web targets
+
 ## 0.1.1
 
 * Moved default `bazel` command to subcommand `bazel init`
