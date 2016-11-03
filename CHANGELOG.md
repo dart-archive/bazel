@@ -1,3 +1,7 @@
+## 0.2.2
+
+* Update to rules dart 0.2.2 with the latest dev sdk
+
 ## 0.2.0
 
 * Refactor of rules_dart with a smaller public surface area of skylark rules
