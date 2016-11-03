@@ -2,7 +2,7 @@ name: bazel
 description: Bazel support for Dart
 author: Dart Team <misc@dartlang.org>
 homepage: https://github.com/dart-lang/bazel
-version: 0.2.0
+version: 0.2.1
 
 # NOTE: We require a generated .packages file in order to use this package.
 environment:
