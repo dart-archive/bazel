@@ -1,6 +1,6 @@
-## 0.2.1
+## 0.2.2
 
-* Update to rules dart 0.2.1 with the latest dev sdk
+* Update to rules dart 0.2.2 with the latest dev sdk
 
 ## 0.2.0
 
