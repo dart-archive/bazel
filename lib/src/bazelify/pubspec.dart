@@ -23,7 +23,25 @@ class Pubspec {
   final Map _pubspecContents;
 
   /// Create a [Pubspec] by parsing [pubspecYaml].
-  Pubspec.parse(String pubspecYaml) : _pubspecContents = loadYaml(pubspecYaml);
+  Pubspec.parse(String pubspecYaml) : _pubspecContents = loadYaml(pubspecYaml) {
+    _transformers = [];
+    var transformersConfig = _pubspecContents['transformers'];
+    if (transformersConfig == null) return;
+    for (var config in transformersConfig) {
+      if (config is String) {
+        _transformers.add(new Transformer(config));
+      } else if (config is Map &&
+          config.keys.length == 1 &&
+          (config.values.first is Map || config.values.first == null)) {
+        _transformers.add(
+            new Transformer(config.keys.first, config: config.values.first));
+      } else {
+        throw new ArgumentError('Unexpected value for transformer config. Got '
+            '$config but expected either a String or Map<String, Map> with '
+            'exactly one key.');
+      }
+    }
+  }
 
   /// Dependencies for a pub package.
   ///
@@ -67,4 +85,22 @@ class Pubspec {
 
   /// Name of the package.
   String get pubPackageName => _pubspecContents['name'];
+
+  List<Transformer> _transformers;
+
+  /// Transformers for the package.
+  Iterable<Transformer> get transformers => _transformers;
+}
+
+/// A single parsed transformer from a pubspec.
+class Transformer {
+  /// The name of the transformer as it appears in the pubspec.
+  final String name;
+
+  /// The config supplied to the transformer, may be null.
+  final Map config;
+
+  Transformer(this.name, {this.config});
+
+  String toString() => '$name: $config';
 }
