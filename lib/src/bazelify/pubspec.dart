@@ -22,9 +22,10 @@ class Pubspec {
 
   final Map _pubspecContents;
 
+  final _transformers = <Transformer>[];
+
   /// Create a [Pubspec] by parsing [pubspecYaml].
   Pubspec.parse(String pubspecYaml) : _pubspecContents = loadYaml(pubspecYaml) {
-    _transformers = [];
     var transformersConfig = _pubspecContents['transformers'];
     if (transformersConfig == null) return;
     for (var config in transformersConfig) {
@@ -85,8 +86,6 @@ class Pubspec {
 
   /// Name of the package.
   String get pubPackageName => _pubspecContents['name'];
-
-  List<Transformer> _transformers;
 
   /// Transformers for the package.
   Iterable<Transformer> get transformers => _transformers;
