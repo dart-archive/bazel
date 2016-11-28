@@ -101,5 +101,6 @@ class Transformer {
 
   Transformer(this.name, {this.config});
 
+  @override
   String toString() => '$name: $config';
 }

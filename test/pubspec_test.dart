@@ -47,11 +47,13 @@ class _TransformerMatcher extends Matcher {
   final Transformer _expected;
   _TransformerMatcher(this._expected);
 
+  @override
   bool matches(item, _) =>
       item is Transformer &&
       item.name == _expected.name &&
       equals(_expected.config).matches(item.config, _);
 
+  @override
   Description describe(Description description) =>
       description.addDescriptionOf(_expected);
 }
