@@ -22,6 +22,11 @@ void main() {
           }),
         ]));
   });
+
+  test('uris can be created correctly', () {
+    expect(new Transformer('a').uri, equals(Uri.parse('package:a/a.dart')));
+    expect(new Transformer('a/b').uri, equals(Uri.parse('package:a/b.dart')));
+  });
 }
 
 var exampleYaml = '''
@@ -51,6 +56,7 @@ class _TransformerMatcher extends Matcher {
   bool matches(item, _) =>
       item is Transformer &&
       item.name == _expected.name &&
+      item.uri == _expected.uri &&
       equals(_expected.config).matches(item.config, _);
 
   Description describe(Description description) =>

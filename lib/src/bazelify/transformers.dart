@@ -2,24 +2,54 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:convert';
 import 'dart:mirrors';
 
-import 'package:barback/barback.dart';
+import 'package:barback/barback.dart' as barback;
+
+import 'pubspec.dart';
 
 /// The mirror system.
 ///
 /// Cached to avoid re-instantiating each time a transformer is initialized.
 final _mirrors = currentMirrorSystem();
 
+/// Creates the contents of a library which exposes a `buildTransformers` method
+/// that you can call to get concrete transformer phases from a `Pubspec`.
+String bootstrapTransformersFromPubpec(Pubspec pubspec) {
+  var sb = new StringBuffer();
+  sb.writeln('import "dart:convert";');
+  sb.writeln('import "package:barback/barback.dart";');
+  sb.writeln('import "package:bazel/src/bazelify/transformers.dart";');
+
+  for (var transformer in pubspec.transformers) {
+    sb.writeln('import "${transformer.uri}";');
+  }
+
+  sb.writeln('Iterable<Iterable> buildTransformers({BarbackMode mode}) {');
+  sb.writeln('mode ??= new BarbackMode("release");');
+  sb.writeln('var transformers = [];');
+  for (var transformer in pubspec.transformers) {
+    sb.writeln('transformers.add(createTransformersInLibrary('
+        'Uri.parse(\'${transformer.uri}\'), '
+        'JSON.decode(\'${JSON.encode(transformer.config)}\'), '
+        'mode));');
+  }
+  sb.writeln('return transformers;');
+  sb.writeln('}');
+
+  return sb.toString();
+}
+
 /// Loads all the transformers and groups defined in [uri].
 ///
 /// Loads the library, finds any [Transformer] or [TransformerGroup] subclasses
 /// in it, instantiates them with [configuration] and [mode], and returns them.
 List createTransformersInLibrary(
-    Uri uri, Map configuration, BarbackMode mode) {
-  var transformerClass = reflectClass(Transformer);
-  var aggregateClass = reflectClass(AggregateTransformer);
-  var groupClass = reflectClass(TransformerGroup);
+    Uri uri, Map configuration, barback.BarbackMode mode) {
+  var transformerClass = reflectClass(barback.Transformer);
+  var aggregateClass = reflectClass(barback.AggregateTransformer);
+  var groupClass = reflectClass(barback.TransformerGroup);
 
   var seen = new Set();
   var transformers = [];
@@ -33,10 +63,11 @@ List createTransformersInLibrary(
       if (!dependency.isExport) continue;
       loadFromLibrary(dependency.targetLibrary);
     }
-
-    transformers.addAll(library.declarations.values.map((declaration) {
+    var sortedDeclarations = library.declarations.values.toList()
+      ..sort((a, b) => a.location.line.compareTo(b.location.line));
+    transformers.addAll(sortedDeclarations.map((declaration) {
       if (declaration is! ClassMirror) return null;
-      var classMirror = declaration;
+      var classMirror = declaration as ClassMirror;
       if (classMirror.isPrivate) return null;
       if (classMirror.isAbstract) return null;
       if (!classMirror.isSubtypeOf(transformerClass) &&
@@ -44,7 +75,6 @@ List createTransformersInLibrary(
           !classMirror.isSubtypeOf(aggregateClass)) {
         return null;
       }
-
       var constructor = _getConstructor(classMirror, 'asPlugin');
       if (constructor == null) return null;
       if (constructor.parameters.isEmpty) {
@@ -54,7 +84,7 @@ List createTransformersInLibrary(
       if (constructor.parameters.length != 1) return null;
 
       return classMirror.newInstance(const Symbol('asPlugin'),
-          [new BarbackSettings(configuration, mode)]).reflectee;
+          [new barback.BarbackSettings(configuration, mode)]).reflectee;
     }).where((classMirror) => classMirror != null));
   }
 
