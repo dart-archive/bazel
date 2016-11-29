@@ -96,10 +96,22 @@ class Transformer {
   /// The name of the transformer as it appears in the pubspec.
   final String name;
 
-  /// The config supplied to the transformer, may be null.
+  /// The config supplied to the transformer.
   final Map config;
 
-  Transformer(this.name, {this.config});
+  /// The uri for this transformer.
+  final Uri uri;
+
+  Transformer(String name, {this.config = const {}})
+      : name = name,
+        uri = _transformerUri(name);
 
   String toString() => '$name: $config';
+}
+
+Uri _transformerUri(String name) {
+  if (p.url.split(name).length == 1){
+    return Uri.parse('package:${name}/${name}.dart');
+  }
+  return Uri.parse('package:${name}.dart');
 }
