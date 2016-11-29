@@ -102,8 +102,9 @@ class Transformer {
   /// The uri for this transformer.
   final Uri uri;
 
-  Transformer(String name, {this.config = const {}})
+  Transformer(String name, {Map config})
       : name = name,
+        config = config ?? {},
         uri = _transformerUri(name);
 
   String toString() => '$name: $config';
