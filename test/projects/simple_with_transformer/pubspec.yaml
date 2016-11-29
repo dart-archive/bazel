@@ -1,0 +1,4 @@
+name: simple_with_transformer
+
+dependencies:
+  barback:
