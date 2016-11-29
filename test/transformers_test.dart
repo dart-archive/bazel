@@ -29,7 +29,7 @@ void main() {
     // have an `asPlugin` constructor.
   });
 
-  test('transformersToPhases', () {
+  test('bootstrapTransformersFromPubpec', () {
     var bootstrapContent = bootstrapTransformersFromPubpec(
       new pubspec.Pubspec.parse('''
           name: example
