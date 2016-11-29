@@ -59,9 +59,6 @@ List createTransformersInLibrary(
   }
 
   var library = _mirrors.libraries[uri];
-
-  // This should only happen if something's wrong with the logic in pub itself.
-  // If it were user error, the entire isolate would fail to load.
   if (library == null) throw "Couldn't find library at $uri.";
 
   loadFromLibrary(library);
