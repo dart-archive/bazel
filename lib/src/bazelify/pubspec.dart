@@ -107,7 +107,7 @@ class Transformer {
         config = config ?? {},
         uri = _transformerUri(name);
 
-  String toString() => '$name: $config';
+  String toString() => '$name : $uri : $config';
 }
 
 Uri _transformerUri(String name) {
