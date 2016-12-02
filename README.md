@@ -117,3 +117,43 @@ analyzer:
   exclude:
     - 'bazel-*/**'
 ```
+
+### Customizing your generated BUILD files
+
+It is fairly common for a package to want to split up their sources into
+multiple bazel targets. Specifically, this is useful if your package has some
+sources which are web friendly, and others which are not.
+
+In order to do this, you can create a `bazelify.yaml` file in you package.
+Today, this file supports a single `targets` section, which defines the differnt
+targets that you wish to be generated. This is a map of target names to
+configuration. Each target config may contain the following keys:
+
+- **default**: Optional, defaults to `false`. If `true`, this is the target a
+  users package will depend on if they don't have a custom bazelify.yaml file.
+  - Exactly one target must be listed as `default: true`.
+  - It is also the target you will get if you list the package without a target
+    name in the dependencies of one of your targets.
+- **sources**: Required. A list of globs to include as sources.
+- **dependencies**: Optional, defaults to empty. The targets that this target
+  depends on. The syntax is `$package:$target`.
+
+For example, if `package:a` has a `transformer.dart` file which they want to be
+in its own target, that might look like the following:
+
+```yaml
+targets:
+  web:
+    default: true
+    sources:
+      - "lib/a.dart"
+      - "lib/src/**"
+    dependencies:
+      - "some_package"
+      - "some_package:web"
+  transformer:
+    sources:
+      - "lib/transformer.dart"
+    dependencies:
+      - "barback"
+```
