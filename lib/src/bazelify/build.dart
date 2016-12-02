@@ -252,10 +252,10 @@ class DartLibrary implements DartBuildRule {
   /// Create a new `dart_library` named [name].
   DartLibrary(
       {this.dependencies,
-      this.isDefault = false,
+      this.isDefault: false,
       this.name,
       this.package,
-      this.sources = const ['lib/**']});
+      this.sources: const ['lib/**']});
 
   @override
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs) =>
@@ -287,11 +287,11 @@ class DartVmBinary implements DartBuildRule {
 
   /// Create a new `dart_vm_Binary` named [name] executing [scriptFile].
   const DartVmBinary(
-      {this.dependencies = const [],
+      {this.dependencies: const [],
       this.name,
       this.package,
       this.scriptFile,
-      this.sources = const ['bin/**']});
+      this.sources: const ['bin/**']});
 
   @override
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs,
@@ -347,10 +347,10 @@ class DartWebApplication implements DartBuildRule {
 
   /// Create a new `dart_web_application` named [name] executing [entryPoint].
   const DartWebApplication(
-      {this.dependencies = const [],
+      {this.dependencies: const [],
       this.name,
       this.package,
-      this.sources = const ['web/**'],
+      this.sources: const ['web/**'],
       this.entryPoint});
 
   @override

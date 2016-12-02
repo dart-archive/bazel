@@ -13,9 +13,9 @@ void main() {
   }
 
   BuildFile createBuildFile(String pubspecYaml,
-      {Map<String, BazelifyConfig> extraConfigs = const {},
-      Iterable<DartWebApplication> webApps = const [],
-      Iterable<DartVmBinary> binaries = const []}) {
+      {Map<String, BazelifyConfig> extraConfigs: const {},
+      Iterable<DartWebApplication> webApps: const [],
+      Iterable<DartVmBinary> binaries: const []}) {
     final pubspec = new Pubspec.parse(pubspecYaml);
     final bazelConfig = new BazelifyConfig.useDefault(pubspec,
         includeWebSources: webApps.isNotEmpty);
@@ -97,7 +97,7 @@ void main() {
 
   group('fromPackageDir', () {
     Future<BuildFile> loadBuildFileFromDir(String packageDir,
-        {Map<String, BazelifyConfig> extraConfigs = const {},
+        {Map<String, BazelifyConfig> extraConfigs: const {},
         bool includeWebSources: false}) async {
       packageDir = p.normalize(packageDir);
       final pubspec = await Pubspec.fromPackageDir(packageDir);

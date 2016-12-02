@@ -6,15 +6,10 @@ load("@io_bazel_rules_dart//dart/build_rules:core.bzl", "dart_library")
 
 package(default_visibility = ["//visibility:public"])
 
-_PUB_DEPS = [
-    "@angular2//:angular2",
-    "@path//:path",
-]
-
 # Generated automatically for package:bazel_workspace
 dart_library(
     name = "bazel_workspace",
-    srcs = glob(["lib/**"]),
-    deps = _PUB_DEPS,
+    srcs = glob(["lib/**", "web/**"]),
+    deps = ["@angular2//:angular2","@path//:path"],
     pub_pkg_name = "bazel_workspace",
 )
