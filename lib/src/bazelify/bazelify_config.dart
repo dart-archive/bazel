@@ -7,11 +7,11 @@ import 'package:yaml/yaml.dart';
 import 'build.dart';
 import 'pubspec.dart';
 
-/// The parsed values from a Dart `bazelify.yaml` file.
+/// The parsed values from a `bazelify.yaml` file.
 class BazelifyConfig {
   /// Returns a parsed [BazelifyConfig] file in [path], if one exists.
   ///
-  /// Otherwise throws [FileSystemException].
+  /// Otherwise uses the default setup.
   static Future<BazelifyConfig> fromPackageDir(Pubspec pubspec, String path,
       {bool includeWebSources: false}) async {
     final configPath = p.join(path, 'bazelify.yaml');
@@ -67,8 +67,13 @@ class BazelifyConfig {
         sources: targetConfig['sources'],
       );
     }
+
+    if (!dartLibraries.values.any((l) => l.isDefault)) {
+      throw new ArgumentError('Found no targets with `default: true`. Expected '
+          'exactly one.');
+    }
   }
 
   DartLibrary get defaultDartLibrary =>
-      dartLibraries.values.singleWhere((t) => t.isDefault);
+      dartLibraries.values.singleWhere((l) => l.isDefault);
 }
