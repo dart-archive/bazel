@@ -8,21 +8,19 @@ void main() {
   test('bazelify.yaml can be parsed', () {
     var pubspec = new Pubspec.parse(pubspecYaml);
     var bazelifyConfig = new BazelifyConfig.parse(pubspec, bazelifyYaml);
-    expectDartLibraries(
-        bazelifyConfig.dartLibraries,
-        {
-          'a': new DartLibrary(
-              name: 'a',
-              package: 'example',
-              dependencies: ['b', 'c:d'],
-              sources: ['lib/a.dart', 'lib/src/a/**']),
-          'e': new DartLibrary(
-              name: 'e',
-              package: 'example',
-              dependencies: ['f'],
-              sources: ['lib/e.dart', 'lib/src/e/**'],
-              isDefault: true),
-        });
+    expectDartLibraries(bazelifyConfig.dartLibraries, {
+      'a': new DartLibrary(
+          name: 'a',
+          package: 'example',
+          dependencies: ['b', 'c:d'],
+          sources: ['lib/a.dart', 'lib/src/a/**']),
+      'e': new DartLibrary(
+          name: 'e',
+          package: 'example',
+          dependencies: ['f'],
+          sources: ['lib/e.dart', 'lib/src/e/**'],
+          isDefault: true),
+    });
   });
 }
 
@@ -51,7 +49,8 @@ dependencies:
   b: 2.0.0
 ''';
 
-void expectDartLibraries(Map<String, DartLibrary> actual, Map<String, DartLibrary> expected) {
+void expectDartLibraries(
+    Map<String, DartLibrary> actual, Map<String, DartLibrary> expected) {
   expect(actual.keys, unorderedEquals(expected.keys));
   for (var p in actual.keys) {
     expect(actual[p], equals(new _DartLibraryMatcher(expected[p])));

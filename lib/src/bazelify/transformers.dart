@@ -15,8 +15,7 @@ final _mirrors = currentMirrorSystem();
 ///
 /// Loads the library, finds any [Transformer] or [TransformerGroup] subclasses
 /// in it, instantiates them with [configuration] and [mode], and returns them.
-List createTransformersInLibrary(
-    Uri uri, Map configuration, BarbackMode mode) {
+List createTransformersInLibrary(Uri uri, Map configuration, BarbackMode mode) {
   var transformerClass = reflectClass(Transformer);
   var aggregateClass = reflectClass(AggregateTransformer);
   var groupClass = reflectClass(TransformerGroup);
