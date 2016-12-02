@@ -14,53 +14,49 @@ load(
 
 package(default_visibility = ["//visibility:public"])
 
-# You don't have any dependencies, yet.
-# Bazelify will update this as you change your pubspec.yaml.
-_PUB_DEPS = []
-
 # Generated automatically for package:silly_monkey
 dart_library(
     name = "silly_monkey",
     srcs = glob(["lib/**", "web/**"]),
-    deps = _PUB_DEPS,
+    deps = [],
     pub_pkg_name = "silly_monkey",
 )
 # Generated automatically for package:silly_monkey|web/main.dart
 dart_web_application(
-    name = "main_web",
+    name = "index",
     srcs = glob(["web/**"]),
     script_file = "web/main.dart",
-    deps = _PUB_DEPS + [
+    deps = [] + [
         ":silly_monkey",
     ],
 )
 dart_ddc_bundle(
-    name = "main_web_ddc_bundle",
+    name = "index_ddc_bundle",
     entry_library = "web/main.dart",
     entry_module = ":silly_monkey",
     input_html = "web/index.html",
     output_dir = "web",
 )
-# A ddc specific dev_server target which serves main_web
+# A ddc specific dev_server target which serves index
 dev_server(
-    name = "main_web_ddc_serve",
+    name = "index_ddc_serve",
     data = [
-        ":main_web_ddc_bundle",
+        ":index_ddc_bundle",
     ],
     script_args = [
-        "--package-spec=main_web_ddc_bundle.packages",
-        "--uri-substitution=web/index.html:web/main_web_ddc_bundle.html",
+        "--package-spec=index_ddc_bundle.packages",
+        "--uri-substitution=web/index.html:web/index_ddc_bundle.html",
     ],
 )
 
-# A ddc specific dev_server target which serves main_web
+# A ddc specific dev_server target which serves index
 dev_server(
     name = "__ddc_serve_all",
     data = [
-        ":main_web_ddc_bundle",
+        ":index_ddc_bundle",
     ],
     script_args = [
-        "--package-spec=main_web_ddc_bundle.packages",
-        "--uri-substitution=web/index.html:web/main_web_ddc_bundle.html",
+        "--package-spec=index_ddc_bundle.packages",
+        "--uri-substitution=web/index.html:web/index_ddc_bundle.html",
     ],
 )

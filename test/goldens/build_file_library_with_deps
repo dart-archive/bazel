@@ -6,14 +6,10 @@ load("@io_bazel_rules_dart//dart/build_rules:core.bzl", "dart_library")
 
 package(default_visibility = ["//visibility:public"])
 
-_PUB_DEPS = [
-    "@path//:path",
-]
-
 # Generated automatically for package:silly_monkey
 dart_library(
     name = "silly_monkey",
     srcs = glob(["lib/**"]),
-    deps = _PUB_DEPS,
+    deps = ["@path//:path"],
     pub_pkg_name = "silly_monkey",
 )

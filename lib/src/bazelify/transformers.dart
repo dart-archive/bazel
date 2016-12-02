@@ -59,7 +59,9 @@ List createTransformersInLibrary(
   }
 
   var library = _mirrors.libraries[uri];
-  if (library == null) throw "Couldn't find library at $uri.";
+  if (library == null) {
+    throw new ArgumentError("Couldn't find library at $uri.");
+  }
 
   loadFromLibrary(library);
   return transformers;

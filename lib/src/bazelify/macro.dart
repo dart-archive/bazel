@@ -1,7 +1,3 @@
-import 'dart:async';
-
-import 'build.dart';
-
 /// A generator for a `packages.bzl` macro file.
 class BazelMacroFile {
   final String _packageName;
@@ -67,9 +63,6 @@ class NewLocalRepository {
     this.path,
     this.buildFile,
   });
-
-  /// Returns the contents of a suitable BUILD file for the repository.
-  Future<BuildFile> resolveBuild() => BuildFile.fromPackageDir(path);
 
   @override
   String toString() {

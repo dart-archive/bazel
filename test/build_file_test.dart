@@ -1,54 +1,56 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:bazel/src/bazelify/bazelify_config.dart';
 import 'package:bazel/src/bazelify/build.dart';
+import 'package:bazel/src/bazelify/pubspec.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
-  BuildFile build;
-
   String loadGolden(String path) {
     return new File(p.normalize('test/goldens/$path')).readAsStringSync();
   }
 
+  BuildFile createBuildFile(String pubspecYaml,
+      {Map<String, BazelifyConfig> extraConfigs = const {},
+      Iterable<DartWebApplication> webApps = const [],
+      Iterable<DartVmBinary> binaries = const []}) {
+    final pubspec = new Pubspec.parse(pubspecYaml);
+    final bazelConfig = new BazelifyConfig.useDefault(pubspec,
+        includeWebSources: webApps.isNotEmpty);
+    final bazelConfigs = {
+      pubspec.pubPackageName: bazelConfig,
+    }..addAll(extraConfigs);
+    return new BuildFile(bazelConfig, bazelConfigs,
+        webApps: webApps, binaries: binaries);
+  }
+
   test('should generate a simple library with no dependencies', () {
-    build = new BuildFile(
-      libraries: [
-        new DartLibrary(
-          name: 'silly_monkey',
-          package: 'silly_monkey',
-        ),
-      ],
-    );
+    final build = createBuildFile('name: silly_monkey');
     expect(build.toString(), loadGolden('build_file_simple_library'));
   });
 
   test('should generate a simple library with dependencies', () {
-    build = new BuildFile(
-      libraries: [
-        new DartLibrary(
-          name: 'silly_monkey',
-          package: 'silly_monkey',
-        ),
-      ],
-      deps: pubPackagesToBazelTargets([
-        'path',
-      ]),
-    );
+    final pathPubspec = new Pubspec.parse('name: path');
+    final pathBazelifyConfig = new BazelifyConfig.useDefault(pathPubspec);
+    final extraConfigs = {
+      pathPubspec.pubPackageName: pathBazelifyConfig,
+    };
+    final yaml = '''
+        name: silly_monkey
+        dependencies:
+          path: any''';
+    final build = createBuildFile(yaml, extraConfigs: extraConfigs);
     expect(build.toString(), loadGolden('build_file_library_with_deps'));
   });
 
   test('should generate a library with a web target', () {
-    build = new BuildFile(
-      libraries: [
-        new DartLibrary(
-          name: 'silly_monkey',
-          package: 'silly_monkey',
-        ),
-      ],
+    final build = createBuildFile(
+      'name: silly_monkey',
       webApps: [
         new DartWebApplication(
-          name: 'main_web',
+          name: 'index',
           package: 'silly_monkey',
           entryPoint: new HtmlEntryPoint(
               htmlFile: 'web/index.html', dartFile: 'web/main.dart'),
@@ -59,13 +61,8 @@ void main() {
   });
 
   test('should generate a library with multiple web targets', () {
-    build = new BuildFile(
-      libraries: [
-        new DartLibrary(
-          name: 'silly_monkey',
-          package: 'silly_monkey',
-        ),
-      ],
+    final build = createBuildFile(
+      'name: silly_monkey',
       webApps: [
         new DartWebApplication(
           name: 'main_web',
@@ -85,16 +82,11 @@ void main() {
   });
 
   test('should generate a library with a binary target', () {
-    build = new BuildFile(
-      libraries: [
-        new DartLibrary(
-          name: 'silly_monkey',
-          package: 'silly_monkey',
-        ),
-      ],
+    final build = createBuildFile(
+      'name: silly_monkey',
       binaries: [
         new DartVmBinary(
-          name: 'main_bin',
+          name: 'main',
           package: 'silly_monkey',
           scriptFile: 'bin/main.dart',
         )
@@ -104,28 +96,45 @@ void main() {
   });
 
   group('fromPackageDir', () {
+    Future<BuildFile> loadBuildFileFromDir(String packageDir,
+        {Map<String, BazelifyConfig> extraConfigs = const {},
+        bool includeWebSources: false}) async {
+      packageDir = p.normalize(packageDir);
+      final pubspec = await Pubspec.fromPackageDir(packageDir);
+      final bazelifyConfig = await BazelifyConfig.fromPackageDir(
+          pubspec, packageDir,
+          includeWebSources: includeWebSources);
+      final bazelifyConfigs = {
+        pubspec.pubPackageName: bazelifyConfig,
+      }..addAll(extraConfigs);
+      return BuildFile.fromPackageDir(packageDir, pubspec, bazelifyConfigs);
+    }
+
     test('should generate a simple library with no dependencies', () async {
-      build = await BuildFile.fromPackageDir(
-        p.normalize('test/projects/simple'),
-      );
+      final build = await loadBuildFileFromDir('test/projects/simple');
+      expect(build.toString(), loadGolden('build_file_simple_library'));
     });
 
     test('should generate a simple library with dependencies', () async {
-      build = await BuildFile.fromPackageDir(
-        p.normalize('test/projects/simple_with_deps'),
-      );
+      final pathPubspec = new Pubspec.parse('name: path');
+      final pathBazelifyConfig = new BazelifyConfig.useDefault(pathPubspec);
+      var extraConfigs = {
+        pathPubspec.pubPackageName: pathBazelifyConfig,
+      };
+      final build = await loadBuildFileFromDir('test/projects/simple_with_deps',
+          extraConfigs: extraConfigs);
+      expect(build.toString(), loadGolden('build_file_library_with_deps'));
     });
 
     test('should generate a library with a web target', () async {
-      build = await BuildFile.fromPackageDir(
-        p.normalize('test/projects/web_application'),
-      );
+      final build = await loadBuildFileFromDir('test/projects/web_application',
+          includeWebSources: true);
+      expect(build.toString(), loadGolden('build_file_web_application'));
     });
 
     test('should generate a library with a binary target', () async {
-      build = await BuildFile.fromPackageDir(
-        p.normalize('test/projects/vm_binary'),
-      );
+      final build = await loadBuildFileFromDir('test/projects/vm_binary');
+      expect(build.toString(), loadGolden('build_file_vm_binary'));
     });
   });
 }

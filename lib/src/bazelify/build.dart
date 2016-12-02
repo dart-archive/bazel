@@ -5,6 +5,7 @@ import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html;
 import 'package:path/path.dart' as p;
 
+import 'bazelify_config.dart';
 import 'pubspec.dart';
 
 // These set of classes are specific to Bazelify and have limited use outside
@@ -81,11 +82,14 @@ class BuildFile {
   static const _webBzl = '$_rulesSource:web.bzl';
   static const _vmBzl = '$_rulesSource:vm.bzl';
 
-  /// Dependencies shared across targets in the BUILD file.
-  final List<String> deps;
+  /// The parsed `bazelify.yaml` file.
+  final BazelifyConfig bazelifyConfig;
+
+  /// All the `BazelifyConfig`s that are known, by package name.
+  final Map<String, BazelifyConfig> bazelifyConfigs;
 
   /// Dart libraries.
-  final List<DartLibrary> libraries;
+  Iterable<DartLibrary> get libraries => bazelifyConfig.dartLibraries.values;
 
   /// Dart VM binaries.
   final List<DartVmBinary> binaries;
@@ -93,15 +97,19 @@ class BuildFile {
   /// Dart web applications.
   final List<DartWebApplication> webApplications;
 
-  /// Resolve and return new [BuildFile] by looking at [path].
+  /// Resolve and return new [BuildFile] by looking at [packageDir].
   ///
   /// The general rule of thumb is:
   /// - Every package generates _exactly one_ dart_library
   /// - Some packages generate 1 or more dart_vm_binary or dart_web_application
-  static Future<BuildFile> fromPackageDir(String path) async {
-    final pubspec = await Pubspec.fromPackageDir(path);
-    final binDir = new Directory(p.join(path, 'bin'));
-    final webDir = new Directory(p.join(path, 'web'));
+  ///
+  /// A `BazelifyConfig` will also be created, and added to `bazelifyConfigs`.
+  static Future<BuildFile> fromPackageDir(String packageDir, Pubspec pubspec,
+      Map<String, BazelifyConfig> bazelifyConfigs) async {
+    final bazelifyConfig = bazelifyConfigs[pubspec.pubPackageName];
+
+    final binDir = new Directory(p.join(packageDir, 'bin'));
+    final webDir = new Directory(p.join(packageDir, 'web'));
     Iterable<DartVmBinary> binaries = const [];
     if (await binDir.exists()) {
       binaries =
@@ -113,28 +121,21 @@ class BuildFile {
           await _findWebApps(pubspec.pubPackageName, webDir.path).toList();
     }
     return new BuildFile(
+      bazelifyConfig,
+      bazelifyConfigs,
       binaries: binaries,
-      libraries: [
-        new DartLibrary(
-          name: pubspec.pubPackageName,
-          package: pubspec.pubPackageName,
-        ),
-      ],
       webApps: webApps,
-      deps: pubPackagesToBazelTargets(pubspec.dependencies),
     );
   }
 
   /// Creates a new [BuildFile].
-  BuildFile({
+  BuildFile(
+    this.bazelifyConfig,
+    this.bazelifyConfigs, {
     Iterable<DartVmBinary> binaries: const [],
-    Iterable<DartLibrary> libraries: const [],
     Iterable<DartWebApplication> webApps: const [],
-    Iterable<String> deps: const [],
   })
-      : this.deps = new List<String>.unmodifiable(deps),
-        this.binaries = new List<DartVmBinary>.unmodifiable(binaries),
-        this.libraries = new List<DartLibrary>.unmodifiable(libraries),
+      : this.binaries = new List<DartVmBinary>.unmodifiable(binaries),
         this.webApplications =
             new List<DartWebApplication>.unmodifiable(webApps);
 
@@ -166,101 +167,103 @@ class BuildFile {
     // Visibility.
     buffer.writeln('package(default_visibility = ["//visibility:public"])\n');
 
-    // Dependencies.
-    if (deps.isEmpty) {
-      buffer.writeln("# You don't have any dependencies, yet.");
-      buffer.writeln(
-          '# Bazelify will update this as you change your pubspec.yaml.');
-      buffer.writeln('_PUB_DEPS = []\n');
-    } else {
-      buffer.writeln('_PUB_DEPS = [');
-      deps.map/*<String>*/((d) => '    "$d",').forEach(buffer.writeln);
-      buffer.writeln(']\n');
-    }
-
     // Now, define some build rules.
     libraries
-        .map/*<String>*/(
-            (r) => r.toRule(includeWeb: webApplications.isNotEmpty))
+        .map/*<String>*/((r) => r.toRule(bazelifyConfigs))
         .forEach(buffer.writeln);
     webApplications
-        .map/*<String>*/((r) => r.toRule(includeLibraries: libraries))
+        .map/*<String>*/(
+            (r) => r.toRule(bazelifyConfigs, includeLibraries: libraries))
         .forEach(buffer.writeln);
 
     // The general dev server target.
     if (webApplications.isNotEmpty) {
       buffer.writeln(
           new DdcDevServer(name: ddcServeAllName, webApps: webApplications)
-              .toRule());
+              .toRule(bazelifyConfigs));
     }
 
     binaries
-        .map/*<String>*/((r) => r.toRule(includeLibraries: libraries))
+        .map/*<String>*/(
+            (r) => r.toRule(bazelifyConfigs, includeLibraries: libraries))
         .forEach(buffer.writeln);
 
     return buffer.toString();
   }
 }
 
-/// Returns a literal list of dependencies shared across targets.
-///
-/// For bazelify, it is architecturally simpler to generate something like:
-///     ```BUILD
-///     _GENERATED_PUB_DEPS = [
-///         "@dep_1//:dep_1",
-///         "@dep_2//:dep_2",
-///         "@dep_3//:dep_3",
-///     ]
-///
-///     dart_library(
-///         name = "%package_lib",
-///         srcs = glob(["lib/**"]),
-///         deps = _GENERATED_PUB_DEPS,
-///     )
-///
-///     dart_web_application(
-///         name = "%package",
-///         srcs = glob(["web/**"]),
-///         script_file = "web/main.dart",
-///         deps = _GENERATED_PUB_DEPS + [":%package_lib"],
-///     )
-///     ```
-///
-/// Makes the assumption that `package:foo` is always `@foo//:foo`.
-Iterable<String> pubPackagesToBazelTargets(Iterable<String> packages) {
-  return (packages.map/*<String>*/((p) => '@$p//:$p').toList()..sort()).toSet();
+/// Returns a `String` representing the list of bazel targets from
+/// `dependencies` using `bazelifyConfigs` to find default target names when not
+/// supplied explicitly.
+String depsToBazelTargetsString(Iterable<String> dependencies,
+    Map<String, BazelifyConfig> bazelifyConfigs) {
+  var targets = new Set<String>();
+  for (var dep in dependencies) {
+    var parts = dep.split(':');
+    if (parts.length > 2) {
+      throw new ArgumentError('Invalid dependency format `$dep`, expected '
+          'either one or zero colons but found ${parts.length - 1}.');
+    }
+    var package = parts[0];
+    var target = parts.length > 1
+        ? parts[1]
+        : bazelifyConfigs[package].defaultDartLibrary.name;
+    targets.add('@$package//:$target');
+  }
+  return '[${targets.map((t) => '"$t"').join(',')}]';
 }
 
 /// A Dart BUILD rule in [BuildFile].
 abstract class DartBuildRule {
+  /// Dependencies of this rule, in "$package:$target" format, where the
+  /// target name is optional.
+  Iterable<String> get dependencies;
+
   /// Name of the target.
   String get name;
 
   /// Originating package.
   String get package;
 
+  /// Sources for this rule. Glob syntax is supported.
+  Iterable<String> get sources;
+
   /// Convert to a dart_rule(...) string.
-  String toRule();
+  String toRule(Map<String, BazelifyConfig> bazelifyConfigs);
 }
 
 /// A `dart_library` definition.
 class DartLibrary implements DartBuildRule {
+  @override
+  final Iterable<String> dependencies;
+
   @override
   final String name;
 
   @override
   final String package;
 
+  @override
+  final Iterable<String> sources;
+
+  /// Whether or not this is the default dart library the package
+  final bool isDefault;
+
   /// Create a new `dart_library` named [name].
-  const DartLibrary({this.name, this.package});
+  DartLibrary(
+      {this.dependencies,
+      this.isDefault = false,
+      this.name,
+      this.package,
+      this.sources = const ['lib/**']});
 
   @override
-  String toRule({bool includeWeb: false}) =>
+  String toRule(Map<String, BazelifyConfig> bazelifyConfigs) =>
       '# Generated automatically for package:$package\n'
       'dart_library(\n'
       '    name = "$name",\n'
-      '    srcs = ${includeWeb ? 'glob(["lib/**", "web/**"])' : 'glob(["lib/**"])'},\n'
-      '    deps = _PUB_DEPS,\n'
+      '    srcs = ${_sourcesToGlob(sources)},\n'
+      '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},\n'
       '    pub_pkg_name = "$name",\n'
       ')';
 }
@@ -268,26 +271,38 @@ class DartLibrary implements DartBuildRule {
 /// A `dart_vm_binary` definition.
 class DartVmBinary implements DartBuildRule {
   @override
+  final Iterable<String> dependencies;
+
+  @override
   final String name;
 
   @override
   final String package;
 
+  @override
+  final Iterable<String> sources;
+
   /// A file with a `main` function to execute as the entry-point.
   final String scriptFile;
 
   /// Create a new `dart_vm_Binary` named [name] executing [scriptFile].
-  const DartVmBinary({this.name, this.package, this.scriptFile});
+  const DartVmBinary(
+      {this.dependencies = const [],
+      this.name,
+      this.package,
+      this.scriptFile,
+      this.sources = const ['bin/**']});
 
   @override
-  String toRule({Iterable<DartLibrary> includeLibraries: const []}) {
+  String toRule(Map<String, BazelifyConfig> bazelifyConfigs,
+      {Iterable<DartLibrary> includeLibraries: const []}) {
     String buffer =
         '# Generated automatically for package:$package|$scriptFile\n'
         'dart_vm_binary(\n'
         '    name = "$name",\n'
-        '    srcs = glob(["bin/**"]),\n'
+        '    srcs = ${_sourcesToGlob(sources)},\n'
         '    script_file = "$scriptFile",\n'
-        '    deps = _PUB_DEPS';
+        '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)}';
     if (includeLibraries.isEmpty) {
       return '$buffer,\n)';
     } else {
@@ -304,10 +319,16 @@ class DartVmBinary implements DartBuildRule {
 /// A `dart_web_application` definition.
 class DartWebApplication implements DartBuildRule {
   @override
+  final Iterable<String> dependencies;
+
+  @override
   final String name;
 
   @override
   final String package;
+
+  @override
+  final Iterable<String> sources;
 
   /// An html application entry point.
   final HtmlEntryPoint entryPoint;
@@ -325,17 +346,23 @@ class DartWebApplication implements DartBuildRule {
   String get scriptFile => entryPoint.dartFile;
 
   /// Create a new `dart_web_application` named [name] executing [entryPoint].
-  const DartWebApplication({this.name, this.package, this.entryPoint});
+  const DartWebApplication(
+      {this.dependencies = const [],
+      this.name,
+      this.package,
+      this.sources = const ['web/**'],
+      this.entryPoint});
 
   @override
-  String toRule({Iterable<DartLibrary> includeLibraries: const []}) {
+  String toRule(Map<String, BazelifyConfig> bazelifyConfigs,
+      {Iterable<DartLibrary> includeLibraries: const []}) {
     String buffer =
         '# Generated automatically for package:$package|$scriptFile\n'
         'dart_web_application(\n'
         '    name = "$name",\n'
-        '    srcs = glob(["web/**"]),\n'
+        '    srcs = ${_sourcesToGlob(sources)},\n'
         '    script_file = "$scriptFile",\n'
-        '    deps = _PUB_DEPS';
+        '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)}';
     if (includeLibraries.isEmpty) {
       buffer = '$buffer,\n)';
     } else {
@@ -352,7 +379,8 @@ class DartWebApplication implements DartBuildRule {
         '    input_html = "$htmlFile",\n'
         '    output_dir = "web",\n'
         ')\n';
-    buffer += new DdcDevServer(name: ddcServeName, webApps: [this]).toRule();
+    buffer += new DdcDevServer(name: ddcServeName, webApps: [this])
+        .toRule(bazelifyConfigs);
     buffer += '\n';
     return buffer;
   }
@@ -372,11 +400,17 @@ class HtmlEntryPoint {
 /// A `dev_server` definition for one or more ddc web apps.
 class DdcDevServer implements DartBuildRule {
   @override
+  Iterable<String> get dependencies => [];
+
+  @override
   final String name;
 
   @override
   String get package =>
       throw new UnimplementedError('DdcDevServer doesn\'t need a package');
+
+  @override
+  Iterable<String> get sources => null;
 
   /// one or more web applications this server serves
   final List<DartWebApplication> webApps;
@@ -385,7 +419,7 @@ class DdcDevServer implements DartBuildRule {
   const DdcDevServer({this.name, this.webApps});
 
   @override
-  String toRule() {
+  String toRule(_) {
     var buffer = new StringBuffer();
     if (webApps.isNotEmpty) {
       buffer.writeln('# A ddc specific dev_server target which serves '
@@ -412,3 +446,6 @@ class DdcDevServer implements DartBuildRule {
     return buffer.toString();
   }
 }
+
+String _sourcesToGlob(Iterable<String> sources) =>
+    'glob([${sources.map((s) => '"$s"').join(", ")}])';
