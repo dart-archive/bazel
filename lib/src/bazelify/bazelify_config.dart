@@ -27,6 +27,7 @@ class BazelifyConfig {
   /// All the `libraries` defined in a `bazelify.yaml` file.
   final dartLibraries = <String, DartLibrary>{};
 
+  /// The default config if you have no `bazelify.yaml` file.
   BazelifyConfig.useDefault(Pubspec pubspec, {bool includeWebSources: false}) {
     var name = pubspec.pubPackageName;
     var sources = ["lib/**"];
@@ -68,7 +69,7 @@ class BazelifyConfig {
       );
     }
 
-    if (!dartLibraries.values.any((l) => l.isDefault)) {
+    if (dartLibraries.values.where((l) => l.isDefault).length != 1) {
       throw new ArgumentError('Found no targets with `default: true`. Expected '
           'exactly one.');
     }

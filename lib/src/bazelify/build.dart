@@ -246,7 +246,7 @@ class DartLibrary implements DartBuildRule {
   @override
   final Iterable<String> sources;
 
-  /// Whether or not this is the default dart library the package
+  /// Whether or not this is the default dart library for the package.
   final bool isDefault;
 
   /// Create a new `dart_library` named [name].

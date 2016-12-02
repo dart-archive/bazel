@@ -53,7 +53,7 @@ void expectDartLibraries(
     Map<String, DartLibrary> actual, Map<String, DartLibrary> expected) {
   expect(actual.keys, unorderedEquals(expected.keys));
   for (var p in actual.keys) {
-    expect(actual[p], equals(new _DartLibraryMatcher(expected[p])));
+    expect(actual[p], new _DartLibraryMatcher(expected[p]));
   }
 }
 
