@@ -5,7 +5,7 @@
 git_repository(
     name = "io_bazel_rules_dart",
     remote = "https://github.com/dart-lang/rules_dart",
-    tag = "v0.2.2",
+    tag = "v0.2.3",
 )
 load(
     "@io_bazel_rules_dart//dart/build_rules:repositories.bzl",
