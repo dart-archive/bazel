@@ -246,8 +246,9 @@ class DartLibrary implements DartBuildRule {
   @override
   final Iterable<String> sources;
 
-  /// Whether or not  to enable the dart development compiler. This is
-  /// configured using the "platforms" option in a bazelify.yaml file.
+  /// Whether or not  to enable the dart development compiler.
+  ///
+  /// This is configured using the "platforms" option in a bazelify.yaml file.
   final bool enableDdc;
 
   /// Whether or not this is the default dart library for the package.
