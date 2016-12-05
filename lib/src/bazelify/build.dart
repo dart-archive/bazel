@@ -246,12 +246,17 @@ class DartLibrary implements DartBuildRule {
   @override
   final Iterable<String> sources;
 
+  /// Whether or not  to enable the dart development compiler. This is
+  /// configured using the "platforms" option in a bazelify.yaml file.
+  final bool enableDdc;
+
   /// Whether or not this is the default dart library for the package.
   final bool isDefault;
 
   /// Create a new `dart_library` named [name].
   DartLibrary(
       {this.dependencies,
+      this.enableDdc: true,
       this.isDefault: false,
       this.name,
       this.package,
@@ -264,6 +269,7 @@ class DartLibrary implements DartBuildRule {
       '    name = "$name",\n'
       '    srcs = ${_sourcesToGlob(sources)},\n'
       '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},\n'
+      '    enable_ddc = ${enableDdc ? 1 : 0},\n'
       '    pub_pkg_name = "$name",\n'
       ')';
 }

@@ -9,6 +9,11 @@ import 'pubspec.dart';
 
 /// The parsed values from a `bazelify.yaml` file.
 class BazelifyConfig {
+  /// Supported values for the `platforms` attribute.
+  static const _allPlatforms = const [_vmPlatform, _webPlatform];
+  static const _vmPlatform = 'vm';
+  static const _webPlatform = 'web';
+
   /// Returns a parsed [BazelifyConfig] file in [path], if one exists.
   ///
   /// Otherwise uses the default setup.
@@ -28,7 +33,8 @@ class BazelifyConfig {
   final dartLibraries = <String, DartLibrary>{};
 
   /// The default config if you have no `bazelify.yaml` file.
-  BazelifyConfig.useDefault(Pubspec pubspec, {bool includeWebSources: false}) {
+  BazelifyConfig.useDefault(Pubspec pubspec,
+      {bool includeWebSources: false, bool enableDdc: true}) {
     var name = pubspec.pubPackageName;
     var sources = ["lib/**"];
     if (includeWebSources) {
@@ -36,6 +42,7 @@ class BazelifyConfig {
     }
     dartLibraries[name] = new DartLibrary(
         dependencies: pubspec.dependencies,
+        enableDdc: enableDdc,
         isDefault: true,
         name: name,
         package: pubspec.pubPackageName,
@@ -59,10 +66,23 @@ class BazelifyConfig {
         throw new ArgumentError('Got $dependencies for `dependencies` but '
             'expected a List<String>.');
       }
+      final platformsConfig = targetConfig['platforms'] ?? _allPlatforms;
+      if (platformsConfig is! List ||
+          platformsConfig.any((p) => p is! String)) {
+        throw new ArgumentError('Got $platformsConfig for `platforms` but '
+            'expected a List<String>.');
+      }
+      final platforms = platformsConfig as List<String>;
+      var invalidPlatforms = platforms.where((p) => !_allPlatforms.contains(p));
+      if (invalidPlatforms.isNotEmpty) {
+        throw new ArgumentError('Got invalid values $invalidPlatforms for '
+            '`platforms`. Only $_allPlatforms are supported.');
+      }
 
       dartLibraries[targetName] = new DartLibrary(
         dependencies: dependencies,
         name: targetName,
+        enableDdc: platforms.contains(_webPlatform),
         isDefault: isDefault,
         package: pubspec.pubPackageName,
         sources: targetConfig['sources'],

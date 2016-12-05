@@ -1,0 +1,7 @@
+targets:
+  silly_monkey:
+    default: true
+    platforms:
+      - vm
+    sources:
+      - "lib/**"

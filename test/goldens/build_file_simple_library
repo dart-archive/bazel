@@ -11,5 +11,6 @@ dart_library(
     name = "silly_monkey",
     srcs = glob(["lib/**"]),
     deps = [],
+    enable_ddc = 1,
     pub_pkg_name = "silly_monkey",
 )

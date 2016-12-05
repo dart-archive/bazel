@@ -19,6 +19,7 @@ dart_library(
     name = "silly_monkey",
     srcs = glob(["lib/**", "web/**"]),
     deps = [],
+    enable_ddc = 1,
     pub_pkg_name = "silly_monkey",
 )
 # Generated automatically for package:silly_monkey|web/main.dart

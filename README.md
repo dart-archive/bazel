@@ -137,6 +137,11 @@ configuration. Each target config may contain the following keys:
 - **sources**: Required. A list of globs to include as sources.
 - **dependencies**: Optional, defaults to empty. The targets that this target
   depends on. The syntax is `$package:$target`.
+- **platforms**: Optional, defaults to all platforms. If specified, then this
+  indicates which platforms this target is compatible with. Options today are
+  `vm` and `web`.
+  - If a target is not `web` compatible, it won't be compiled with the dart
+    dev compiler, but that is the only effect of this attribute today.
 
 For example, if `package:a` has a `transformer.dart` file which they want to be
 in its own target, that might look like the following:
@@ -152,6 +157,8 @@ targets:
       - "some_package"
       - "some_package:web"
   transformer:
+    platforms:
+      - "vm"
     sources:
       - "lib/transformer.dart"
     dependencies:

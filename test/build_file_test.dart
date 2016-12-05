@@ -13,11 +13,13 @@ void main() {
   }
 
   BuildFile createBuildFile(String pubspecYaml,
-      {Map<String, BazelifyConfig> extraConfigs: const {},
+      {bool enableDdc: true,
+      Map<String, BazelifyConfig> extraConfigs: const {},
       Iterable<DartWebApplication> webApps: const [],
       Iterable<DartVmBinary> binaries: const []}) {
     final pubspec = new Pubspec.parse(pubspecYaml);
     final bazelConfig = new BazelifyConfig.useDefault(pubspec,
+        enableDdc: enableDdc,
         includeWebSources: webApps.isNotEmpty);
     final bazelConfigs = {
       pubspec.pubPackageName: bazelConfig,
@@ -91,6 +93,7 @@ void main() {
           scriptFile: 'bin/main.dart',
         )
       ],
+      enableDdc: false,
     );
     expect(build.toString(), loadGolden('build_file_vm_binary'));
   });
