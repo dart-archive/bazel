@@ -1,3 +1,5 @@
 analyzer:
   exclude:
     - 'bazel-*/**'
+    - 'get_cwd'
+    - 'ng2_app'

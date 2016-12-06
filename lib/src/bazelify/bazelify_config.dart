@@ -72,7 +72,14 @@ class BazelifyConfig {
 
     var targetConfigs = config['targets'] ?? [];
     for (var targetName in targetConfigs.keys) {
-      var targetConfig = targetConfigs[targetName];
+      var targetConfig = targetConfigs[targetName] as Map<String, dynamic>;
+
+      var invalidOptions = targetConfig.keys.toList()
+          ..removeWhere((k) => _targetOptions.contains(k));
+      if (invalidOptions.isNotEmpty) {
+        throw new ArgumentError('Got invalid options `$invalidOptions` for '
+            'target `$targetName`. Only $_targetOptions are supported keys.');
+      }
 
       var isDefault = targetConfig[_default] ?? false;
       if (isDefault is! bool) {
