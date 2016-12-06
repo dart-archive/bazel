@@ -235,7 +235,6 @@ abstract class DartBuildRule {
   /// Sources for this rule. Glob syntax is supported.
   Iterable<String> get sources;
 
-
   /// Convert to a dart_rule(...) string.
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs);
 }
@@ -287,8 +286,7 @@ class DartLibrary implements DartBuildRule {
       ')';
 
   @override
-  String toString() =>
-      'package: $package\n'
+  String toString() => 'package: $package\n'
       'name: $name\n'
       'sources: $sources\n'
       'excludeSources: $excludeSources\n'
@@ -488,6 +486,6 @@ class DdcDevServer implements DartBuildRule {
 }
 
 String _sourcesToGlob(
-    Iterable<String> sources, Iterable<String> excludeSources) =>
+        Iterable<String> sources, Iterable<String> excludeSources) =>
     'glob([${sources.map((s) => '"$s"').join(", ")}], '
     'exclude=[${excludeSources.map((s) => '"$s"').join(", ")}])';

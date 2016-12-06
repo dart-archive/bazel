@@ -121,7 +121,7 @@ class BazelifyConfig {
   static void _checkListOfStringsOrThrow(value, String option) {
     if (value is! List || value.any((v) => v is! String)) {
       throw new ArgumentError(
-        'Got `$value` for `$option` but expected a List<String>.');
+          'Got `$value` for `$option` but expected a List<String>.');
     }
   }
 }

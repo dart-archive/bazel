@@ -144,8 +144,8 @@ void main() {
     });
 
     test('should generate a library for each target', () async {
-      final build = await loadBuildFileFromDir(
-          'test/projects/multiple_targets');
+      final build =
+          await loadBuildFileFromDir('test/projects/multiple_targets');
       expect(build.toString(), loadGolden('build_file_multiple_targets'));
     });
   });
