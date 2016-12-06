@@ -1,0 +1,9 @@
+targets:
+  silly_monkey:
+    default: true
+    platforms:
+      - vm
+    sources:
+      - "lib/**"
+    exclude_sources:
+      - "lib/web_file.dart"

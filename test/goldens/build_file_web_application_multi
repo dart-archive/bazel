@@ -14,23 +14,20 @@ load(
 
 package(default_visibility = ["//visibility:public"])
 
-# You don't have any dependencies, yet.
-# Bazelify will update this as you change your pubspec.yaml.
-_PUB_DEPS = []
-
 # Generated automatically for package:silly_monkey
 dart_library(
     name = "silly_monkey",
-    srcs = glob(["lib/**", "web/**"]),
-    deps = _PUB_DEPS,
+    srcs = glob(["lib/**", "web/**"], exclude=[]),
+    deps = [],
+    enable_ddc = 1,
     pub_pkg_name = "silly_monkey",
 )
 # Generated automatically for package:silly_monkey|web/main.dart
 dart_web_application(
     name = "main_web",
-    srcs = glob(["web/**"]),
+    srcs = glob(["web/**"], exclude=[]),
     script_file = "web/main.dart",
-    deps = _PUB_DEPS + [
+    deps = [] + [
         ":silly_monkey",
     ],
 )
@@ -56,9 +53,9 @@ dev_server(
 # Generated automatically for package:silly_monkey|web/secondary.dart
 dart_web_application(
     name = "secondary_web",
-    srcs = glob(["web/**"]),
+    srcs = glob(["web/**"], exclude=[]),
     script_file = "web/secondary.dart",
-    deps = _PUB_DEPS + [
+    deps = [] + [
         ":silly_monkey",
     ],
 )

@@ -9,23 +9,20 @@ load("@io_bazel_rules_dart//dart/build_rules:vm.bzl", "dart_vm_binary")
 
 package(default_visibility = ["//visibility:public"])
 
-# You don't have any dependencies, yet.
-# Bazelify will update this as you change your pubspec.yaml.
-_PUB_DEPS = []
-
 # Generated automatically for package:silly_monkey
 dart_library(
     name = "silly_monkey",
-    srcs = glob(["lib/**"]),
-    deps = _PUB_DEPS,
+    srcs = glob(["lib/**"], exclude=["lib/web_file.dart"]),
+    deps = [],
+    enable_ddc = 0,
     pub_pkg_name = "silly_monkey",
 )
 # Generated automatically for package:silly_monkey|bin/main.dart
 dart_vm_binary(
-    name = "main_bin",
-    srcs = glob(["bin/**"]),
+    name = "main",
+    srcs = glob(["bin/**"], exclude=[]),
     script_file = "bin/main.dart",
-    deps = _PUB_DEPS + [
+    deps = [] + [
         ":silly_monkey",
     ],
 )

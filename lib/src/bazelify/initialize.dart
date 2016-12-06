@@ -9,6 +9,7 @@ import 'package:yaml/yaml.dart';
 
 import '../step_timer.dart';
 import 'arguments.dart';
+import 'bazelify_config.dart';
 import 'build.dart';
 import 'macro.dart';
 import 'pubspec.dart';
@@ -138,7 +139,7 @@ class InitCommand extends Command {
 /// Where to retrieve the `rules_dart`.
 abstract class DartRulesSource {
   /// The default version of [DartRulesSource] if not otherwise specified.
-  static const DartRulesSource stable = const DartRulesSource.tag('v0.2.2');
+  static const DartRulesSource stable = const DartRulesSource.tag('v0.2.3');
 
   /// Use a git [commit].
   const factory DartRulesSource.commit(String commit) = _GitCommitRulesSource;
@@ -196,10 +197,13 @@ class _Initialize {
   Future<Null> run() async {
     final timer = new StepTimer();
     await timer.run('pub get', _pubGetInPackage);
-    final buildFilepaths =
-        await timer.run('create .bazelify', _createBazelifyDir);
+    final packagePaths = await _readPackagePaths();
+    final pubspecs = await _readPubspecs(packagePaths);
+    final bazelifyConfigs = await _readBazelifyConfigs(packagePaths, pubspecs);
+    await timer.run('create .bazelify',
+        () => _createBazelifyDir(packagePaths, pubspecs, bazelifyConfigs));
     await timer.run('create packages.bzl, build, and workspace',
-        () => _writeBazelFiles(buildFilepaths));
+        () => _writeBazelFiles(packagePaths, bazelifyConfigs));
     await timer.run('scan for analysis options', _suggestAnalyzerExcludes);
     timer.printTimings();
   }
@@ -211,27 +215,55 @@ class _Initialize {
     Directory.current = previousDirectory;
   }
 
-  Future<Map<String, String>> _createBazelifyDir() async {
-    final packages = await _readPackages();
+  Future<Null> _createBazelifyDir(
+      Map<String, String> packagePaths,
+      Map<String, Pubspec> pubspecs,
+      Map<String, BazelifyConfig> bazelifyConfigs) async {
     final bazelifyPath = p.join(arguments.pubPackageDir, '.bazelify');
     await _createEmptyDir(bazelifyPath);
-    final buildFilePaths =
-        await _writePackageBuildFiles(bazelifyPath, packages);
-    return buildFilePaths;
+    await _writePackageBuildFiles(
+        bazelifyPath, packagePaths, pubspecs, bazelifyConfigs);
   }
 
-  Future<Null> _writeBazelFiles(Map<String, String> buildFilePaths) async {
-    await _writePackagesBzl(buildFilePaths);
+  Future<Null> _writeBazelFiles(Map<String, String> packagePaths,
+      Map<String, BazelifyConfig> bazelifyConfigs) async {
+    await _writePackagesBzl(packagePaths);
     await _writeWorkspaceFile();
-    await _writeBuildFile();
+    await _writeBuildFile(bazelifyConfigs);
   }
 
-  Future<Map<String, Uri>> _readPackages() async {
+  Future<Map<String, String>> _readPackagePaths() async {
     final packagesFilePath = p.join(arguments.pubPackageDir, '.packages');
-    return packages_file.parse(
+    var packageUris = packages_file.parse(
       await new File(packagesFilePath).readAsBytes(),
       Uri.parse(packagesFilePath),
     );
+    var packagePaths = <String, String>{};
+    for (var package in packageUris.keys) {
+      var localPath = packageUris[package].toFilePath();
+      localPath = localPath.substring(0, localPath.length - 'lib/'.length);
+      packagePaths[package] = localPath;
+    }
+    return packagePaths;
+  }
+
+  Future<Map<String, BazelifyConfig>> _readBazelifyConfigs(
+      Map<String, String> packagePaths, Map<String, Pubspec> pubspecs) async {
+    final bazelifyConfigs = <String, BazelifyConfig>{};
+    for (var package in packagePaths.keys) {
+      bazelifyConfigs[package] = await BazelifyConfig.fromPackageDir(
+          pubspecs[package], packagePaths[package]);
+    }
+    return bazelifyConfigs;
+  }
+
+  Future<Map<String, Pubspec>> _readPubspecs(
+      Map<String, String> packagePaths) async {
+    final pubspecs = <String, Pubspec>{};
+    for (var package in packagePaths.keys) {
+      pubspecs[package] = await Pubspec.fromPackageDir(packagePaths[package]);
+    }
+    return pubspecs;
   }
 
   Future<Null> _createEmptyDir(String dirPath) async {
@@ -242,27 +274,26 @@ class _Initialize {
     await dir.create(recursive: true);
   }
 
-  Future<Map<String, String>> _writePackageBuildFiles(
-      String bazelifyPath, Map<String, Uri> packages) async {
-    final packageToPath = <String, String>{};
-    for (final package in packages.keys) {
+  Future<Null> _writePackageBuildFiles(
+      String bazelifyPath,
+      Map<String, String> packagePaths,
+      Map<String, Pubspec> pubspecs,
+      Map<String, BazelifyConfig> bazelifyConfigs) async {
+    for (final package in packagePaths.keys) {
       final buildFilePath = p.join(bazelifyPath, '$package.BUILD');
-      var localPath = packages[package].toFilePath();
-      localPath = localPath.substring(0, localPath.length - 'lib/'.length);
-      packageToPath[package] = localPath;
-
-      final newBuildFile = await BuildFile.fromPackageDir(localPath);
-      await new File(buildFilePath).writeAsString('$newBuildFile');
+      final packageDir = packagePaths[package];
+      var buildFile = await BuildFile.fromPackageDir(
+          packageDir, pubspecs[package], bazelifyConfigs);
+      await new File(buildFilePath).writeAsString('$buildFile');
     }
-    return packageToPath;
   }
 
-  Future<Null> _writePackagesBzl(Map<String, String> buildFilePaths) async {
+  Future<Null> _writePackagesBzl(Map<String, String> packagePaths) async {
     final pubspec = await Pubspec.fromPackageDir(arguments.pubPackageDir);
     final macroFile = new BazelMacroFile.fromPackages(
       pubspec.pubPackageName,
-      buildFilePaths.keys,
-      (package) => buildFilePaths[package],
+      packagePaths.keys,
+      (package) => packagePaths[package],
     );
     final packagesBzl = p.join(arguments.pubPackageDir, 'packages.bzl');
     await new File(packagesBzl).writeAsString('$macroFile');
@@ -274,8 +305,15 @@ class _Initialize {
     await new File(workspaceFile).writeAsString('$workspace');
   }
 
-  Future<Null> _writeBuildFile() async {
-    final rootBuild = await BuildFile.fromPackageDir(arguments.pubPackageDir);
+  Future<Null> _writeBuildFile(
+      Map<String, BazelifyConfig> bazelifyConfigs) async {
+    final packagePath = arguments.pubPackageDir;
+    final pubspec = await Pubspec.fromPackageDir(packagePath);
+    final bazelifyConfig = await BazelifyConfig
+        .fromPackageDir(pubspec, packagePath, includeWebSources: true);
+    bazelifyConfigs[pubspec.pubPackageName] = bazelifyConfig;
+    final rootBuild = await BuildFile.fromPackageDir(
+        arguments.pubPackageDir, pubspec, bazelifyConfigs);
     final rootBuildPath = p.join(arguments.pubPackageDir, 'BUILD');
     await new File(rootBuildPath).writeAsString('$rootBuild');
   }

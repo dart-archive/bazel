@@ -1,0 +1,22 @@
+targets:
+  shared:
+    sources:
+      - "lib/**"
+    excludeSources:
+      - "lib/web/**"
+      - "lib/vm/**"
+    default: true
+  web:
+    sources:
+      - "lib/web/**"
+    dependencies:
+      - ":shared"
+    platforms:
+      - "web"
+  vm:
+    sources:
+      - "lib/vm/**"
+    dependencies:
+      - ":shared"
+    platforms:
+      - "vm"
