@@ -2,7 +2,7 @@ targets:
   shared:
     sources:
       - "lib/**"
-    excludeSources:
+    exclude_sources:
       - "lib/web/**"
       - "lib/vm/**"
     default: true
