@@ -31,7 +31,7 @@ of the community.
 > Have a suggestion to make this better? [File an issue][file-issue].
 
 Our Bazel package publishes a `bazelify` command that takes an existing pub
-package and automatically generates a Bazel worskpace: full of extensions,
+package and automatically generates a Bazel workspace: full of extensions,
 macros, rules, and more.
 
 ### Installation
