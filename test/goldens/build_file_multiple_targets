@@ -25,7 +25,7 @@ dart_library(
 # Generated automatically for package:silly_monkey
 dart_library(
     name = "shared",
-    srcs = glob(["lib/**"], exclude=[]),
+    srcs = glob(["lib/**"], exclude=["lib/web/**", "lib/vm/**"]),
     deps = [],
     enable_ddc = 1,
     pub_pkg_name = "silly_monkey",
