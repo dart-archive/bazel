@@ -14,12 +14,14 @@ void main() {
 
   BuildFile createBuildFile(String pubspecYaml,
       {bool enableDdc: true,
+      Iterable<String> excludeSources: const [],
       Map<String, BazelifyConfig> extraConfigs: const {},
       Iterable<DartWebApplication> webApps: const [],
       Iterable<DartVmBinary> binaries: const []}) {
     final pubspec = new Pubspec.parse(pubspecYaml);
     final bazelConfig = new BazelifyConfig.useDefault(pubspec,
         enableDdc: enableDdc,
+        excludeSources: excludeSources,
         includeWebSources: webApps.isNotEmpty);
     final bazelConfigs = {
       pubspec.pubPackageName: bazelConfig,
@@ -93,6 +95,7 @@ void main() {
           scriptFile: 'bin/main.dart',
         )
       ],
+      excludeSources: ["lib/web_file.dart"],
       enableDdc: false,
     );
     expect(build.toString(), loadGolden('build_file_vm_binary'));
@@ -138,6 +141,12 @@ void main() {
     test('should generate a library with a binary target', () async {
       final build = await loadBuildFileFromDir('test/projects/vm_binary');
       expect(build.toString(), loadGolden('build_file_vm_binary'));
+    });
+
+    test('should generate a library for each target', () async {
+      final build = await loadBuildFileFromDir(
+          'test/projects/multiple_targets');
+      expect(build.toString(), loadGolden('build_file_multiple_targets'));
     });
   });
 }

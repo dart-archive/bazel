@@ -12,7 +12,7 @@ package(default_visibility = ["//visibility:public"])
 # Generated automatically for package:silly_monkey
 dart_library(
     name = "silly_monkey",
-    srcs = glob(["lib/**"]),
+    srcs = glob(["lib/**"], exclude=["lib/web_file.dart"]),
     deps = [],
     enable_ddc = 0,
     pub_pkg_name = "silly_monkey",
@@ -20,7 +20,7 @@ dart_library(
 # Generated automatically for package:silly_monkey|bin/main.dart
 dart_vm_binary(
     name = "main",
-    srcs = glob(["bin/**"]),
+    srcs = glob(["bin/**"], exclude=[]),
     script_file = "bin/main.dart",
     deps = [] + [
         ":silly_monkey",

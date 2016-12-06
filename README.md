@@ -135,6 +135,7 @@ configuration. Each target config may contain the following keys:
   - It is also the target you will get if you list the package without a target
     name in the dependencies of one of your targets.
 - **sources**: Required. A list of globs to include as sources.
+- **exclude_sources**: Optional. A list of globs to to exclude from `sources`.
 - **dependencies**: Optional, defaults to empty. The targets that this target
   depends on. The syntax is `$package:$target`.
 - **platforms**: Optional, defaults to all platforms. If specified, then this
@@ -153,6 +154,8 @@ targets:
     sources:
       - "lib/a.dart"
       - "lib/src/**"
+    exclude_sources:
+      - "lib/src/transformer/**"
     dependencies:
       - "some_package"
       - "some_package:web"
@@ -161,6 +164,7 @@ targets:
       - "vm"
     sources:
       - "lib/transformer.dart"
+      - "lib/src/transformer/**"
     dependencies:
       - "barback"
 ```

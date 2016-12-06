@@ -9,7 +9,7 @@ package(default_visibility = ["//visibility:public"])
 # Generated automatically for package:silly_monkey
 dart_library(
     name = "silly_monkey",
-    srcs = glob(["lib/**"]),
+    srcs = glob(["lib/**"], exclude=[]),
     deps = ["@path//:path"],
     enable_ddc = 1,
     pub_pkg_name = "silly_monkey",

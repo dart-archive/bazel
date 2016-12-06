@@ -14,6 +14,20 @@ class BazelifyConfig {
   static const _vmPlatform = 'vm';
   static const _webPlatform = 'web';
 
+  /// Supported target config options.
+  static const _targetOptions = const [
+    _default,
+    _dependencies,
+    _sources,
+    _excludeSources,
+    _platforms,
+  ];
+  static const _default = 'default';
+  static const _dependencies = 'dependencies';
+  static const _sources = 'sources';
+  static const _excludeSources = 'exclude_sources';
+  static const _platforms = 'platforms';
+
   /// Returns a parsed [BazelifyConfig] file in [path], if one exists.
   ///
   /// Otherwise uses the default setup.
@@ -34,7 +48,9 @@ class BazelifyConfig {
 
   /// The default config if you have no `bazelify.yaml` file.
   BazelifyConfig.useDefault(Pubspec pubspec,
-      {bool includeWebSources: false, bool enableDdc: true}) {
+      {bool includeWebSources: false,
+      bool enableDdc: true,
+      Iterable<String> excludeSources: const []}) {
     var name = pubspec.pubPackageName;
     var sources = ["lib/**"];
     if (includeWebSources) {
@@ -46,7 +62,8 @@ class BazelifyConfig {
         isDefault: true,
         name: name,
         package: pubspec.pubPackageName,
-        sources: sources);
+        sources: sources,
+        excludeSources: excludeSources);
   }
 
   /// Create a [BazelifyConfig] by parsing [configYaml].
@@ -56,28 +73,30 @@ class BazelifyConfig {
     var targetConfigs = config['targets'] ?? [];
     for (var targetName in targetConfigs.keys) {
       var targetConfig = targetConfigs[targetName];
-      var isDefault = targetConfig['default'] ?? false;
+
+      var isDefault = targetConfig[_default] ?? false;
       if (isDefault is! bool) {
         throw new ArgumentError(
-            'Got `$isDefault` for `default` but expected a boolean');
+            'Got `$isDefault` for `$_default` but expected a boolean');
       }
-      final dependencies = targetConfig['dependencies'] ?? <String>[];
-      if (dependencies is! List || dependencies.any((d) => d is! String)) {
-        throw new ArgumentError('Got $dependencies for `dependencies` but '
-            'expected a List<String>.');
-      }
-      final platformsConfig = targetConfig['platforms'] ?? _allPlatforms;
-      if (platformsConfig is! List ||
-          platformsConfig.any((p) => p is! String)) {
-        throw new ArgumentError('Got $platformsConfig for `platforms` but '
-            'expected a List<String>.');
-      }
+
+      final dependencies = targetConfig[_dependencies] ?? <String>[];
+      _checkListOfStringsOrThrow(dependencies, _dependencies);
+
+      final platformsConfig = targetConfig[_platforms] ?? _allPlatforms;
+      _checkListOfStringsOrThrow(platformsConfig, _platforms);
       final platforms = platformsConfig as List<String>;
       var invalidPlatforms = platforms.where((p) => !_allPlatforms.contains(p));
       if (invalidPlatforms.isNotEmpty) {
         throw new ArgumentError('Got invalid values $invalidPlatforms for '
-            '`platforms`. Only $_allPlatforms are supported.');
+            '`$_platforms`. Only $_allPlatforms are supported.');
       }
+
+      final sources = targetConfig[_sources];
+      _checkListOfStringsOrThrow(sources, _sources);
+
+      final excludeSources = targetConfig[_excludeSources] ?? [];
+      _checkListOfStringsOrThrow(excludeSources, _excludeSources);
 
       dartLibraries[targetName] = new DartLibrary(
         dependencies: dependencies,
@@ -85,16 +104,24 @@ class BazelifyConfig {
         enableDdc: platforms.contains(_webPlatform),
         isDefault: isDefault,
         package: pubspec.pubPackageName,
-        sources: targetConfig['sources'],
+        excludeSources: excludeSources,
+        sources: sources,
       );
     }
 
     if (dartLibraries.values.where((l) => l.isDefault).length != 1) {
-      throw new ArgumentError('Found no targets with `default: true`. Expected '
-          'exactly one.');
+      throw new ArgumentError('Found no targets with `$_default: true`. '
+          'Expected exactly one.');
     }
   }
 
   DartLibrary get defaultDartLibrary =>
       dartLibraries.values.singleWhere((l) => l.isDefault);
+
+  static void _checkListOfStringsOrThrow(value, String option) {
+    if (value is! List || value.any((v) => v is! String)) {
+      throw new ArgumentError(
+        'Got `$value` for `$option` but expected a List<String>.');
+    }
+  }
 }

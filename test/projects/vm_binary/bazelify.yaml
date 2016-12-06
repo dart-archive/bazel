@@ -5,3 +5,5 @@ targets:
       - vm
     sources:
       - "lib/**"
+    exclude_sources:
+      - "lib/web_file.dart"

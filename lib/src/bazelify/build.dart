@@ -208,7 +208,11 @@ String depsToBazelTargetsString(Iterable<String> dependencies,
     var target = parts.length > 1
         ? parts[1]
         : bazelifyConfigs[package].defaultDartLibrary.name;
-    targets.add('@$package//:$target');
+    if (package.isEmpty) {
+      targets.add(':$target');
+    } else {
+      targets.add('@$package//:$target');
+    }
   }
   return '[${targets.map((t) => '"$t"').join(',')}]';
 }
@@ -219,6 +223,9 @@ abstract class DartBuildRule {
   /// target name is optional.
   Iterable<String> get dependencies;
 
+  /// Sources to exclude from `sources`. Glob syntax is supported.
+  Iterable<String> get excludeSources;
+
   /// Name of the target.
   String get name;
 
@@ -228,6 +235,7 @@ abstract class DartBuildRule {
   /// Sources for this rule. Glob syntax is supported.
   Iterable<String> get sources;
 
+
   /// Convert to a dart_rule(...) string.
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs);
 }
@@ -236,6 +244,9 @@ abstract class DartBuildRule {
 class DartLibrary implements DartBuildRule {
   @override
   final Iterable<String> dependencies;
+
+  @override
+  final Iterable<String> excludeSources;
 
   @override
   final String name;
@@ -258,6 +269,7 @@ class DartLibrary implements DartBuildRule {
   DartLibrary(
       {this.dependencies,
       this.enableDdc: true,
+      this.excludeSources: const [],
       this.isDefault: false,
       this.name,
       this.package,
@@ -268,17 +280,30 @@ class DartLibrary implements DartBuildRule {
       '# Generated automatically for package:$package\n'
       'dart_library(\n'
       '    name = "$name",\n'
-      '    srcs = ${_sourcesToGlob(sources)},\n'
+      '    srcs = ${_sourcesToGlob(sources, excludeSources)},\n'
       '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},\n'
       '    enable_ddc = ${enableDdc ? 1 : 0},\n'
-      '    pub_pkg_name = "$name",\n'
+      '    pub_pkg_name = "$package",\n'
       ')';
+
+  @override
+  String toString() =>
+      'package: $package\n'
+      'name: $name\n'
+      'sources: $sources\n'
+      'excludeSources: $excludeSources\n'
+      'dependencies: $dependencies\n'
+      'isDefault: $isDefault\n'
+      'enableDdc: $enableDdc';
 }
 
 /// A `dart_vm_binary` definition.
 class DartVmBinary implements DartBuildRule {
   @override
   final Iterable<String> dependencies;
+
+  @override
+  final Iterable<String> excludeSources;
 
   @override
   final String name;
@@ -295,6 +320,7 @@ class DartVmBinary implements DartBuildRule {
   /// Create a new `dart_vm_Binary` named [name] executing [scriptFile].
   const DartVmBinary(
       {this.dependencies: const [],
+      this.excludeSources: const [],
       this.name,
       this.package,
       this.scriptFile,
@@ -307,7 +333,7 @@ class DartVmBinary implements DartBuildRule {
         '# Generated automatically for package:$package|$scriptFile\n'
         'dart_vm_binary(\n'
         '    name = "$name",\n'
-        '    srcs = ${_sourcesToGlob(sources)},\n'
+        '    srcs = ${_sourcesToGlob(sources, excludeSources)},\n'
         '    script_file = "$scriptFile",\n'
         '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)}';
     if (includeLibraries.isEmpty) {
@@ -327,6 +353,9 @@ class DartVmBinary implements DartBuildRule {
 class DartWebApplication implements DartBuildRule {
   @override
   final Iterable<String> dependencies;
+
+  @override
+  final Iterable<String> excludeSources;
 
   @override
   final String name;
@@ -355,6 +384,7 @@ class DartWebApplication implements DartBuildRule {
   /// Create a new `dart_web_application` named [name] executing [entryPoint].
   const DartWebApplication(
       {this.dependencies: const [],
+      this.excludeSources: const [],
       this.name,
       this.package,
       this.sources: const ['web/**'],
@@ -367,7 +397,7 @@ class DartWebApplication implements DartBuildRule {
         '# Generated automatically for package:$package|$scriptFile\n'
         'dart_web_application(\n'
         '    name = "$name",\n'
-        '    srcs = ${_sourcesToGlob(sources)},\n'
+        '    srcs = ${_sourcesToGlob(sources, excludeSources)},\n'
         '    script_file = "$scriptFile",\n'
         '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)}';
     if (includeLibraries.isEmpty) {
@@ -408,6 +438,9 @@ class HtmlEntryPoint {
 class DdcDevServer implements DartBuildRule {
   @override
   Iterable<String> get dependencies => [];
+
+  @override
+  Iterable<String> get excludeSources => null;
 
   @override
   final String name;
@@ -454,5 +487,7 @@ class DdcDevServer implements DartBuildRule {
   }
 }
 
-String _sourcesToGlob(Iterable<String> sources) =>
-    'glob([${sources.map((s) => '"$s"').join(", ")}])';
+String _sourcesToGlob(
+    Iterable<String> sources, Iterable<String> excludeSources) =>
+    'glob([${sources.map((s) => '"$s"').join(", ")}], '
+    'exclude=[${excludeSources.map((s) => '"$s"').join(", ")}])';

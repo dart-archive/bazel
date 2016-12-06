@@ -17,9 +17,11 @@ void main() {
       'e': new DartLibrary(
           name: 'e',
           package: 'example',
-          dependencies: ['f'],
+          dependencies: ['f', ':a'],
           sources: ['lib/e.dart', 'lib/src/e/**'],
-          isDefault: true),
+          excludeSources: ['lib/src/e/g.dart'],
+          isDefault: true,
+          enableDdc: false),
     });
   });
 }
@@ -37,9 +39,14 @@ targets:
     default: true
     dependencies:
       - f
+      - :a
     sources:
       - "lib/e.dart"
       - "lib/src/e/**"
+    exclude_sources:
+      - "lib/src/e/g.dart"
+    platforms:
+      - vm
 ''';
 
 var pubspecYaml = '''
@@ -67,13 +74,12 @@ class _DartLibraryMatcher extends Matcher {
       item.name == _expected.name &&
       item.package == _expected.package &&
       item.isDefault == _expected.isDefault &&
+      item.enableDdc == _expected.enableDdc &&
       equals(_expected.dependencies).matches(item.dependencies, _) &&
-      equals(_expected.sources).matches(item.sources, _);
+      equals(_expected.sources).matches(item.sources, _) &&
+      equals(_expected.excludeSources).matches(item.excludeSources, _);
 
   @override
   Description describe(Description description) =>
-      description.addDescriptionOf('${_expected.package}:${_expected.name}\n'
-          'sources: ${_expected.sources}\n'
-          'dependencies: ${_expected.sources}\n'
-          'isDefault: ${_expected.isDefault}');
+      description.addDescriptionOf(_expected);
 }
