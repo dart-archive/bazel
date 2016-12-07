@@ -14,7 +14,6 @@ class BazelifyConfig {
   static const _vmPlatform = 'vm';
   static const _webPlatform = 'web';
 
-  /// Supported target config options.
   static const _targetOptions = const [
     _builders,
     _default,
@@ -32,7 +31,6 @@ class BazelifyConfig {
   static const _platforms = 'platforms';
   static const _sources = 'sources';
 
-  /// Supported builder config options.
   static const _builderOptions = const [
     _class,
     _constructor,
@@ -148,7 +146,8 @@ class BazelifyConfig {
           defaultValue: <String, dynamic>{});
 
       final clazz = _readStringOrThrow(builderConfig, _class);
-      final constructor = _readStringOrThrow(builderConfig, _constructor);
+      final constructor =
+          _readStringOrThrow(builderConfig, _constructor, allowNull: true);
       final import = _readStringOrThrow(builderConfig, _import);
       final inputExtension = _readStringOrThrow(builderConfig, _inputExtension);
       final outputExtensions =
@@ -156,8 +155,9 @@ class BazelifyConfig {
       final replacesTransformer = _readStringOrThrow(
           builderConfig, _replacesTransformer,
           allowNull: true);
-      final sharedPartOutput =
-          _readBoolOrThrow(builderConfig, _sharedPartOutput);
+      final sharedPartOutput = _readBoolOrThrow(
+          builderConfig, _sharedPartOutput,
+          defaultValue: false);
       final target = _readStringOrThrow(builderConfig, _target);
 
       dartBuilderBinaries[builderName] = new DartBuilderBinary(

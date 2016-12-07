@@ -94,6 +94,9 @@ class BuildFile {
   /// Dart VM binaries.
   final List<DartVmBinary> binaries;
 
+  Iterable<DartBuilderBinary> get builderBinaries =>
+      bazelifyConfig.dartBuilderBinaries.values;
+
   /// Dart web applications.
   final List<DartWebApplication> webApplications;
 
@@ -186,6 +189,11 @@ class BuildFile {
     binaries
         .map/*<String>*/(
             (r) => r.toRule(bazelifyConfigs, includeLibraries: libraries))
+        .forEach(buffer.writeln);
+
+    // Note: This will throw today.
+    builderBinaries
+        .map/*<String>*/((r) => r.toRule(bazelifyConfigs))
         .forEach(buffer.writeln);
 
     return buffer.toString();
@@ -290,15 +298,20 @@ class DartLibrary implements DartBuildRule {
       this.sources: const ['lib/**']});
 
   @override
-  String toRule(Map<String, BazelifyConfig> bazelifyConfigs) =>
-      '# Generated automatically for package:$package\n'
-      'dart_library(\n'
-      '    name = "$name",\n'
-      '    srcs = ${_sourcesToGlob(sources, excludeSources)},\n'
-      '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},\n'
-      '    enable_ddc = ${enableDdc ? 1 : 0},\n'
-      '    pub_pkg_name = "$package",\n'
-      ')';
+  String toRule(Map<String, BazelifyConfig> bazelifyConfigs) {
+    if (builders != null || generateFor != null) {
+      throw new UnimplementedError('`builders` and `generate_for` are not yet '
+          'supported for `target` configs.');
+    }
+    return '# Generated automatically for package:$package\n'
+        'dart_library(\n'
+        '    name = "$name",\n'
+        '    srcs = ${_sourcesToGlob(sources, excludeSources)},\n'
+        '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},\n'
+        '    enable_ddc = ${enableDdc ? 1 : 0},\n'
+        '    pub_pkg_name = "$package",\n'
+        ')';
+  }
 
   @override
   String toString() => 'builders: $builders\n'
@@ -532,7 +545,7 @@ class DartBuilderBinary implements DartBuildRule {
   /// The input extension to treat as primary inputs to the builder.
   final String inputExtension;
 
-  /// The expected output extensions.\
+  /// The expected output extensions.
   ///
   /// For each file matching `inputExtension` a matching file with each of
   /// these extensions must be output.
@@ -540,6 +553,8 @@ class DartBuilderBinary implements DartBuildRule {
 
   /// The name of a transformer (as it appears in a pubspec.yaml) that this
   /// builder replaces.
+  ///
+  /// May be null.
   final String replacesTransformer;
 
   /// Whether or not this builder outputs to a shared part file with other
@@ -569,7 +584,8 @@ class DartBuilderBinary implements DartBuildRule {
 
   @override
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs) =>
-      throw new UnimplementedError('TODO(nbosch, jakemac53): implement this!');
+      throw new UnimplementedError(
+        '`builders` are not yet supported by bazelify');
 
   @override
   String toString() => 'clazz: $clazz\n'

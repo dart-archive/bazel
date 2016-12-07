@@ -151,13 +151,15 @@ keys:
 - **builders**: Optional, defaults to empty. The builders to apply to this
   target. These are defined by this package or other packages in the `builders`
   section of their bazelify.yaml.
-  - A list of either a Strings or Maps. If a Map is supplied then the key is the
-    name of the builder, and the value will be parsed and passed into the
-    builder constructor as a part of the `BuilderSettings` object.
+  - **NOTE**: This is not implemented and will throw an `UnimplementedError`.
+  - A `List<String|Map>`, for Map values the key is the name of the builder, and
+    the value will be parsed and passed into the builder constructor as a part
+    of the `BuilderSettings` object.
   - There is one magic config option, `$generate_for`, which overrides the
-    targets `generate_for` option just for this builder.
+    target's `generate_for` option just for this builder.
 - **generate_for**: Optional, defaults to `sources`. The files to treat as
   inputs to all `builders`. Supports glob syntax.
+  - **NOTE**: This is not implemented and will throw an `UnimplementedError`.
 
 
 Example `targets` section for a package with two targets and some builders
@@ -193,9 +195,14 @@ targets:
 
 #### Defining `Builder`s in your package (similar to transformers)
 
+**NOTE**: Using this config is not yet implemented, adding this to your
+`bazelify.yaml` will cause an `UnimplementedError` to be thrown by bazelify
+today.
+
 If users of your package need to apply some code generation to their package,
-then you can define `Builder`s (from `package:build`) and have those be either
-be automatically applied based on existing transformer settings,or simply
+then you can define `Builder`s (from [package:build]
+(https://pub.dartlang.org/packages/build)) and have those be either be
+automatically applied based on existing transformer settings, or simply
 available for users to opt into as needed.
 
 You tell bazelify about your `Builder`s using the `builders` section of your
@@ -208,9 +215,6 @@ config may contain the following keys:
   containing the `Builder` class. This should always be a `package:` uri.
 - **class**: The name of the `Builder` class to instantiate, must be exported by
   the library referenced by `import`.
-  - We could do what transformers do and use mirrors/codegen to just find these,
-    but imo that's a bit magic and provides little benefit in this case since
-    it's only creators of builders that have to worry about it not all users.
 - **constructor**: Optional. The name of the constructor to use for `class` if
   not the default one.
   - This must follow a specific format, probably taking a single
