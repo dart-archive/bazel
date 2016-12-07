@@ -14,19 +14,41 @@ class BazelifyConfig {
   static const _vmPlatform = 'vm';
   static const _webPlatform = 'web';
 
-  /// Supported target config options.
   static const _targetOptions = const [
+    _builders,
     _default,
     _dependencies,
-    _sources,
     _excludeSources,
+    _generateFor,
     _platforms,
+    _sources,
   ];
+  static const _builders = 'builders';
   static const _default = 'default';
   static const _dependencies = 'dependencies';
-  static const _sources = 'sources';
   static const _excludeSources = 'exclude_sources';
+  static const _generateFor = 'generate_for';
   static const _platforms = 'platforms';
+  static const _sources = 'sources';
+
+  static const _builderOptions = const [
+    _class,
+    _constructor,
+    _import,
+    _inputExtension,
+    _outputExtensions,
+    _replacesTransformer,
+    _sharedPartOutput,
+    _target,
+  ];
+  static const _class = 'class';
+  static const _constructor = 'constructor';
+  static const _import = 'import';
+  static const _inputExtension = 'input_extension';
+  static const _outputExtensions = 'output_extensions';
+  static const _replacesTransformer = 'replaces_transformer';
+  static const _sharedPartOutput = 'shared_part_output';
+  static const _target = 'target';
 
   /// Returns a parsed [BazelifyConfig] file in [path], if one exists.
   ///
@@ -43,7 +65,10 @@ class BazelifyConfig {
     }
   }
 
-  /// All the `libraries` defined in a `bazelify.yaml` file.
+  /// All the `builders` defined in a `bazelify.yaml` file.
+  final dartBuilderBinaries = <String, DartBuilderBinary>{};
+
+  /// All the `targets` defined in a `bazelify.yaml` file.
   final dartLibraries = <String, DartLibrary>{};
 
   /// The default config if you have no `bazelify.yaml` file.
@@ -70,48 +95,41 @@ class BazelifyConfig {
   BazelifyConfig.parse(Pubspec pubspec, String configYaml) {
     final config = loadYaml(configYaml);
 
-    var targetConfigs = config['targets'] ?? [];
+    final Map<String, Map> targetConfigs = config['targets'] ?? {};
     for (var targetName in targetConfigs.keys) {
-      var targetConfig = targetConfigs[targetName] as Map<String, dynamic>;
+      var targetConfig = _readMapOrThrow(
+          targetConfigs, targetName, _targetOptions, 'target `$targetName`');
 
-      var invalidOptions = targetConfig.keys.toList()
-          ..removeWhere((k) => _targetOptions.contains(k));
-      if (invalidOptions.isNotEmpty) {
-        throw new ArgumentError('Got invalid options `$invalidOptions` for '
-            'target `$targetName`. Only $_targetOptions are supported keys.');
-      }
+      final builders = _readBuildersOrThrow(targetConfig, _builders);
 
-      var isDefault = targetConfig[_default] ?? false;
-      if (isDefault is! bool) {
-        throw new ArgumentError(
-            'Got `$isDefault` for `$_default` but expected a boolean');
-      }
+      final dependencies = _readListOfStringsOrThrow(
+          targetConfig, _dependencies,
+          defaultValue: []);
 
-      final dependencies = targetConfig[_dependencies] ?? <String>[];
-      _checkListOfStringsOrThrow(dependencies, _dependencies);
+      final excludeSources = _readListOfStringsOrThrow(
+          targetConfig, _excludeSources,
+          defaultValue: []);
 
-      final platformsConfig = targetConfig[_platforms] ?? _allPlatforms;
-      _checkListOfStringsOrThrow(platformsConfig, _platforms);
-      final platforms = platformsConfig as List<String>;
-      var invalidPlatforms = platforms.where((p) => !_allPlatforms.contains(p));
-      if (invalidPlatforms.isNotEmpty) {
-        throw new ArgumentError('Got invalid values $invalidPlatforms for '
-            '`$_platforms`. Only $_allPlatforms are supported.');
-      }
+      var isDefault =
+          _readBoolOrThrow(targetConfig, _default, defaultValue: false);
 
-      final sources = targetConfig[_sources];
-      _checkListOfStringsOrThrow(sources, _sources);
+      final platforms = _readListOfStringsOrThrow(targetConfig, _platforms,
+          defaultValue: _allPlatforms, validValues: _allPlatforms);
 
-      final excludeSources = targetConfig[_excludeSources] ?? [];
-      _checkListOfStringsOrThrow(excludeSources, _excludeSources);
+      final sources = _readListOfStringsOrThrow(targetConfig, _sources);
+
+      final generateFor = _readListOfStringsOrThrow(targetConfig, _generateFor,
+          allowNull: true);
 
       dartLibraries[targetName] = new DartLibrary(
+        builders: builders,
         dependencies: dependencies,
-        name: targetName,
         enableDdc: platforms.contains(_webPlatform),
-        isDefault: isDefault,
-        package: pubspec.pubPackageName,
         excludeSources: excludeSources,
+        generateFor: generateFor,
+        isDefault: isDefault,
+        name: targetName,
+        package: pubspec.pubPackageName,
         sources: sources,
       );
     }
@@ -120,15 +138,132 @@ class BazelifyConfig {
       throw new ArgumentError('Found no targets with `$_default: true`. '
           'Expected exactly one.');
     }
+
+    final Map<String, Map> builderConfigs = config['builders'] ?? {};
+    for (var builderName in builderConfigs.keys) {
+      final builderConfig = _readMapOrThrow(builderConfigs, builderName,
+          _builderOptions, 'builder `$builderName`',
+          defaultValue: <String, dynamic>{});
+
+      final clazz = _readStringOrThrow(builderConfig, _class);
+      final constructor =
+          _readStringOrThrow(builderConfig, _constructor, allowNull: true);
+      final import = _readStringOrThrow(builderConfig, _import);
+      final inputExtension = _readStringOrThrow(builderConfig, _inputExtension);
+      final outputExtensions =
+          _readListOfStringsOrThrow(builderConfig, _outputExtensions);
+      final replacesTransformer = _readStringOrThrow(
+          builderConfig, _replacesTransformer,
+          allowNull: true);
+      final sharedPartOutput = _readBoolOrThrow(
+          builderConfig, _sharedPartOutput,
+          defaultValue: false);
+      final target = _readStringOrThrow(builderConfig, _target);
+
+      dartBuilderBinaries[builderName] = new DartBuilderBinary(
+        clazz: clazz,
+        constructor: constructor,
+        import: import,
+        inputExtension: inputExtension,
+        name: builderName,
+        outputExtensions: outputExtensions,
+        package: pubspec.pubPackageName,
+        replacesTransformer: replacesTransformer,
+        sharedPartOutput: sharedPartOutput,
+        target: target,
+      );
+    }
   }
 
   DartLibrary get defaultDartLibrary =>
       dartLibraries.values.singleWhere((l) => l.isDefault);
 
-  static void _checkListOfStringsOrThrow(value, String option) {
+  static Map<String, Map<String, dynamic>> _readBuildersOrThrow(
+      Map<String, dynamic> options, String option) {
+    var values = options[option];
+    if (values == null) return null;
+
+    if (values is! List) {
+      throw new ArgumentError(
+          'Got `$values` for `$option` but expected a List.');
+    }
+
+    final normalizedValues = <String, Map<String, dynamic>>{};
+    for (var value in values) {
+      if (value is String) {
+        normalizedValues[value] = {};
+      } else if (value is Map) {
+        if (value.length == 1) {
+          normalizedValues[value.keys.first] = value.values.first;
+        } else {
+          throw value;
+        }
+      } else {
+        throw new ArgumentError(
+            'Got `$value` for builder but expected a String or Map');
+      }
+    }
+    return normalizedValues;
+  }
+
+  static List<String> _readListOfStringsOrThrow(
+      Map<String, dynamic> options, String option,
+      {List<String> defaultValue,
+      Iterable<String> validValues,
+      bool allowNull: false}) {
+    var value = options[option] ?? defaultValue;
+    if (value == null && allowNull) return null;
+
     if (value is! List || value.any((v) => v is! String)) {
       throw new ArgumentError(
           'Got `$value` for `$option` but expected a List<String>.');
     }
+    if (validValues != null) {
+      var invalidValues = value.where((v) => !validValues.contains(v));
+      if (invalidValues.isNotEmpty) {
+        throw new ArgumentError('Got invalid values ``$invalidValues` for '
+            '`$option`. Only `$validValues` are supported.');
+      }
+    }
+    return value;
+  }
+
+  static Map<String, dynamic> _readMapOrThrow(Map<String, dynamic> options,
+      String option, Iterable<String> validKeys, String description,
+      {Map<String, dynamic> defaultValue}) {
+    var value = options[option] ?? defaultValue;
+    if (value is! Map) {
+      throw new ArgumentError('Invalid options for `$option`, got `$value` but '
+          'expected a Map.');
+    }
+    var mapValue = value as Map<String, dynamic>;
+    var invalidOptions = mapValue.keys.toList()
+      ..removeWhere((k) => validKeys.contains(k));
+    if (invalidOptions.isNotEmpty) {
+      throw new ArgumentError('Got invalid options `$invalidOptions` for '
+          '$description. Only `$validKeys` are supported keys.');
+    }
+    return mapValue;
+  }
+
+  static String _readStringOrThrow(Map<String, dynamic> options, String option,
+      {String defaultValue, bool allowNull: false}) {
+    var value = options[option];
+    if (value == null && allowNull) return null;
+    if (value is! String) {
+      throw new ArgumentError(
+          'Expected a String for `$option` but got `$value`.');
+    }
+    return value;
+  }
+
+  static bool _readBoolOrThrow(Map<String, dynamic> options, String option,
+      {bool defaultValue}) {
+    var value = options[option] ?? defaultValue;
+    if (value is! bool) {
+      throw new ArgumentError(
+          'Expected a boolean for `$option` but got `$value`.');
+    }
+    return value;
   }
 }

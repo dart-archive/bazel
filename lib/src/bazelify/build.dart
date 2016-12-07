@@ -94,6 +94,9 @@ class BuildFile {
   /// Dart VM binaries.
   final List<DartVmBinary> binaries;
 
+  Iterable<DartBuilderBinary> get builderBinaries =>
+      bazelifyConfig.dartBuilderBinaries.values;
+
   /// Dart web applications.
   final List<DartWebApplication> webApplications;
 
@@ -188,6 +191,11 @@ class BuildFile {
             (r) => r.toRule(bazelifyConfigs, includeLibraries: libraries))
         .forEach(buffer.writeln);
 
+    // Note: This will throw today.
+    builderBinaries
+        .map/*<String>*/((r) => r.toRule(bazelifyConfigs))
+        .forEach(buffer.writeln);
+
     return buffer.toString();
   }
 }
@@ -256,6 +264,13 @@ class DartLibrary implements DartBuildRule {
   @override
   final Iterable<String> sources;
 
+  /// A list of builders to apply to this target, possibly with config options.
+  ///
+  /// May be `null`.
+  ///
+  // TODO: Actually use this once we have support in the rules.
+  final Map<String, Map<String, dynamic>> builders;
+
   /// Whether or not  to enable the dart development compiler.
   ///
   /// This is configured using the "platforms" option in a bazelify.yaml file.
@@ -264,35 +279,50 @@ class DartLibrary implements DartBuildRule {
   /// Whether or not this is the default dart library for the package.
   final bool isDefault;
 
+  /// Sources to use as inputs for `builders`. May be `null`, in which case
+  /// it should fall back on `sources`.
+  ///
+  // TODO: Actually use this once we have support in the rules.
+  final Iterable<String> generateFor;
+
   /// Create a new `dart_library` named [name].
   DartLibrary(
-      {this.dependencies,
+      {this.builders,
+      this.dependencies,
       this.enableDdc: true,
       this.excludeSources: const [],
+      this.generateFor,
       this.isDefault: false,
       this.name,
       this.package,
       this.sources: const ['lib/**']});
 
   @override
-  String toRule(Map<String, BazelifyConfig> bazelifyConfigs) =>
-      '# Generated automatically for package:$package\n'
-      'dart_library(\n'
-      '    name = "$name",\n'
-      '    srcs = ${_sourcesToGlob(sources, excludeSources)},\n'
-      '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},\n'
-      '    enable_ddc = ${enableDdc ? 1 : 0},\n'
-      '    pub_pkg_name = "$package",\n'
-      ')';
+  String toRule(Map<String, BazelifyConfig> bazelifyConfigs) {
+    if (builders != null || generateFor != null) {
+      throw new UnimplementedError('`builders` and `generate_for` are not yet '
+          'supported for `target` configs.');
+    }
+    return '# Generated automatically for package:$package\n'
+        'dart_library(\n'
+        '    name = "$name",\n'
+        '    srcs = ${_sourcesToGlob(sources, excludeSources)},\n'
+        '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},\n'
+        '    enable_ddc = ${enableDdc ? 1 : 0},\n'
+        '    pub_pkg_name = "$package",\n'
+        ')';
+  }
 
   @override
-  String toString() => 'package: $package\n'
-      'name: $name\n'
-      'sources: $sources\n'
-      'excludeSources: $excludeSources\n'
+  String toString() => 'builders: $builders\n'
       'dependencies: $dependencies\n'
+      'enableDdc: $enableDdc\n'
+      'excludeSources: $excludeSources\n'
+      'generateFor: $generateFor\n'
       'isDefault: $isDefault\n'
-      'enableDdc: $enableDdc';
+      'name: $name\n'
+      'package: $package\n'
+      'sources: $sources';
 }
 
 /// A `dart_vm_binary` definition.
@@ -483,6 +513,91 @@ class DdcDevServer implements DartBuildRule {
     }
     return buffer.toString();
   }
+}
+
+/// A `dart_builder_binary` definition.
+class DartBuilderBinary implements DartBuildRule {
+  @override
+  Iterable<String> get dependencies => [target];
+
+  @override
+  Iterable<String> get excludeSources => null;
+
+  @override
+  final String name;
+
+  @override
+  final String package;
+
+  @override
+  Iterable<String> get sources => null;
+
+  /// The name of the custom `Builder` class.
+  final String clazz;
+
+  /// The name of the constructor to use, if `null` then the default constructor
+  /// will be used.
+  final String constructor;
+
+  /// The import to be used to load `clazz`.
+  final String import;
+
+  /// The input extension to treat as primary inputs to the builder.
+  final String inputExtension;
+
+  /// The expected output extensions.
+  ///
+  /// For each file matching `inputExtension` a matching file with each of
+  /// these extensions must be output.
+  final Iterable<String> outputExtensions;
+
+  /// The name of a transformer (as it appears in a pubspec.yaml) that this
+  /// builder replaces.
+  ///
+  /// May be null.
+  final String replacesTransformer;
+
+  /// Whether or not this builder outputs to a shared part file with other
+  /// builders.
+  ///
+  /// If true then this builder will actually output to a temp file and then
+  /// those temp files will be concatenated together into the part file.
+  ///
+  /// Note that if this is true the builder should not output any directives
+  /// that have ordering concerns such as `library`, `import`, `export`, etc.
+  final bool sharedPartOutput;
+
+  /// The name of the dart_library target that contains `import`.
+  final String target;
+
+  DartBuilderBinary(
+      {this.clazz,
+      this.constructor,
+      this.inputExtension,
+      this.import,
+      this.name,
+      this.outputExtensions,
+      this.package,
+      this.replacesTransformer,
+      this.sharedPartOutput,
+      this.target});
+
+  @override
+  String toRule(Map<String, BazelifyConfig> bazelifyConfigs) =>
+      throw new UnimplementedError(
+        '`builders` are not yet supported by bazelify');
+
+  @override
+  String toString() => 'clazz: $clazz\n'
+      'constructor: $constructor\n'
+      'inputExtension: $inputExtension\n'
+      'import: $import\n'
+      'name: $name\n'
+      'outputExtensions: $outputExtensions\n'
+      'package: $package\n'
+      'replacesTransformer: $replacesTransformer\n'
+      'sharedPartOutput: $sharedPartOutput\n'
+      'target: $target';
 }
 
 String _sourcesToGlob(
