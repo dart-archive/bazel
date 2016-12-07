@@ -151,11 +151,11 @@ keys:
 - **builders**: Optional, defaults to empty. The builders to apply to this
   target. These are defined by this package or other packages in the `builders`
   section of their bazelify.yaml.
-  - May be either a String or a Map. If a Map is supplied then the key is the
+  - A list of either a Strings or Maps. If a Map is supplied then the key is the
     name of the builder, and the value will be parsed and passed into the
     builder constructor as a part of the `BuilderSettings` object.
   - There is one magic config option, `$generate_for`, which overrides the
-    targets `generate_for` option for this builder.
+    targets `generate_for` option just for this builder.
 - **generate_for**: Optional, defaults to `sources`. The files to treat as
   inputs to all `builders`. Supports glob syntax.
 
@@ -177,8 +177,8 @@ targets:
       - "some_package:web"
     builders:
       - "some_package:builder":
-        my_option: some_value
-        $generate_for:
+          my_option: some_value
+          $generate_for:
     generate_for:
       - "lib/a.dart"
   transformer:
@@ -195,8 +195,8 @@ targets:
 
 If users of your package need to apply some code generation to their package,
 then you can define `Builder`s (from `package:build`) and have those be either
-be automatically applied to all users or simply available for them to opt into
-as needed.
+be automatically applied based on existing transformer settings,or simply
+available for users to opt into as needed.
 
 You tell bazelify about your `Builder`s using the `builders` section of your
 `bazelify.yaml`. This is a map of builder names to configuration. Each builder

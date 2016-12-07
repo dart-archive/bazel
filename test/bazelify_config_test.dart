@@ -36,7 +36,7 @@ void main() {
       'h': new DartBuilderBinary(
         clazz: 'E',
         constructor: 'withSettings',
-        import: 'lib/e.dart',
+        import: 'package:example/e.dart',
         inputExtension: '.dart',
         name: 'h',
         outputExtensions: [
@@ -83,7 +83,7 @@ builders:
   h:
     class: E
     constructor: withSettings
-    import: lib/e.dart
+    import: package:example/e.dart
     input_extension: .dart
     output_extensions:
       - .g.dart
