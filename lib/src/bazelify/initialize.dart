@@ -339,9 +339,15 @@ analyzer:
     } else {
       final analysisOptions =
           loadYaml(await analysisOptionsFile.readAsString());
-      final analyzerConfig = analysisOptions['analyzer'];
-      final excludes =
-          analyzerConfig == null ? null : analyzerConfig['exclude'];
+      final analyzerConfig = analysisOptions != null
+          ? analysisOptions['analyzer']
+          : const {
+              'strong-mode': true,
+              'exclude': const [
+                'bazel-*',
+              ],
+            };
+      final excludes = analyzerConfig['exclude'];
       if (excludes == null || !excludes.contains('bazel-*')) {
         print('Bazel will create directories with symlinked dart files which '
             'will impact the analysis server.\n'
@@ -354,7 +360,7 @@ analyzer:
     }
   }
 
-  /// Searchs up in directories starting with the pubPackageDir until a
+  /// Searches up in directories starting with the pubPackageDir until a
   /// '.analysis_options' or 'analysis_options.yaml' is found, or null if no
   /// such file exists.
   Future<File> _findAnalysisOptions() async {
