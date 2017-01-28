@@ -1,11 +1,11 @@
-.buildlog
-.packages
+**/.buildlog
+**/.packages
 .project
-.pub/
-build/
+**/.pub/
+**/build/
 **/packages/
 .bazelify
 bazel-*
 workspace/pubspec.lock
 workspace/packages.bzl
-pubspec.lock
+**/pubspec.lock
