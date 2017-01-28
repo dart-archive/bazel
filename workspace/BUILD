@@ -9,7 +9,7 @@ package(default_visibility = ["//visibility:public"])
 # Generated automatically for package:bazel_workspace
 dart_library(
     name = "bazel_workspace",
-    srcs = glob(["lib/**", "web/**"]),
+    srcs = glob(["lib/**", "web/**"], exclude=[]),
     deps = ["@angular2//:angular2","@path//:path"],
     enable_ddc = 1,
     pub_pkg_name = "bazel_workspace",
