@@ -14,4 +14,4 @@ before_install:
 
 script:
   - ./tool/presubmit.dart
-  - cd dazel && pub run test
+  - cd dazel && pub get && pub run test
