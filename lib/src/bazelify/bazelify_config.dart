@@ -196,7 +196,7 @@ class BazelifyConfig {
         if (value.length == 1) {
           normalizedValues[value.keys.first] = value.values.first;
         } else {
-          throw value;
+          throw new ArgumentError('Expected single key but got $value');
         }
       } else {
         throw new ArgumentError(

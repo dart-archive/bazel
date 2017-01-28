@@ -585,7 +585,7 @@ class DartBuilderBinary implements DartBuildRule {
   @override
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs) =>
       throw new UnimplementedError(
-        '`builders` are not yet supported by bazelify');
+          '`builders` are not yet supported by bazelify');
 
   @override
   String toString() => 'clazz: $clazz\n'
