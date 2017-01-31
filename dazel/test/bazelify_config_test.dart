@@ -1,8 +1,8 @@
 import 'package:test/test.dart';
 
-import 'package:bazel/src/bazelify/bazelify_config.dart';
-import 'package:bazel/src/bazelify/build.dart';
-import 'package:bazel/src/bazelify/pubspec.dart';
+import 'package:dazel/src/bazelify/bazelify_config.dart';
+import 'package:dazel/src/bazelify/build.dart';
+import 'package:dazel/src/bazelify/pubspec.dart';
 
 void main() {
   test('bazelify.yaml can be parsed', () {

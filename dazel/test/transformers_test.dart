@@ -2,7 +2,7 @@ import 'package:barback/barback.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
-import 'package:bazel/src/bazelify/transformers.dart';
+import 'package:dazel/src/bazelify/transformers.dart';
 
 import 'projects/simple_with_transformer/lib/transformer.dart';
 

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:bazel/src/bazelify/command_runner.dart';
-import 'package:bazel/src/bazelify/exceptions.dart';
+import 'package:dazel/src/bazelify/command_runner.dart';
+import 'package:dazel/src/bazelify/exceptions.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 Future<Null> main(List<String> args) async {

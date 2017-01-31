@@ -1,4 +1,4 @@
-name: bazel
+name: dazel
 description: Bazel support for Dart
 author: Dart Team <misc@dartlang.org>
 homepage: https://github.com/dart-lang/bazel

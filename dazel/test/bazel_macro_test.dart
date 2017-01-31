@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:bazel/src/bazelify/macro.dart';
+import 'package:dazel/src/bazelify/macro.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
