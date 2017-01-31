@@ -17,6 +17,8 @@ dependencies:
   stack_trace: '^1.6.8'
   which: '^0.1.3'
   yaml: '^2.1.11'
+  bazel_codegen:
+    path: ../bazel_codegen
 
 dev_dependencies:
   path: "^1.4.0"
