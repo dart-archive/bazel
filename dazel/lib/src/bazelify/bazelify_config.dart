@@ -7,7 +7,7 @@ import 'package:yaml/yaml.dart';
 import 'build.dart';
 import 'pubspec.dart';
 
-/// The parsed values from a `bazelify.yaml` file.
+/// The parsed values from a `build.yaml` file.
 class BazelifyConfig {
   /// Supported values for the `platforms` attribute.
   static const _allPlatforms = const [_vmPlatform, _webPlatform];
@@ -55,7 +55,7 @@ class BazelifyConfig {
   /// Otherwise uses the default setup.
   static Future<BazelifyConfig> fromPackageDir(Pubspec pubspec, String path,
       {bool includeWebSources: false}) async {
-    final configPath = p.join(path, 'bazelify.yaml');
+    final configPath = p.join(path, 'build.yaml');
     final file = new File(configPath);
     if (await file.exists()) {
       return new BazelifyConfig.parse(pubspec, await file.readAsString());
@@ -65,13 +65,13 @@ class BazelifyConfig {
     }
   }
 
-  /// All the `builders` defined in a `bazelify.yaml` file.
+  /// All the `builders` defined in a `build.yaml` file.
   final dartBuilderBinaries = <String, DartBuilderBinary>{};
 
-  /// All the `targets` defined in a `bazelify.yaml` file.
+  /// All the `targets` defined in a `build.yaml` file.
   final dartLibraries = <String, DartLibrary>{};
 
-  /// The default config if you have no `bazelify.yaml` file.
+  /// The default config if you have no `build.yaml` file.
   BazelifyConfig.useDefault(Pubspec pubspec,
       {bool includeWebSources: false,
       bool enableDdc: true,
