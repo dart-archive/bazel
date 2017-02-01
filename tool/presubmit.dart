@@ -4,10 +4,10 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 main() {
-  // Run bazelify.
-  print('Running bazelify...');
+  // Run dazel.
+  print('Running dazel...');
   var result =
-      Process.runSync('dart', ['dazel/bin/bazelify.dart', 'init', '-p', 'workspace']);
+      Process.runSync('dart', ['dazel/bin/dazel.dart', 'init', '-p', 'workspace']);
   if (result.stderr.isNotEmpty) {
     print('ERROR: ${result.stderr}');
     exit(1);

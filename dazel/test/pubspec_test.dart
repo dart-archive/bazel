@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 
-import 'package:bazel/src/bazelify/pubspec.dart';
+import 'package:dazel/src/bazelify/pubspec.dart';
 
 void main() {
   test('pubspec yaml can be parsed', () {

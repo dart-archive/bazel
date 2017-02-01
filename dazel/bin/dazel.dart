@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:bazel/src/bazelify/command_runner.dart';
-import 'package:bazel/src/bazelify/exceptions.dart';
+import 'package:dazel/src/bazelify/command_runner.dart';
+import 'package:dazel/src/bazelify/exceptions.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 Future<Null> main(List<String> args) async {
@@ -21,7 +21,7 @@ Future<Null> main(List<String> args) async {
       exitCode = error.exitCode;
       return;
     } else {
-      print('Whoops! You may have discovered a bug in `bazelify` :(.\n'
+      print('Whoops! You may have discovered a bug in `dazel` :(.\n'
           'Please file an issue at http://github.com/dart-lang/bazel');
       print(error);
       print(chain.terse);

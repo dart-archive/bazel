@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:bazel/src/bazelify/initialize.dart';
-import 'package:bazel/src/bazelify/workspace.dart';
+import 'package:dazel/src/bazelify/initialize.dart';
+import 'package:dazel/src/bazelify/workspace.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 

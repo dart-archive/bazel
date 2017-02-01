@@ -200,8 +200,8 @@ class _Initialize {
     final packagePaths = await _readPackagePaths();
     final pubspecs = await _readPubspecs(packagePaths);
     final bazelifyConfigs = await _readBazelifyConfigs(packagePaths, pubspecs);
-    await timer.run('create .bazelify',
-        () => _createBazelifyDir(packagePaths, pubspecs, bazelifyConfigs));
+    await timer.run('create .dazel',
+        () => _createDazelDir(packagePaths, pubspecs, bazelifyConfigs));
     await timer.run('create packages.bzl, build, and workspace',
         () => _writeBazelFiles(packagePaths, bazelifyConfigs));
     await timer.run('scan for analysis options', _suggestAnalyzerExcludes);
@@ -215,11 +215,11 @@ class _Initialize {
     Directory.current = previousDirectory;
   }
 
-  Future<Null> _createBazelifyDir(
+  Future<Null> _createDazelDir(
       Map<String, String> packagePaths,
       Map<String, Pubspec> pubspecs,
       Map<String, BazelifyConfig> bazelifyConfigs) async {
-    final bazelifyPath = p.join(arguments.pubPackageDir, '.bazelify');
+    final bazelifyPath = p.join(arguments.pubPackageDir, '.dazel');
     await _createEmptyDir(bazelifyPath);
     await _writePackageBuildFiles(
         bazelifyPath, packagePaths, pubspecs, bazelifyConfigs);

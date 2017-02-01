@@ -1,23 +1,20 @@
-`bazelify` is a tool to generate an manage bazel workspaces for Dart projects.
+`dazel` is a tool to generate an manage bazel workspaces for Dart projects.
 
 ### Installation
 
 [install-bazel]: https://www.bazel.io/versions/master/docs/install.html
 
-> **NOTE**: bazelify requires an existing installation of [bazel][install-bazel]
+> **NOTE**: dazel requires an existing installation of [bazel][install-bazel]
 
 
-If you're familiar with [`pub run`][pub_run], then `bazelify` is easy:
+If you're familiar with [`pub run`][pub_run], then `dazel` is easy. Start by
+adding a `dev_dependency` on the `dazel` package.
 
 [pub_run]: https://www.dartlang.org/tools/pub/cmd/pub-run
 
-```bash
-$ pub global activate bazel
-```
-
 ### Generation
 
-You can run `bazelify` on a typical `pub` package:
+You can run `dazel` on a typical `pub` package:
 
 ```
 my_new_package/
@@ -29,11 +26,11 @@ my_new_package/
 
 ```bash
 $ cd my_new_package
-$ pub global run bazel:bazelify init
+$ pub run dazel init
 ```
 
-If you don't have a project, you can use our `workspace` folder of examples.
-See `tool/presubmit.dart` for some examples.
+If you don't have a project, you can use our `workspace` folder of examples. See
+`tool/presubmit.dart` for some examples.
 
 ### Usage
 
@@ -45,30 +42,28 @@ You can `bazel run` files in `bin/`:
 $ bazel run :hello_bin
 ```
 
-You can also `bazel run` a development sever for your web application:
+You can also run a development sever for your web application:
 
 ```bash
 # Assume you have web/main.dart, and web/index.html.
-$ bazel run :main_dartium_serve
+$ pub run dazel serve
 ```
 
-Oh, and did we mention support for the [Dart dev compiler][DDC]?
+Oh, and did we mention support for the [Dart dev compiler][ddc]?
 
 [ddc]: https://github.com/dart-lang/dev_compiler
 
-```bash
-$ bazel run :main_ddc_serve
-```
+The dazel server supports both dart code on Dartium and js compiled with DDC.
 
 ### Cleaning up
 
-We automatically generate a bunch of file for you - don't worry about checking
-them in for now - you can safely ignore them when commiting. Here is an example
-snippet you can include in a `.gitignore`:
+We automatically generate a bunch of file for you - these should not be checked
+in to your repository - you can safely ignore them when commiting. Here is an
+example snippet you can include in a `.gitignore`:
 
 ```gitignore
 /bazel-*
-.bazelify
+.dazel
 packages.bzl
 BUILD
 WORKSPACE
@@ -87,7 +82,7 @@ analyzer:
 ### Customizing your generated BUILD files
 
 Customizing the BUILD file output of a package is done  by creating a
-`bazelify.yaml` file, which describes your configuration.
+`build.yaml` file, which describes your configuration.
 
 #### Splitting your package into multiple targets
 
@@ -95,13 +90,13 @@ It is fairly common for a package to want to split up their sources into
 multiple bazel targets. Specifically, this is useful if your package has some
 sources which are web friendly, and others which are not.
 
-This is done by adding a `targets` section to your `bazelify.yaml` file, which
+This is done by adding a `targets` section to your `build.yaml` file, which
 defines the different targets that you wish to be generated. This is a map of
 target names to configuration. Each target config may contain the following
 keys:
 
 - **default**: Optional, defaults to `false`. If `true`, this is the target a
-  users package will depend on if they don't have a custom bazelify.yaml file.
+  users package will depend on if they don't have a custom build.yaml file.
   - Exactly one target must be listed as `default: true`.
   - It is also the target you will get if you list the package without a target
     name in the dependencies of one of your targets.
@@ -116,7 +111,7 @@ keys:
     dev compiler, but that is the only effect of this attribute today.
 - **builders**: Optional, defaults to empty. The builders to apply to this
   target. These are defined by this package or other packages in the `builders`
-  section of their bazelify.yaml.
+  section of their build.yaml.
   - **NOTE**: This is not implemented and will throw an `UnimplementedError`.
   - A `List<String|Map>`, for Map values the key is the name of the builder, and
     the value will be parsed and passed into the builder constructor as a part
@@ -162,8 +157,7 @@ targets:
 #### Defining `Builder`s in your package (similar to transformers)
 
 **NOTE**: Using this config is not yet implemented, adding this to your
-`bazelify.yaml` will cause an `UnimplementedError` to be thrown by bazelify
-today.
+`build.yaml` will cause an `UnimplementedError` to be thrown by dazel today.
 
 If users of your package need to apply some code generation to their package,
 then you can define `Builder`s (from [package:build]
@@ -171,8 +165,8 @@ then you can define `Builder`s (from [package:build]
 automatically applied based on existing transformer settings, or simply
 available for users to opt into as needed.
 
-You tell bazelify about your `Builder`s using the `builders` section of your
-`bazelify.yaml`. This is a map of builder names to configuration. Each builder
+You tell dazel about your `Builder`s using the `builders` section of your
+`build.yaml`. This is a map of builder names to configuration. Each builder
 config may contain the following keys:
 
 - **target**: The name of the target which defines contains your `Builder` class
@@ -189,7 +183,7 @@ config may contain the following keys:
   appear in a pubspec) that this should be used in place of. Any package with
   that transformer and a dependency on this package should get this builder
   applied.
-  - If a user has a custom `bazelify.yaml` file then this has no effect, they
+  - If a user has a custom `build.yaml` file then this has no effect, they
     must explicitly list all builders.
 - **input_extension**: Required. The input extensions to treat as primary inputs
   to the builder.

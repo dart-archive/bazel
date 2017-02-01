@@ -1,13 +1,13 @@
 import 'package:test/test.dart';
 
-import 'package:bazel/src/bazelify/bazelify_config.dart';
-import 'package:bazel/src/bazelify/build.dart';
-import 'package:bazel/src/bazelify/pubspec.dart';
+import 'package:dazel/src/bazelify/bazelify_config.dart';
+import 'package:dazel/src/bazelify/build.dart';
+import 'package:dazel/src/bazelify/pubspec.dart';
 
 void main() {
-  test('bazelify.yaml can be parsed', () {
+  test('build.yaml can be parsed', () {
     var pubspec = new Pubspec.parse(pubspecYaml);
-    var bazelifyConfig = new BazelifyConfig.parse(pubspec, bazelifyYaml);
+    var bazelifyConfig = new BazelifyConfig.parse(pubspec, buildYaml);
     expectDartLibraries(bazelifyConfig.dartLibraries, {
       'a': new DartLibrary(
         builders: {
@@ -52,7 +52,7 @@ void main() {
   });
 }
 
-var bazelifyYaml = '''
+var buildYaml = '''
 targets:
   a:
     builders:
