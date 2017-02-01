@@ -5,7 +5,7 @@ import 'serve.dart' show ServeCommand;
 
 class BazelifyCommandRunner extends CommandRunner {
   BazelifyCommandRunner()
-      : super('bazelify', 'Bootstrap your Dart package with Bazel.') {
+      : super('dazel', 'Bootstrap your Dart package with Bazel.') {
     argParser
       ..addOption('bazel',
           help: 'A path to the "bazel" executable. Defauls to your PATH.')

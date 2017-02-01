@@ -62,7 +62,7 @@ class BazelifyServeArguments extends BazelifyArguments {
 Future serve(BazelifyServeArguments args) async {
   if (p.relative(args.pubPackageDir) != '.') {
     throw new ApplicationFailedException(
-        'bazelify serve only supports running from your top level package '
+        'dazel serve only supports running from your top level package '
         'directory.',
         1);
   }
