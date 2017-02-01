@@ -65,7 +65,7 @@ example snippet you can include in a `.gitignore`:
 
 ```gitignore
 /bazel-*
-.bazelify
+.dazel
 packages.bzl
 BUILD
 WORKSPACE

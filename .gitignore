@@ -4,7 +4,7 @@
 **/.pub/
 **/build/
 **/packages/
-.bazelify
+.dazel
 bazel-*
 workspace/pubspec.lock
 workspace/packages.bzl
