@@ -16,8 +16,6 @@ class BazelAssetReader implements AssetReader {
   /// The path to the package we are currently processing.
   final String packagePath;
 
-  final _assetCache = <AssetId, String>{};
-
   /// The bazel specific file system.
   ///
   /// Responsible for knowing where bazel stores source and generated files on
@@ -55,30 +53,34 @@ class BazelAssetReader implements AssetReader {
   Iterable<AssetId> findAssetIds(Iterable<String> assetPaths) =>
       path_translation.findAssetIds(assetPaths, packagePath, _packageMap);
 
-  /// Primes the cache with [assets].
-  void cacheAssets(Map<AssetId, String> assets) {
-    _assetCache.addAll(assets);
+  @override
+  Future<List<int>> readAsBytes(AssetId id) async {
+    final filePath = _filePathForId(id);
+    numAssetsReadFromDisk++;
+    final bytes = _fileSystem.readAsBytesSync(filePath);
+    if (bytes == null) {
+      throw new CodegenError('Could not find $id at $filePath');
+    }
+    return bytes;
   }
 
   @override
   Future<String> readAsString(AssetId id, {Encoding encoding: UTF8}) async {
+    final filePath = _filePathForId(id);
+    numAssetsReadFromDisk++;
+    final contents = _fileSystem.readAsStringSync(filePath, encoding: encoding);
+    if (contents == null) {
+      throw new CodegenError('Could not find $id at $filePath');
+    }
+    return contents;
+  }
+
+  String _filePathForId(AssetId id) {
     final packagePath = _packageMap[id.package];
     if (!_assetFilter.isValid(id) || packagePath == null) {
       throw new CodegenError('Attempted to read invalid input $id.');
     }
-    final filePath = p.join(packagePath, id.path);
-
-    if (_assetCache.containsKey(id)) {
-      return _assetCache[id];
-    }
-
-    numAssetsReadFromDisk++;
-    final contents = _fileSystem.readAsStringSync(filePath);
-    if (contents == null) {
-      throw new CodegenError('Could not find $id at $filePath');
-    }
-    _assetCache[id] = contents;
-    return contents;
+    return p.join(packagePath, id.path);
   }
 
   @override
@@ -89,7 +91,7 @@ class BazelAssetReader implements AssetReader {
     final filePath = p.join(packagePath, id.path);
     if (!_assetFilter.isValid(id)) return false;
 
-    return _assetCache.containsKey(id) || _fileSystem.existsSync(filePath);
+    return _fileSystem.existsSync(filePath);
   }
 }
 

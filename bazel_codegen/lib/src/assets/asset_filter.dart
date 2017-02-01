@@ -26,6 +26,6 @@ class AssetFilter {
       if (packagePath == null) return false;
       return _knownValidAssets.contains(p.join(packagePath, id.path));
     }
-    return !_assetWriter.assetsWritten.containsKey(id);
+    return !_assetWriter.assetsWritten.contains(id);
   }
 }

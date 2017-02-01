@@ -15,7 +15,7 @@ import '../errors.dart';
 class BazelAssetWriter implements AssetWriter {
   final String _outDir;
   final Map<String, String> _packageMap;
-  final Map<AssetId, String> assetsWritten = <AssetId, String>{};
+  final assetsWritten = new Set<AssetId>();
 
   /// Workspace relative paths that we can't overwrite.
   final Set<String> _inputs;
@@ -24,19 +24,31 @@ class BazelAssetWriter implements AssetWriter {
       : _inputs = validInputs;
 
   @override
-  Future writeAsString(Asset asset, {Encoding encoding: UTF8}) async {
-    var packageDir = _packageMap[asset.id.package];
-    var bazelPath = path.join(packageDir, asset.id.path);
+  Future writeAsBytes(AssetId id, List<int> bytes) async {
+    var file = _fileForId(id);
+    assetsWritten.add(id);
+    await file.create(recursive: true);
+    await file.writeAsBytes(bytes);
+  }
+
+  @override
+  Future writeAsString(AssetId id, String contents,
+      {Encoding encoding: UTF8}) async {
+    var file = _fileForId(id);
+    assetsWritten.add(id);
+    await file.create(recursive: true);
+    await file.writeAsString(contents, encoding: encoding);
+  }
+
+  File _fileForId(AssetId id) {
+    var packageDir = _packageMap[id.package];
+    var bazelPath = path.join(packageDir, id.path);
     if (_inputs?.contains(bazelPath) == true) {
       throw new CodegenError(
-          'Attempted to output ${asset.id} which was an input. Bazel does not '
+          'Attempted to output ${id} which was an input. Bazel does not '
           'allow overwriting of input files.');
     }
 
-    var file = new File(path.join(_outDir, bazelPath));
-    var contents = asset.stringContents;
-    assetsWritten[asset.id] = contents;
-    await file.create(recursive: true);
-    await file.writeAsString(contents);
+    return new File(path.join(_outDir, bazelPath));
   }
 }
