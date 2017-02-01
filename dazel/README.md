@@ -8,7 +8,7 @@
 
 
 If you're familiar with [`pub run`][pub_run], then `dazel` is easy. Start by
-adding a `dev_dependency` on then `dazel` package.
+adding a `dev_dependency` on the `dazel` package.
 
 [pub_run]: https://www.dartlang.org/tools/pub/cmd/pub-run
 
@@ -46,16 +46,14 @@ You can also run a development sever for your web application:
 
 ```bash
 # Assume you have web/main.dart, and web/index.html.
-$ pub run dazel serve :main_dartium_serve
+$ pub run dazel serve
 ```
 
 Oh, and did we mention support for the [Dart dev compiler][ddc]?
 
 [ddc]: https://github.com/dart-lang/dev_compiler
 
-```bash
-$ pub run dazel serve :main_ddc_serve
-```
+The dazel server supports both dart code on Dartium and js compiled with DDC.
 
 ### Cleaning up
 
@@ -168,7 +166,7 @@ automatically applied based on existing transformer settings, or simply
 available for users to opt into as needed.
 
 You tell dazel about your `Builder`s using the `builders` section of your
-`dazel.yaml`. This is a map of builder names to configuration. Each builder
+`build.yaml`. This is a map of builder names to configuration. Each builder
 config may contain the following keys:
 
 - **target**: The name of the target which defines contains your `Builder` class
