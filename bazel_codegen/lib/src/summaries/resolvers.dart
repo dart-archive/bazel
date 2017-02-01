@@ -8,7 +8,8 @@ import 'dart:io';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/src/generated/engine.dart' show AnalysisContext;
 import 'package:analyzer/src/generated/source.dart' show SourceKind;
-import 'package:build/build.dart' show Resolvers, Resolver, BuildStep, AssetId;
+import 'package:build/build.dart'
+    show Resolvers, Resolver, ReleasableResolver, BuildStep, AssetId;
 
 import '../assets/path_translation.dart';
 import 'analysis_context.dart';
@@ -44,9 +45,9 @@ class SummaryResolvers implements Resolvers {
       this._packagePath, this._packageMap);
 
   @override
-  Future<Resolver> get(BuildStep buildStep, List<AssetId> entryPoints,
-      bool resolveAllConstants) async {
+  Future<ReleasableResolver> get(BuildStep buildStep) async {
     await _primeWithSources(buildStep.readAsString);
+    var entryPoints = [buildStep.inputId];
     await _assetResolver.addAssets(entryPoints, buildStep.readAsString);
     return new AnalysisResolver(_context, entryPoints);
   }
@@ -67,7 +68,7 @@ class SummaryResolvers implements Resolvers {
 }
 
 /// a [Resolver] backed by an [AnalysisContext].
-class AnalysisResolver implements Resolver {
+class AnalysisResolver implements ReleasableResolver {
   final AnalysisContext _analysisContext;
   final List<AssetId> _assetIds;
 
@@ -75,6 +76,14 @@ class AnalysisResolver implements Resolver {
 
   @override
   void release() => _analysisContext.dispose();
+
+  @override
+  bool isLibrary(AssetId assetId) {
+    var uri = assetUri(assetId);
+    var source = _analysisContext.sourceFactory.forUri2(uri);
+    return source != null &&
+        _analysisContext.computeKindOf(source) == SourceKind.LIBRARY;
+  }
 
   @override
   LibraryElement getLibrary(AssetId assetId) {

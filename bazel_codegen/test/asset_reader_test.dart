@@ -31,40 +31,32 @@ void main() {
     expect(translatedAssets, equals([f1AssetId, f2AssetId]));
   });
 
-  group('hasInput', () {
-    test('checks the file system for assets', () async {
-      final nonLoadedId = f1AssetId.changeExtension('.dne');
-      fileSystem.nextExistsReturn = true;
-      expect(await reader.hasInput(nonLoadedId), isTrue);
-      expect(fileSystem.calls, isNotEmpty);
-      expect(fileSystem.calls.single.memberName, equals(#existsSync));
+  test('hasInput', () async {
+    final nonLoadedId = f1AssetId.changeExtension('.dne');
+    fileSystem.nextExistsReturn = true;
+    expect(await reader.hasInput(nonLoadedId), isTrue);
+    expect(fileSystem.calls, isNotEmpty);
+    expect(fileSystem.calls.single.memberName, equals(#existsSync));
 
-      final otherUnloadedId = f1AssetId.changeExtension('.broken.link');
-      fileSystem.nextExistsReturn = false;
-      expect(await reader.hasInput(otherUnloadedId), isFalse);
-    });
-
-    test('returns `true` for cached files.', () async {
-      reader.cacheAssets({f1AssetId: 'File 1 Contents'});
-      expect(await reader.hasInput(f1AssetId), isTrue);
-    });
+    final otherUnloadedId = f1AssetId.changeExtension('.broken.link');
+    fileSystem.nextExistsReturn = false;
+    expect(await reader.hasInput(otherUnloadedId), isFalse);
   });
 
-  group('readAsString', () {
-    test('checks the file system for non-loaded assets', () async {
-      final nonLoadedId = f1AssetId.changeExtension('.dne');
-      final nonLoadedContents = 'Test File Contents';
-      fileSystem.nextFileContents = nonLoadedContents;
-      expect(await reader.readAsString(nonLoadedId), equals(nonLoadedContents));
-      expect(fileSystem.calls, isNotEmpty);
-      expect(fileSystem.calls.single.memberName, equals(#readAsStringSync));
-    });
+  test('readAsString', () async {
+    final contents = 'Test File Contents';
+    fileSystem.nextFileContents = contents;
+    expect(await reader.readAsString(f1AssetId), equals(contents));
+    expect(fileSystem.calls, isNotEmpty);
+    expect(fileSystem.calls.single.memberName, equals(#readAsStringSync));
+  });
 
-    test('returns cached contents for cached files.', () async {
-      final cachedContents = 'File 1 Contents';
-      reader.cacheAssets({f1AssetId: cachedContents});
-      expect(await reader.readAsString(f1AssetId), equals(cachedContents));
-    });
+  test('readAsBytes', () async {
+    final contents = [1, 2, 3];
+    fileSystem.nextFileContents = contents;
+    expect(await reader.readAsBytes(f1AssetId), equals(contents));
+    expect(fileSystem.calls, isNotEmpty);
+    expect(fileSystem.calls.single.memberName, equals(#readAsBytesSync));
   });
 }
 
@@ -73,14 +65,15 @@ class FakeFileSystem implements BazelFileSystem {
   final calls = <Invocation>[];
 
   bool nextExistsReturn = false;
-  String nextFileContents = 'Fake File Contents';
+  Object nextFileContents = 'Fake File Contents';
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
     calls.add(invocation);
     if (invocation.memberName == #existsSync) {
       return nextExistsReturn;
-    } else if (invocation.memberName == #readAsStringSync) {
+    } else if (invocation.memberName == #readAsStringSync ||
+        invocation.memberName == #readAsBytesSync) {
       return nextFileContents;
     }
     return null;

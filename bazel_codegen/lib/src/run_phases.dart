@@ -157,15 +157,14 @@ Future<IOSinkLogHandle> _runBuilders(List<BuilderFactory> builders,
               () => runBuilder(builder, inputSrcs, reader, writer, resolvers,
                   logger: logger));
         }
-      },
-          zoneSpecification:
-              new ZoneSpecification(print: (self, parent, zone, message) {
-            if (isWorker) {
-              logger.info(message);
-            } else {
-              parent.print(zone, message);
-            }
-          }));
+      }, zoneSpecification:
+          new ZoneSpecification(print: (self, parent, zone, message) {
+        if (isWorker) {
+          logger.info(message);
+        } else {
+          parent.print(zone, message);
+        }
+      }));
     } catch (e, s) {
       logger.severe(
           'Caught error during code generation step '
@@ -174,18 +173,15 @@ Future<IOSinkLogHandle> _runBuilders(List<BuilderFactory> builders,
           s);
     }
 
-    // Avoid rereading from disk for previous outputs
-    reader.cacheAssets(writer.assetsWritten);
-
     // Set outputs as inputs into the next builder
     inputSrcs
       ..clear()
-      ..addAll(writer.assetsWritten.keys);
-    validInputs?.addAll(writer.assetsWritten.keys
+      ..addAll(writer.assetsWritten);
+    validInputs?.addAll(writer.assetsWritten
         .map((id) => p.join(packageMap[id.package], id.path)));
 
     // Track and clear written assets.
-    allWrittenAssets.addAll(writer.assetsWritten.keys);
+    allWrittenAssets.addAll(writer.assetsWritten);
     writer.assetsWritten.clear();
   }
 
@@ -203,8 +199,8 @@ Future<IOSinkLogHandle> _runBuilders(List<BuilderFactory> builders,
         if (allWrittenAssets.contains(expectedAssetId)) continue;
 
         if (defaultContent.containsKey(extension)) {
-          writes.add(writer.writeAsString(
-              new Asset(expectedAssetId, defaultContent[extension])));
+          writes.add(
+              writer.writeAsString(expectedAssetId, defaultContent[extension]));
         } else {
           logger.warning('Missing expected output $expectedAssetId');
         }
