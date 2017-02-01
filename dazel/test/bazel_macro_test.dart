@@ -14,13 +14,13 @@ void main() {
         new NewLocalRepository(
           name: 'silly_monkey',
           path: 'some/path/to/.pub_cache/silly_monkey-0.0.0',
-          buildFile: '.bazelify/silly_monkey.BUILD',
+          buildFile: '.dazel/silly_monkey.BUILD',
         )
             .toString(),
         'native.new_local_repository(\n'
         '    name = "silly_monkey",\n'
         '    path = "some/path/to/.pub_cache/silly_monkey-0.0.0",\n'
-        '    build_file = ".bazelify/silly_monkey.BUILD",\n'
+        '    build_file = ".dazel/silly_monkey.BUILD",\n'
         ')\n');
   });
 
