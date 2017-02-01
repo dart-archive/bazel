@@ -1,3 +1,8 @@
+## 0.3.0
+
+* Deprecate bazelify in favor of dazel. See
+  https://pub.dartlang.org/packages/dazel
+
 ## 0.2.2
 
 * Update to rules dart 0.2.2 with the latest dev sdk
