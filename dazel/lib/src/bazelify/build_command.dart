@@ -71,8 +71,10 @@ class BuildCommand extends Command {
     var bazelBuildProcess = await Process.start(args.bazelExecutable, [
       'build',
       ':${args.target}',
-      '--strategy=DartDevCompiler=worker',
-      '--strategy=DartSummary=worker',
+      // TODO: Remove these, today its needed to disable the sandbox.
+      //       see https://github.com/dart-lang/bazel/issues/98.
+      '--strategy=DartPackagesDir=standalone',
+      '--strategy=Dart2jsCompile=standalone',
     ]);
     stdout.addStream(bazelBuildProcess.stdout);
     stderr.addStream(bazelBuildProcess.stderr);
