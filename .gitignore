@@ -9,4 +9,5 @@ bazel-*
 workspace/pubspec.lock
 workspace/packages.bzl
 workspace/BUILD
+workspace/WORKSPACE
 **/pubspec.lock
