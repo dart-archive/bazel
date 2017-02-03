@@ -10,7 +10,7 @@ package(default_visibility = ["//visibility:public"])
 dart_library(
     name = "silly_monkey",
     srcs = glob(["lib/**"], exclude=[]),
-    deps = ["@path//:path"],
+    deps = ["@pub_path//:path"],
     enable_ddc = 1,
     pub_pkg_name = "silly_monkey",
 )

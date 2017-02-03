@@ -280,7 +280,7 @@ class _Initialize {
       Map<String, Pubspec> pubspecs,
       Map<String, BazelifyConfig> bazelifyConfigs) async {
     for (final package in packagePaths.keys) {
-      final buildFilePath = p.join(bazelifyPath, '$package.BUILD');
+      final buildFilePath = p.join(bazelifyPath, 'pub_$package.BUILD');
       final packageDir = packagePaths[package];
       var buildFile = await BuildFile.fromPackageDir(
           packageDir, pubspecs[package], bazelifyConfigs);

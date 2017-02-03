@@ -206,7 +206,7 @@ String depsToBazelTargetsString(Iterable<String> dependencies,
     if (package.isEmpty) {
       targets.add(':$target');
     } else {
-      targets.add('@$package//:$target');
+      targets.add('@pub_$package//:$target');
     }
   }
   return '[${targets.map((t) => '"$t"').join(',')}]';
