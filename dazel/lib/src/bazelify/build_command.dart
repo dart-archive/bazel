@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:args/command_runner.dart';
 import 'package:path/path.dart' as p;
 
+import '../step_timer.dart';
 import 'arguments.dart';
 import 'build.dart';
 import 'exceptions.dart';
@@ -28,12 +29,11 @@ class BuildCommand extends Command {
   @override
   String get description => 'Builds a dart web app.';
 
-  final watch = new Stopwatch();
+  final timer = new StepTimer();
 
   @override
   Future<Null> run() async {
-    assert(!watch.isRunning);
-    watch.start();
+    assert(timer == null);
     var commonArgs = await sharedArguments(globalResults);
     if (commonArgs == null) return;
 
@@ -54,20 +54,33 @@ class BuildCommand extends Command {
         outputDir: argResults['output-dir'],
         target: app);
 
-    await build(buildArgs);
-    watch
-      ..reset()
-      ..stop();
+    await timer.run(
+        'Building app `${buildArgs.target}.html`', () => build(buildArgs),
+        printCompleteOnNewLine: true);
+    timer.complete('See `${buildArgs.outputDir}` dir for build output.');
   }
 
   Future build(BazelifyBuildArguments args) async {
-    _log('Building app at ${args.target}.html...\n');
     if (p.relative(args.pubPackageDir) != '.') {
       throw new ApplicationFailedException(
           'dazel build only supports running from your top level package '
           'directory.',
           1);
     }
+    await timer.run('Running bazel build', () => _bazelBuild(args),
+        printCompleteOnNewLine: true);
+    var outputDir = new Directory(args.outputDir);
+    await timer.run('Deleting old `${args.outputDir}` dir if needed',
+        () => _deleteDir(outputDir));
+    var entryPoint = await timer.run(
+        'Collecting target data', () => _getEntryPointData(args.target));
+    var tarPath = 'bazel-bin/${entryPoint.dartFile}.js.tar';
+    await timer.run('Expanding tar file at `$tarPath` into `${args.outputDir}`',
+        () => _expandTar(tarPath, outputDir, args));
+  }
+
+  Future _bazelBuild(BazelifyBuildArguments args) async {
+    stdout.writeln();
     var bazelBuildProcess = await Process.start(args.bazelExecutable, [
       'build',
       ':${args.target}',
@@ -83,18 +96,22 @@ class BuildCommand extends Command {
       throw new ApplicationFailedException(
           'bazel failed with a non-zero exit code.', bazelExitCode);
     }
-    print('');
+    stdout.writeln();
+  }
 
-    var outputDir = new Directory(args.outputDir);
-    if (await outputDir.exists()) {
-      _log('Deleting old `${args.outputDir}` dir.');
-      await outputDir.delete(recursive: true);
+  Future _deleteDir(Directory dir) async {
+    if (await dir.exists()) {
+      await dir.delete(recursive: true);
     }
+  }
 
-    var file = new File("${args.target}.html");
-    var entryPoint = await htmlEntryPointFromFile(file, './');
-    var tarPath = 'bazel-bin/${entryPoint.dartFile}.js.tar';
-    _log('Expanding tar file at `$tarPath` into `${args.outputDir}`.');
+  Future<HtmlEntryPoint> _getEntryPointData(String target) {
+    var file = new File('$target.html');
+    return htmlEntryPointFromFile(file, './');
+  }
+
+  Future _expandTar(
+      String tarPath, Directory outputDir, BazelifyBuildArguments args) async {
     var archive =
         new TarDecoder().decodeBytes(await new File(tarPath).readAsBytes());
     await outputDir.create();
@@ -104,22 +121,6 @@ class BuildCommand extends Command {
       await outputFile.create(recursive: true);
       await outputFile.writeAsBytes(archiveFile.content);
     }));
-    _log('Build complete! See `${args.outputDir}` dir for build output.');
-  }
-
-  void _log(String message) {
-    print("${_elapsed(watch)}: $message");
-  }
-
-  String _elapsed(Stopwatch watch) {
-    var elapsed = "${watch.elapsed}";
-
-    // Strip of empty segments of the time.
-    var match = _elapsedRegexp.firstMatch(elapsed);
-    if (match != null) elapsed = elapsed.substring(match.end);
-
-    // Only show 3 digits of precision.
-    return elapsed.substring(0, elapsed.length - 3);
   }
 }
 
