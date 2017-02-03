@@ -4,6 +4,9 @@ author: Dart Team <misc@dartlang.org>
 homepage: https://github.com/dart-lang/bazel
 version: 0.0.1
 
+environment:
+  sdk: ">=1.8.0 <2.0.0"
+
 dependencies:
   analyzer: ^0.29.5
   args: ^0.13.6
