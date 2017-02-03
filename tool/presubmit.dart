@@ -33,7 +33,6 @@ main() {
   testRunningGetCwd();
   // TODO: Not finding the NG2 web app
   //testBuildingNg2App();
-  testRunningDartFmt();
 
   print('\nPASS');
 }
@@ -51,15 +50,6 @@ void testBuildingNg2App() {
   print('Building a Web app...');
   var result = bazel(['build', ':ng2_app_run']);
   if (!result.stderr.contains('Compiling with dart2js //ng2_app:ng2_app')) {
-    print('Error: ${result.stderr}');
-    exit(1);
-  }
-}
-
-void testRunningDartFmt() {
-  print('Run the pre-built dart_style:format binary...');
-  var result = bazel(['run', 'run_dartfmt']);
-  if (!result.stderr.contains('run_dartfmt @dart_style//:format')) {
     print('Error: ${result.stderr}');
     exit(1);
   }
