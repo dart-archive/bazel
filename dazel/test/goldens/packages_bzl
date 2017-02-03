@@ -6,7 +6,7 @@ PUB_PACKAGE_NAME = "silly_monkey"
 # Generated automatically for package:silly_monkey|pubspec.yaml
 def dazel_init():
     native.new_local_repository(
-        name = "path",
+        name = "pub_path",
         path = "some/path/to/.pub_cache/path-0.0.0",
-        build_file = ".dazel/path.BUILD",
+        build_file = ".dazel/pub_path.BUILD",
     )
