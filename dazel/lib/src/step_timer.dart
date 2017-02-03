@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 class StepTimer {
   final _stopwatch = new Stopwatch()..start();
@@ -14,15 +15,25 @@ class StepTimer {
     return elapsed.substring(0, elapsed.length - 3);
   }
 
-  Future/*<T>*/ run/*<T>*/(String description, Future/*<T>*/ step()) async {
+  Future/*<T>*/ run/*<T>*/(String description, Future/*<T>*/ step(),
+      {bool printCompleteOnNewLine = false}) async {
+    assert(_stopwatch.isRunning);
+    var start = _stopwatch.elapsed;
     try {
-      print('$_elapsed: $description');
+      stdout.write('$_elapsed: $description');
+      if (printCompleteOnNewLine) stdout.writeln();
       return await step();
-    } finally {}
+    } finally {
+      var elapsedMillis = (_stopwatch.elapsed - start).inMilliseconds;
+      if (printCompleteOnNewLine) {
+        stdout.write('$_elapsed: $description finished');
+      }
+      stdout.writeln(' (${elapsedMillis}ms)');
+    }
   }
 
   void complete(String message) {
-    print('$_elapsed: $message');
+    stdout.writeln('$_elapsed: $message');
     _stopwatch.stop();
   }
 }
