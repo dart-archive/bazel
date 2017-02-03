@@ -386,7 +386,7 @@ class DartWebApplication implements DartBuildRule {
 
   String get ddcBundleName => '${name}_ddc_bundle';
 
-  String get ddcBundleOutputHtmlPath => 'web/$ddcBundleName.html';
+  String get ddcBundleOutputHtmlPath => '$ddcBundleName.html';
 
   String get ddcServeName => '${name}_ddc_serve';
 

@@ -54,7 +54,7 @@ void main() {
       'name: silly_monkey',
       webApps: [
         new DartWebApplication(
-          name: 'index',
+          name: 'web/index',
           package: 'silly_monkey',
           entryPoint: new HtmlEntryPoint(
               htmlFile: 'web/index.html', dartFile: 'web/main.dart'),
@@ -69,13 +69,13 @@ void main() {
       'name: silly_monkey',
       webApps: [
         new DartWebApplication(
-          name: 'main_web',
+          name: 'web/main_web',
           package: 'silly_monkey',
           entryPoint: new HtmlEntryPoint(
               htmlFile: 'web/index.html', dartFile: 'web/main.dart'),
         ),
         new DartWebApplication(
-          name: 'secondary_web',
+          name: 'web/secondary_web',
           package: 'silly_monkey',
           entryPoint: new HtmlEntryPoint(
               htmlFile: 'web/secondary.html', dartFile: 'web/secondary.dart'),
