@@ -106,7 +106,7 @@ class BuildCommand extends Command {
   }
 
   Future<HtmlEntryPoint> _getEntryPointData(String target) {
-    var file = new File("$target.html");
+    var file = new File('$target.html');
     return htmlEntryPointFromFile(file, './');
   }
 

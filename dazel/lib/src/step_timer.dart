@@ -15,6 +15,14 @@ class StepTimer {
     return elapsed.substring(0, elapsed.length - 3);
   }
 
+  /// Runs [step], printing the current elapsed time followed by [description].
+  ///
+  /// When [step] completes if [printCompleteOnNewLine] is false, then it will
+  /// just append the time in milliseconds to the same line, otherwise it will
+  /// print a new line with the elapsed time.
+  ///
+  /// If the action might do some of its own logging, then you should pass
+  /// `printCompleteOnNewLine: true` to this method for ideal output.
   Future/*<T>*/ run/*<T>*/(String description, Future/*<T>*/ step(),
       {bool printCompleteOnNewLine = false}) async {
     assert(_stopwatch.isRunning);
@@ -32,8 +40,9 @@ class StepTimer {
     }
   }
 
-  void complete(String message) {
-    stdout.writeln('$_elapsed: $message');
+  /// Stops the timer, and logs [message].
+  void complete([String message]) {
+    if (message != null) stdout.writeln('$_elapsed: $message');
     _stopwatch.stop();
   }
 }
