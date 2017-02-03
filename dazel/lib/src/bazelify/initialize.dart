@@ -196,16 +196,15 @@ class _Initialize {
 
   Future<Null> run() async {
     final timer = new StepTimer();
-    await timer.run('pub get', _pubGetInPackage);
+    await timer.run('running pub get', _pubGetInPackage);
     final packagePaths = await _readPackagePaths();
     final pubspecs = await _readPubspecs(packagePaths);
     final bazelifyConfigs = await _readBazelifyConfigs(packagePaths, pubspecs);
-    await timer.run('create .dazel',
+    await timer.run('creating .dazel',
         () => _createDazelDir(packagePaths, pubspecs, bazelifyConfigs));
-    await timer.run('create packages.bzl, build, and workspace',
+    await timer.run('creating packages.bzl, build, and workspace',
         () => _writeBazelFiles(packagePaths, bazelifyConfigs));
-    await timer.run('scan for analysis options', _suggestAnalyzerExcludes);
-    timer.printTimings();
+    await timer.run('scanning for analysis options', _suggestAnalyzerExcludes);
   }
 
   Future<Null> _pubGetInPackage() async {

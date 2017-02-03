@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:args/command_runner.dart';
 import 'package:path/path.dart' as p;
 
+import '../step_timer.dart';
 import 'arguments.dart';
 import 'build.dart';
 import 'exceptions.dart';
@@ -28,12 +29,11 @@ class BuildCommand extends Command {
   @override
   String get description => 'Builds a dart web app.';
 
-  final watch = new Stopwatch();
+  final timer = new StepTimer();
 
   @override
   Future<Null> run() async {
-    assert(!watch.isRunning);
-    watch.start();
+    assert(timer == null);
     var commonArgs = await sharedArguments(globalResults);
     if (commonArgs == null) return;
 
@@ -54,10 +54,10 @@ class BuildCommand extends Command {
         outputDir: argResults['output-dir'],
         target: app);
 
-    await build(buildArgs);
-    watch
-      ..reset()
-      ..stop();
+    await timer.run(
+        'Building app ${buildArgs.target}.html to '
+        '`${buildArgs.outputDir}`.',
+        () => build(buildArgs));
   }
 
   Future build(BazelifyBuildArguments args) async {
