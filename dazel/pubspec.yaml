@@ -2,13 +2,14 @@ name: dazel
 description: Bazel support for Dart
 author: Dart Team <misc@dartlang.org>
 homepage: https://github.com/dart-lang/bazel
-version: 0.2.2
+version: 0.2.3
 
 # NOTE: We require a generated .packages file in order to use this package.
 environment:
   sdk: "> 1.19.0"
 
 dependencies:
+  archive: ^1.0.0
   args: "^0.13.6"
   barback: "^0.15.2"
   html: "^0.13.0"
@@ -23,3 +24,12 @@ dependencies:
 dev_dependencies:
   path: "^1.4.0"
   test: "^0.12.15+2"
+  test_descriptor: "^1.0.0"
+
+dependency_overrides:
+  # test_descriptor is not yet published, but should be soon. For now we are
+  # just using a dependency override so we can use it.
+  test:
+    git: https://github.com/dart-lang/test.git
+  test_descriptor:
+    git: https://github.com/dart-lang/test_descriptor.git
