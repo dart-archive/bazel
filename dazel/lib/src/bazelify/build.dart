@@ -46,7 +46,8 @@ class BuildFile {
         .list(recursive: true, followLinks: false)
         .where((entity) => entity is File && entity.path.endsWith('.html'));
     await for (final File file in files) {
-      yield await htmlEntryPointFromFile(file, packageDir);
+      var entrypoint = await htmlEntryPointFromFile(file, packageDir);
+      if (entrypoint != null) yield entrypoint;
     }
   }
 
