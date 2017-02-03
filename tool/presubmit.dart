@@ -42,7 +42,7 @@ void testRunningGetCwd() {
 
 void testBuildingNg2App() {
   print('Building a Web app...');
-  var result = bazel(['build', 'ng2_app:all']);
+  var result = bazel(['build', ':ng2_app_run']);
   if (!result.stderr.contains('Compiling with dart2js //ng2_app:ng2_app')) {
     print('Error: ${result.stderr}');
     exit(1);

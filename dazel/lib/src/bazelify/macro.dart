@@ -13,9 +13,8 @@ class BazelMacroFile {
   ) {
     final repos = packages.map/*<NewLocalRepository>*/((d) {
       return new NewLocalRepository(
-        name: d,
+        name: 'pub_$d',
         path: resolvePath(d),
-        buildFile: '.dazel/$d.BUILD',
       );
     });
     return new BazelMacroFile.fromRepositories(
@@ -54,14 +53,10 @@ class NewLocalRepository {
   /// Local file path of the package.
   final String path;
 
-  /// Where the generated BUILD file should be.
-  final String buildFile;
-
   /// Create a `new_local_repository` macro.
   NewLocalRepository({
     this.name,
     this.path,
-    this.buildFile,
   });
 
   @override
