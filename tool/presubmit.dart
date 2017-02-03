@@ -9,12 +9,16 @@ main() {
   Directory.current = p.join(p.current, 'workspace');
 
   print('Running pub get...');
-  Process.runSync('pub', ['get']);
+  var pubGetResult = Process.runSync('pub', ['get']);
+  if (pubGetResult.exitCode != 0) {
+    print('Pub get failed');
+    exit(1);
+  }
 
   // Run dazel.
   print('Running dazel...');
   var result = Process.runSync('pub', ['run', 'dazel', 'init']);
-  if (result.stderr.isNotEmpty) {
+  if (result.stderr.isNotEmpty || result.exitCode != 0) {
     print('ERROR: ${result.stderr}');
     exit(1);
   }
