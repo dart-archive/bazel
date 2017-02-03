@@ -24,7 +24,7 @@ dart_library(
 )
 # Generated automatically for package:silly_monkey|web/main.dart
 dart_web_application(
-    name = "main_web",
+    name = "web/main_web",
     srcs = glob(["web/**"], exclude=[]),
     script_file = "web/main.dart",
     deps = [] + [
@@ -32,27 +32,27 @@ dart_web_application(
     ],
 )
 dart_ddc_bundle(
-    name = "main_web_ddc_bundle",
+    name = "web/main_web_ddc_bundle",
     entry_library = "web/main.dart",
     entry_module = ":silly_monkey",
     input_html = "web/index.html",
     output_dir = "web",
 )
-# A ddc specific dev_server target which serves main_web
+# A ddc specific dev_server target which serves web/main_web
 dev_server(
-    name = "main_web_ddc_serve",
+    name = "web/main_web_ddc_serve",
     data = [
-        ":main_web_ddc_bundle",
+        ":web/main_web_ddc_bundle",
     ],
     script_args = [
-        "--package-spec=main_web_ddc_bundle.packages",
+        "--package-spec=web/main_web_ddc_bundle.packages",
         "--uri-substitution=web/index.html:web/main_web_ddc_bundle.html",
     ],
 )
 
 # Generated automatically for package:silly_monkey|web/secondary.dart
 dart_web_application(
-    name = "secondary_web",
+    name = "web/secondary_web",
     srcs = glob(["web/**"], exclude=[]),
     script_file = "web/secondary.dart",
     deps = [] + [
@@ -60,33 +60,33 @@ dart_web_application(
     ],
 )
 dart_ddc_bundle(
-    name = "secondary_web_ddc_bundle",
+    name = "web/secondary_web_ddc_bundle",
     entry_library = "web/secondary.dart",
     entry_module = ":silly_monkey",
     input_html = "web/secondary.html",
     output_dir = "web",
 )
-# A ddc specific dev_server target which serves secondary_web
+# A ddc specific dev_server target which serves web/secondary_web
 dev_server(
-    name = "secondary_web_ddc_serve",
+    name = "web/secondary_web_ddc_serve",
     data = [
-        ":secondary_web_ddc_bundle",
+        ":web/secondary_web_ddc_bundle",
     ],
     script_args = [
-        "--package-spec=secondary_web_ddc_bundle.packages",
+        "--package-spec=web/secondary_web_ddc_bundle.packages",
         "--uri-substitution=web/secondary.html:web/secondary_web_ddc_bundle.html",
     ],
 )
 
-# A ddc specific dev_server target which serves main_web, secondary_web
+# A ddc specific dev_server target which serves web/main_web, web/secondary_web
 dev_server(
     name = "__ddc_serve_all",
     data = [
-        ":main_web_ddc_bundle",
-        ":secondary_web_ddc_bundle",
+        ":web/main_web_ddc_bundle",
+        ":web/secondary_web_ddc_bundle",
     ],
     script_args = [
-        "--package-spec=main_web_ddc_bundle.packages",
+        "--package-spec=web/main_web_ddc_bundle.packages",
         "--uri-substitution=web/index.html:web/main_web_ddc_bundle.html",
         "--uri-substitution=web/secondary.html:web/secondary_web_ddc_bundle.html",
     ],

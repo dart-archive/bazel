@@ -1,5 +1,6 @@
 import 'package:args/command_runner.dart';
 
+import 'build_command.dart' show BuildCommand;
 import 'initialize.dart' show InitCommand;
 import 'serve.dart' show ServeCommand;
 
@@ -15,6 +16,7 @@ class BazelifyCommandRunner extends CommandRunner {
               'Defaults to CWD.');
 
     addCommand(new InitCommand());
+    addCommand(new BuildCommand());
     addCommand(new ServeCommand());
   }
 }
