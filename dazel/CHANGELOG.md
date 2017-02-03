@@ -1,3 +1,12 @@
+## 0.2.3
+
+* Add `dazel build` command, which can build a web app and create a deployable
+  directory for it (using dart2js), similar to `pub build`.
+    * Has a single positional argument which should be the path to the html file
+      for the app to build. For example, `dazel build web/index.html`.
+    * Has a single optional argument `--output-dir` which defaults to `deploy`.
+      The abbreviation `o` is supported for this argument as well.
+
 ## 0.2.2
 
 * Update to rules dart 0.2.2 with the latest dev sdk

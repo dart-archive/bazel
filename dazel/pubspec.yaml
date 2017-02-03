@@ -2,13 +2,14 @@ name: dazel
 description: Bazel support for Dart
 author: Dart Team <misc@dartlang.org>
 homepage: https://github.com/dart-lang/bazel
-version: 0.2.2
+version: 0.2.3
 
 # NOTE: We require a generated .packages file in order to use this package.
 environment:
   sdk: "> 1.19.0"
 
 dependencies:
+  archive: ^1.0.0
   args: "^0.13.6"
   barback: "^0.15.2"
   html: "^0.13.0"

@@ -139,7 +139,7 @@ class InitCommand extends Command {
 /// Where to retrieve the `rules_dart`.
 abstract class DartRulesSource {
   /// The default version of [DartRulesSource] if not otherwise specified.
-  static const DartRulesSource stable = const DartRulesSource.tag('v0.2.3');
+  static const DartRulesSource stable = const DartRulesSource.tag('v0.3.1');
 
   /// Use a git [commit].
   const factory DartRulesSource.commit(String commit) = _GitCommitRulesSource;
