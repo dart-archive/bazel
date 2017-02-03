@@ -118,7 +118,7 @@ class BuildCommand extends Command {
     var match = _elapsedRegexp.firstMatch(elapsed);
     if (match != null) elapsed = elapsed.substring(match.end);
 
-    // Only show 3 didgets of precision.
+    // Only show 3 digits of precision.
     return elapsed.substring(0, elapsed.length - 3);
   }
 }
@@ -130,12 +130,11 @@ class BazelifyBuildArguments extends BazelifyArguments {
   /// The app target to build.
   final String target;
 
-  BazelifyBuildArguments._({
-    String bazelExecutable,
-    String pubPackageDir,
-    this.outputDir,
-    this.target,
-  })
+  BazelifyBuildArguments._(
+      {String bazelExecutable,
+      String pubPackageDir,
+      this.outputDir,
+      this.target})
       : super(bazelExecutable: bazelExecutable, pubPackageDir: pubPackageDir);
 }
 
