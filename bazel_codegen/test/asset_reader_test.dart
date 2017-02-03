@@ -6,8 +6,8 @@ import 'dart:io';
 import 'package:build/build.dart';
 import 'package:test/test.dart';
 
-import 'package:bazel_codegen/src/assets/asset_reader.dart';
-import 'package:bazel_codegen/src/assets/file_system.dart';
+import 'package:_bazel_codegen/src/assets/asset_reader.dart';
+import 'package:_bazel_codegen/src/assets/file_system.dart';
 
 void main() {
   const packagePath = 'test/package/test_package';

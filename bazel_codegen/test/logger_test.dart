@@ -7,7 +7,7 @@ import 'dart:io';
 import 'package:logging/logging.dart';
 import 'package:test/test.dart';
 
-import 'package:bazel_codegen/src/logging.dart';
+import 'package:_bazel_codegen/src/logging.dart';
 
 void main() {
   IOSinkLogHandle logHandle;
