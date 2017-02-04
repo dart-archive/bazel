@@ -1,5 +1,5 @@
 name: bazel
-description: [Deprecated] See https://pub.dartlang.org/packages/dazel
+description: '*Deprecated* See https://pub.dartlang.org/packages/dazel'
 author: Dart Team <misc@dartlang.org>
 homepage: https://github.com/dart-lang/bazel
 version: 0.3.0
