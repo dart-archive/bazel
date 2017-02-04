@@ -9,7 +9,7 @@ import 'package:build/build.dart';
 import 'package:build_barback/build_barback.dart';
 import 'package:path/path.dart' as p;
 
-import '../bazel_codegen.dart';
+import '../_bazel_codegen.dart';
 import 'arg_parser.dart';
 import 'assets/asset_filter.dart';
 import 'assets/asset_reader.dart';
