@@ -65,6 +65,7 @@ class BuildFile {
 
   static const ddcServeAllName = '__ddc_serve_all';
   static const _coreBzl = '$_rulesSource:core.bzl';
+  static const codegenBzl = '$_rulesSource/codegen:codegen.bzl';
   static const _rulesSource = '@io_bazel_rules_dart//dart/build_rules';
   static const _webBzl = '$_rulesSource:web.bzl';
   static const _vmBzl = '$_rulesSource:vm.bzl';
@@ -90,7 +91,7 @@ class BuildFile {
   /// Resolve and return new [BuildFile] by looking at [packageDir].
   ///
   /// The general rule of thumb is:
-  /// - Every package generates _exactly one_ dart_library
+  /// - Every package generates one or more dart_libraries
   /// - Some packages generate 1 or more dart_vm_binary or dart_web_application
   ///
   /// A `BazelifyConfig` will also be created, and added to `bazelifyConfigs`.
@@ -143,6 +144,12 @@ class BuildFile {
       buffer.writeln('load("$_coreBzl", "dart_library")');
       buffer.writeln();
     }
+    if (builderBinaries.isNotEmpty) {
+      buffer
+        ..writeln('# Dazel: ${builderBinaries.length} codegen binaries.')
+        ..writeln('load("$codegenBzl", "dart_codegen_binary")')
+        ..writeln();
+    }
     if (webApplications.isNotEmpty) {
       buffer.writeln('# Dazel: ${webApplications.length} web apps.');
       buffer.writeln('load(\n    "$_webBzl",\n    "dart_web_application",');
@@ -153,6 +160,15 @@ class BuildFile {
       buffer.writeln('# Dazel: ${binaries.length} binaries.');
       buffer.writeln('load("$_vmBzl", "dart_vm_binary")');
       buffer.writeln();
+    }
+    final buildersUsed =
+        libraries.expand((l) => l.builders?.keys ?? const <String>[]);
+    if (buildersUsed.isNotEmpty) {
+      buffer
+        ..writeln('# Dazel: Using codegen.')
+        ..writeln(
+            'load(":codegen.bzl", ${buildersUsed.map((b) => '"$b"').join(', ')})')
+        ..writeln();
     }
 
     // Visibility.
@@ -255,8 +271,6 @@ class DartLibrary implements DartBuildRule {
   /// A list of builders to apply to this target, possibly with config options.
   ///
   /// May be `null`.
-  ///
-  // TODO: Actually use this once we have support in the rules.
   final Map<String, Map<String, dynamic>> builders;
 
   /// Whether or not  to enable the dart development compiler.
@@ -269,8 +283,6 @@ class DartLibrary implements DartBuildRule {
 
   /// Sources to use as inputs for `builders`. May be `null`, in which case
   /// it should fall back on `sources`.
-  ///
-  // TODO: Actually use this once we have support in the rules.
   final Iterable<String> generateFor;
 
   /// Create a new `dart_library` named [name].
@@ -287,18 +299,38 @@ class DartLibrary implements DartBuildRule {
 
   @override
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs) {
-    if (builders != null || generateFor != null) {
-      throw new UnimplementedError('`builders` and `generate_for` are not yet '
-          'supported for `target` configs.');
+    var rule = new StringBuffer();
+    var generatedTargets = <String>[];
+    if (builders != null) {
+      for (var builderName in builders.keys) {
+        var targetName = '${name}_$builderName';
+        generatedTargets.add(targetName);
+        var generateForGlob = generateFor == null
+            ? ''
+            : '    generate_for = ${_sourcesToGlob(generateFor, const [])},';
+        rule
+          ..writeln('$builderName(')
+          ..writeln('    name = "$targetName",')
+          ..writeln('    srcs = ${_sourcesToGlob(sources, excludeSources)},')
+          ..writeln(generateForGlob)
+          ..writeln(')');
+      }
     }
-    return '# Generated automatically for package:$package\n'
-        'dart_library(\n'
-        '    name = "$name",\n'
-        '    srcs = ${_sourcesToGlob(sources, excludeSources)},\n'
-        '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},\n'
-        '    enable_ddc = ${enableDdc ? 1 : 0},\n'
-        '    pub_pkg_name = "$package",\n'
-        ')';
+    var generatedSrcs = generatedTargets.isEmpty
+        ? ''
+        : ' + [${generatedTargets.map((t) => '":$t"').join(', ')}]';
+    rule
+      ..writeln('# Generated automatically for package:$package')
+      ..writeln('dart_library(')
+      ..writeln('    name = "$name",')
+      ..writeln(
+          '    srcs = ${_sourcesToGlob(sources, excludeSources)}$generatedSrcs,')
+      ..writeln(
+          '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},')
+      ..writeln('    enable_ddc = ${enableDdc ? 1 : 0},')
+      ..writeln('    pub_pkg_name = "$package",')
+      ..write(')');
+    return '$rule';
   }
 
   @override
@@ -573,6 +605,16 @@ class DartBuilderBinary implements DartBuildRule {
       'package: $package\n'
       'replacesTransformer: $replacesTransformer\n'
       'target: $target';
+
+  String toCodegenRule() {
+    final joinedOutputExtensions =
+        outputExtensions.map((o) => '"$o"').join(', ');
+    return '$name = dart_codegen_rule(\n'
+        '    codegen_binary = "@pub_$package//:$name",\n'
+        '    in_extension = "$inputExtension",\n'
+        '    out_extensions = [$joinedOutputExtensions],\n'
+        ')';
+  }
 }
 
 String _sourcesToGlob(

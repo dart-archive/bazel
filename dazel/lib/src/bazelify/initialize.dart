@@ -11,6 +11,7 @@ import '../step_timer.dart';
 import 'arguments.dart';
 import 'bazelify_config.dart';
 import 'build.dart';
+import 'codegen_rules.dart';
 import 'macro.dart';
 import 'pubspec.dart';
 import 'workspace.dart';
@@ -316,6 +317,9 @@ class _Initialize {
         arguments.pubPackageDir, pubspec, bazelifyConfigs);
     final rootBuildPath = p.join(arguments.pubPackageDir, 'BUILD');
     await new File(rootBuildPath).writeAsString('$rootBuild');
+    final codegenRules = new CodegenRulesFile(bazelifyConfig, bazelifyConfigs);
+    final codegenRulesPath = p.join(arguments.pubPackageDir, 'codegen.bzl');
+    await new File(codegenRulesPath).writeAsString('$codegenRules');
   }
 
   /// Checks for the presence of an analysis_options which excludes bazel
