@@ -34,8 +34,7 @@ void main() {
     });
     expectDartBuilderBinaries(bazelifyConfig.dartBuilderBinaries, {
       'h': new DartBuilderBinary(
-        clazz: 'E',
-        constructor: 'withSettings',
+        builderFactories: ['createBuilder'],
         import: 'package:example/e.dart',
         inputExtension: '.dart',
         name: 'h',
@@ -45,7 +44,6 @@ void main() {
         ],
         package: 'example',
         replacesTransformer: 'example',
-        sharedPartOutput: true,
         target: 'e',
       ),
     });
@@ -81,15 +79,13 @@ targets:
       - vm
 builders:
   h:
-    class: E
-    constructor: withSettings
+    builder_factories: ["createBuilder"]
     import: package:example/e.dart
     input_extension: .dart
     output_extensions:
       - .g.dart
       - .json
     replaces_transformer: example
-    shared_part_output: true
     target: e
 ''';
 
@@ -115,8 +111,7 @@ class _DartBuilderBinaryMatcher extends Matcher {
   @override
   bool matches(item, _) =>
       item is DartBuilderBinary &&
-      item.clazz == _expected.clazz &&
-      item.constructor == _expected.constructor &&
+      equals(_expected.builderFactories).matches(item.builderFactories, _) &&
       equals(_expected.dependencies).matches(item.dependencies, _) &&
       item.inputExtension == _expected.inputExtension &&
       item.import == _expected.import &&
@@ -124,7 +119,6 @@ class _DartBuilderBinaryMatcher extends Matcher {
       equals(item.outputExtensions).matches(_expected.outputExtensions, _) &&
       item.package == _expected.package &&
       item.replacesTransformer == _expected.replacesTransformer &&
-      item.sharedPartOutput == _expected.sharedPartOutput &&
       item.target == _expected.target;
 
   @override
