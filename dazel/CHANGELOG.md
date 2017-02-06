@@ -1,3 +1,7 @@
+## 0.3.1
+
+* Bug fix: Bump the dependency on _bazel_codegen since 0.0.1 is broken
+
 ## 0.3.0
 
 ### Package rename
