@@ -268,9 +268,7 @@ class DartLibrary implements DartBuildRule {
   @override
   final Iterable<String> sources;
 
-  /// A list of builders to apply to this target, possibly with config options.
-  ///
-  /// May be `null`.
+  /// A map from builder name to the configuration used for this target.
   final Map<String, Map<String, dynamic>> builders;
 
   /// Whether or not  to enable the dart development compiler.
@@ -287,7 +285,7 @@ class DartLibrary implements DartBuildRule {
 
   /// Create a new `dart_library` named [name].
   DartLibrary(
-      {this.builders,
+      {this.builders: const {},
       this.dependencies,
       this.enableDdc: true,
       this.excludeSources: const [],
@@ -301,20 +299,18 @@ class DartLibrary implements DartBuildRule {
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs) {
     var rule = new StringBuffer();
     var generatedTargets = <String>[];
-    if (builders != null) {
-      for (var builderName in builders.keys) {
-        var targetName = '${name}_$builderName';
-        generatedTargets.add(targetName);
-        var generateForGlob = generateFor == null
-            ? ''
-            : '    generate_for = ${_sourcesToGlob(generateFor, const [])},';
-        rule
-          ..writeln('$builderName(')
-          ..writeln('    name = "$targetName",')
-          ..writeln('    srcs = ${_sourcesToGlob(sources, excludeSources)},')
-          ..writeln(generateForGlob)
-          ..writeln(')');
-      }
+    for (var builderName in builders.keys) {
+      var targetName = '${name}_$builderName';
+      generatedTargets.add(targetName);
+      var generateForGlob = generateFor == null
+          ? ''
+          : '    generate_for = ${_sourcesToGlob(generateFor, const [])},';
+      rule
+        ..writeln('$builderName(')
+        ..writeln('    name = "$targetName",')
+        ..writeln('    srcs = ${_sourcesToGlob(sources, excludeSources)},')
+        ..writeln(generateForGlob)
+        ..writeln(')');
     }
     var generatedSrcs = generatedTargets.isEmpty
         ? ''
