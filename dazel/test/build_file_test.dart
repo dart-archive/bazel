@@ -148,5 +148,10 @@ void main() {
           await loadBuildFileFromDir('test/projects/multiple_targets');
       expect(build.toString(), loadGolden('build_file_multiple_targets'));
     });
+
+    test('should generate a dart_codegen_binary for builders', () async {
+      final build = await loadBuildFileFromDir('test/projects/codegen_author');
+      expect(build.toString(), loadGolden('build_file_codegen_author'));
+    });
   });
 }

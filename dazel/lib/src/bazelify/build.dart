@@ -558,7 +558,7 @@ class DartBuilderBinary implements DartBuildRule {
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs) =>
       'dart_codegen_binary(\n'
       '    name = "$name",\n'
-      '    srcs = [], #glob(["lib/**"]), #TODO: Should be customizable?\n'
+      '    srcs = [],\n'
       '    builder_import = "$import",\n'
       '    builder_factories = [${builderFactories.map((b) => '"$b"').join(', ')}],\n'
       '    deps = [":$target"],\n'
