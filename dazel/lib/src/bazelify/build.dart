@@ -164,10 +164,10 @@ class BuildFile {
     final buildersUsed =
         libraries.expand((l) => l.builders?.keys ?? const <String>[]);
     if (buildersUsed.isNotEmpty) {
+      var joinedBuilders = buildersUsed.map((b) => '"$b"').join(', ');
       buffer
         ..writeln('# Dazel: Using codegen.')
-        ..writeln(
-            'load(":codegen.bzl", ${buildersUsed.map((b) => '"$b"').join(', ')})')
+        ..writeln('load(":codegen.bzl", $joinedBuilders)')
         ..writeln();
     }
 
@@ -315,14 +315,14 @@ class DartLibrary implements DartBuildRule {
     var generatedSrcs = generatedTargets.isEmpty
         ? ''
         : ' + [${generatedTargets.map((t) => '":$t"').join(', ')}]';
+    var srcs = _sourcesToGlob(sources, excludeSources);
+    var deps = depsToBazelTargetsString(dependencies, bazelifyConfigs);
     rule
       ..writeln('# Generated automatically for package:$package')
       ..writeln('dart_library(')
       ..writeln('    name = "$name",')
-      ..writeln(
-          '    srcs = ${_sourcesToGlob(sources, excludeSources)}$generatedSrcs,')
-      ..writeln(
-          '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},')
+      ..writeln('    srcs = $srcs$generatedSrcs,')
+      ..writeln('    deps = $deps,')
       ..writeln('    enable_ddc = ${enableDdc ? 1 : 0},')
       ..writeln('    pub_pkg_name = "$package",')
       ..write(')');
