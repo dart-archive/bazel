@@ -520,12 +520,8 @@ class DartBuilderBinary implements DartBuildRule {
   @override
   Iterable<String> get sources => null;
 
-  /// The name of the custom `Builder` class.
-  final String clazz;
-
-  /// The name of the constructor to use, if `null` then the default constructor
-  /// will be used.
-  final String constructor;
+  /// The names of the top-level methods in [import] from args -> Builder.
+  final List<String> builderFactories;
 
   /// The import to be used to load `clazz`.
   final String import;
@@ -545,45 +541,37 @@ class DartBuilderBinary implements DartBuildRule {
   /// May be null.
   final String replacesTransformer;
 
-  /// Whether or not this builder outputs to a shared part file with other
-  /// builders.
-  ///
-  /// If true then this builder will actually output to a temp file and then
-  /// those temp files will be concatenated together into the part file.
-  ///
-  /// Note that if this is true the builder should not output any directives
-  /// that have ordering concerns such as `library`, `import`, `export`, etc.
-  final bool sharedPartOutput;
-
   /// The name of the dart_library target that contains `import`.
   final String target;
 
   DartBuilderBinary(
-      {this.clazz,
-      this.constructor,
+      {this.builderFactories,
       this.inputExtension,
       this.import,
       this.name,
       this.outputExtensions,
       this.package,
       this.replacesTransformer,
-      this.sharedPartOutput,
       this.target});
 
   @override
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs) =>
-      throw new UnimplementedError('`builders` are not yet supported by dazel');
+      'dart_codegen_binary(\n'
+      '    name = "$name",\n'
+      '    srcs = [], #glob(["lib/**"]), #TODO: Should be customizable?\n'
+      '    builder_import = "$import",\n'
+      '    builder_factories = [${builderFactories.map((b) => '"$b"').join(', ')}],\n'
+      '    deps = [":$target"],\n'
+      ')';
 
   @override
-  String toString() => 'clazz: $clazz\n'
-      'constructor: $constructor\n'
+  String toString() => 'builderFactories: $builderFactories\n'
       'inputExtension: $inputExtension\n'
       'import: $import\n'
       'name: $name\n'
       'outputExtensions: $outputExtensions\n'
       'package: $package\n'
       'replacesTransformer: $replacesTransformer\n'
-      'sharedPartOutput: $sharedPartOutput\n'
       'target: $target';
 }
 

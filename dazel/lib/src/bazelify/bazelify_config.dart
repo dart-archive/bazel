@@ -32,22 +32,18 @@ class BazelifyConfig {
   static const _sources = 'sources';
 
   static const _builderOptions = const [
-    _class,
-    _constructor,
+    _builderFactories,
     _import,
     _inputExtension,
     _outputExtensions,
     _replacesTransformer,
-    _sharedPartOutput,
     _target,
   ];
-  static const _class = 'class';
-  static const _constructor = 'constructor';
+  static const _builderFactories = 'builder_factories';
   static const _import = 'import';
   static const _inputExtension = 'input_extension';
   static const _outputExtensions = 'output_extensions';
   static const _replacesTransformer = 'replaces_transformer';
-  static const _sharedPartOutput = 'shared_part_output';
   static const _target = 'target';
 
   /// Returns a parsed [BazelifyConfig] file in [path], if one exists.
@@ -145,9 +141,8 @@ class BazelifyConfig {
           _builderOptions, 'builder `$builderName`',
           defaultValue: <String, dynamic>{});
 
-      final clazz = _readStringOrThrow(builderConfig, _class);
-      final constructor =
-          _readStringOrThrow(builderConfig, _constructor, allowNull: true);
+      final builderFactories =
+          _readListOfStringsOrThrow(builderConfig, _builderFactories);
       final import = _readStringOrThrow(builderConfig, _import);
       final inputExtension = _readStringOrThrow(builderConfig, _inputExtension);
       final outputExtensions =
@@ -155,21 +150,16 @@ class BazelifyConfig {
       final replacesTransformer = _readStringOrThrow(
           builderConfig, _replacesTransformer,
           allowNull: true);
-      final sharedPartOutput = _readBoolOrThrow(
-          builderConfig, _sharedPartOutput,
-          defaultValue: false);
       final target = _readStringOrThrow(builderConfig, _target);
 
       dartBuilderBinaries[builderName] = new DartBuilderBinary(
-        clazz: clazz,
-        constructor: constructor,
+        builderFactories: builderFactories,
         import: import,
         inputExtension: inputExtension,
         name: builderName,
         outputExtensions: outputExtensions,
         package: pubspec.pubPackageName,
         replacesTransformer: replacesTransformer,
-        sharedPartOutput: sharedPartOutput,
         target: target,
       );
     }
