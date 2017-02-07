@@ -4,6 +4,9 @@
 # Dazel: 1 libraries.
 load("@io_bazel_rules_dart//dart/build_rules:core.bzl", "dart_library")
 
+# Dazel: 1 codegen binaries.
+load("@io_bazel_rules_dart//dart/build_rules/codegen:codegen.bzl", "dart_codegen_binary")
+
 package(default_visibility = ["//visibility:public"])
 
 # Generated automatically for package:does_code_generation
