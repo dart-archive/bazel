@@ -9,18 +9,18 @@ load("@io_bazel_rules_dart//dart/build_rules/codegen:codegen.bzl", "dart_codegen
 
 package(default_visibility = ["//visibility:public"])
 
-# Generated automatically for package:does_code_generation
+# Generated automatically for package:codegen_author
 dart_library(
-    name = "does_code_generation",
+    name = "codegen_author",
     srcs = glob(["lib/**"], exclude=[]),
     deps = [],
     enable_ddc = 1,
-    pub_pkg_name = "does_code_generation",
+    pub_pkg_name = "codegen_author",
 )
 dart_codegen_binary(
     name = "some_builder",
     srcs = [],
-    builder_import = "package:does_code_generation/some_builder.dart",
+    builder_import = "package:codegen_author/some_builder.dart",
     builder_factories = ["someBuilder"],
-    deps = [":does_code_generation"],
+    deps = [":codegen_author"],
 )

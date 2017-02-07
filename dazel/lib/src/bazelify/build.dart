@@ -162,6 +162,19 @@ class BuildFile {
       buffer.writeln('load("$_vmBzl", "dart_vm_binary")');
       buffer.writeln();
     }
+    final buildersUsed =
+        libraries.expand((l) => l.builders?.keys ?? const <String>[]);
+    for (var builder in buildersUsed) {
+      var builderDefinition = bazelifyConfigs.values
+          .expand((c) => c.dartBuilderBinaries.values)
+          .firstWhere((b) => b.name == builder);
+      var builderPackage = builderDefinition.package;
+      buffer
+        ..writeln('load(')
+        ..writeln('    "//:.dazel/pub_$builderPackage.codegen.bzl",')
+        ..writeln('    "$builder",')
+        ..writeln(')');
+    }
 
     // Visibility.
     buffer.writeln('package(default_visibility = ["//visibility:public"])\n');
@@ -260,11 +273,7 @@ class DartLibrary implements DartBuildRule {
   @override
   final Iterable<String> sources;
 
-  /// A list of builders to apply to this target, possibly with config options.
-  ///
-  /// May be `null`.
-  ///
-  // TODO: Actually use this once we have support in the rules.
+  /// A map from builder name to the configuration used for this target.
   final Map<String, Map<String, dynamic>> builders;
 
   /// Whether or not  to enable the dart development compiler.
@@ -277,13 +286,11 @@ class DartLibrary implements DartBuildRule {
 
   /// Sources to use as inputs for `builders`. May be `null`, in which case
   /// it should fall back on `sources`.
-  ///
-  // TODO: Actually use this once we have support in the rules.
   final Iterable<String> generateFor;
 
   /// Create a new `dart_library` named [name].
   DartLibrary(
-      {this.builders,
+      {this.builders: const {},
       this.dependencies,
       this.enableDdc: true,
       this.excludeSources: const [],
@@ -295,18 +302,36 @@ class DartLibrary implements DartBuildRule {
 
   @override
   String toRule(Map<String, BazelifyConfig> bazelifyConfigs) {
-    if (builders != null || generateFor != null) {
-      throw new UnimplementedError('`builders` and `generate_for` are not yet '
-          'supported for `target` configs.');
+    var rule = new StringBuffer();
+    var generatedTargets = <String>[];
+    for (var builderName in builders.keys) {
+      var targetName = '${name}_$builderName';
+      generatedTargets.add(targetName);
+      var generateForGlob = generateFor == null
+          ? ''
+          : '    generate_for = ${_sourcesToGlob(generateFor, const [])},';
+      rule
+        ..writeln('$builderName(')
+        ..writeln('    name = "$targetName",')
+        ..writeln('    srcs = ${_sourcesToGlob(sources, excludeSources)},')
+        ..writeln(generateForGlob)
+        ..writeln(')');
     }
-    return '# Generated automatically for package:$package\n'
-        'dart_library(\n'
-        '    name = "$name",\n'
-        '    srcs = ${_sourcesToGlob(sources, excludeSources)},\n'
-        '    deps = ${depsToBazelTargetsString(dependencies, bazelifyConfigs)},\n'
-        '    enable_ddc = ${enableDdc ? 1 : 0},\n'
-        '    pub_pkg_name = "$package",\n'
-        ')';
+    var generatedSrcs = generatedTargets.isEmpty
+        ? ''
+        : ' + [${generatedTargets.map((t) => '":$t"').join(', ')}]';
+    var srcs = _sourcesToGlob(sources, excludeSources);
+    var deps = depsToBazelTargetsString(dependencies, bazelifyConfigs);
+    rule
+      ..writeln('# Generated automatically for package:$package')
+      ..writeln('dart_library(')
+      ..writeln('    name = "$name",')
+      ..writeln('    srcs = $srcs$generatedSrcs,')
+      ..writeln('    deps = $deps,')
+      ..writeln('    enable_ddc = ${enableDdc ? 1 : 0},')
+      ..writeln('    pub_pkg_name = "$package",')
+      ..write(')');
+    return '$rule';
   }
 
   @override
@@ -584,6 +609,16 @@ class DartBuilderBinary implements DartBuildRule {
       'package: $package\n'
       'replacesTransformer: $replacesTransformer\n'
       'target: $target';
+
+  String toCodegenRule() {
+    final joinedOutputExtensions =
+        outputExtensions.map((o) => '"$o"').join(', ');
+    return '$name = dart_codegen_rule(\n'
+        '    codegen_binary = "@pub_$package//:$name",\n'
+        '    in_extension = "$inputExtension",\n'
+        '    out_extensions = [$joinedOutputExtensions],\n'
+        ')';
+  }
 }
 
 String _sourcesToGlob(

@@ -1,0 +1,5 @@
+name: uses_code_generation
+
+dependencies:
+  codegen_author:
+    path: ../codegen_author

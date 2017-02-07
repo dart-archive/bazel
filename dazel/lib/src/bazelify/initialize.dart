@@ -12,6 +12,7 @@ import '../step_timer.dart';
 import 'arguments.dart';
 import 'bazelify_config.dart';
 import 'build.dart';
+import 'codegen_rules.dart';
 import 'exceptions.dart';
 import 'macro.dart';
 import 'pubspec.dart';
@@ -225,6 +226,7 @@ class _Initialize {
     await _createEmptyDir(bazelifyPath);
     await _writePackageBuildFiles(
         bazelifyPath, packagePaths, pubspecs, bazelifyConfigs);
+    await _writePackageCodegenRules(bazelifyPath, bazelifyConfigs);
   }
 
   Future<Null> _writeBazelFiles(Map<String, String> packagePaths,
@@ -287,6 +289,17 @@ class _Initialize {
       var buildFile = await BuildFile.fromPackageDir(
           packageDir, pubspecs[package], bazelifyConfigs);
       await new File(buildFilePath).writeAsString('$buildFile');
+    }
+  }
+
+  Future<Null> _writePackageCodegenRules(
+      String bazelifyPath, Map<String, BazelifyConfig> bazelifyConfigs) async {
+    for (final package in bazelifyConfigs.keys) {
+      final buildConfig = bazelifyConfigs[package];
+      if (buildConfig.dartBuilderBinaries.isEmpty) continue;
+      final rulesFilePath = p.join(bazelifyPath, 'pub_$package.codegen.bzl');
+      final rulesFile = new CodegenRulesFile(buildConfig.dartBuilderBinaries);
+      await new File(rulesFilePath).writeAsString('$rulesFile');
     }
   }
 

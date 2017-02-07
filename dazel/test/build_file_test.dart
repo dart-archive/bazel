@@ -154,5 +154,17 @@ void main() {
       final build = await loadBuildFileFromDir('test/projects/codegen_author');
       expect(build.toString(), loadGolden('build_file_codegen_author'));
     });
+
+    test('should generate a codegen target for libraries', () async {
+      final codegenAuthorPath = 'test/projects/codegen_author';
+      final codegenAuthorPubspec =
+          await Pubspec.fromPackageDir(codegenAuthorPath);
+      final codegenAuthorConfig = await BazelifyConfig.fromPackageDir(
+          codegenAuthorPubspec, codegenAuthorPath);
+      final extraConfigs = {'codegen_author': codegenAuthorConfig};
+      final build = await loadBuildFileFromDir('test/projects/codegen_consumer',
+          extraConfigs: extraConfigs);
+      expect(build.toString(), loadGolden('build_file_codegen_consumer'));
+    });
   });
 }

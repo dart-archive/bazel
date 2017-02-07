@@ -171,7 +171,7 @@ class BazelifyConfig {
   static Map<String, Map<String, dynamic>> _readBuildersOrThrow(
       Map<String, dynamic> options, String option) {
     var values = options[option];
-    if (values == null) return null;
+    if (values == null) return const {};
 
     if (values is! List) {
       throw new ArgumentError(
