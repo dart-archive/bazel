@@ -1,0 +1,9 @@
+load(
+    "@io_bazel_rules_dart//dart/build_rules/codegen:codegen.bzl",
+    "dart_codegen_rule"
+)
+some_builder = dart_codegen_rule(
+    codegen_binary = "@pub_codegen_author//:some_builder",
+    in_extension = ".dart",
+    out_extensions = [".some_builder.dart"],
+)
