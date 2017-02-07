@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:args/command_runner.dart';
 import 'package:path/path.dart' as p;
 
+import '../console.dart';
 import '../step_timer.dart';
 import 'arguments.dart';
 import 'build.dart';
@@ -57,7 +58,8 @@ class BuildCommand extends Command {
     await timer.run(
         'Building app `${buildArgs.target}.html`', () => build(buildArgs),
         printCompleteOnNewLine: true);
-    timer.complete('See `${buildArgs.outputDir}` dir for build output.');
+    timer.complete(
+        inGreen('Done! See `${buildArgs.outputDir}` dir for build output.'));
   }
 
   Future build(BazelifyBuildArguments args) async {
