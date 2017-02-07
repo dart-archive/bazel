@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dazel/src/bazelify/bazelify_config.dart';
 import 'package:dazel/src/bazelify/build.dart';
+import 'package:dazel/src/bazelify/common.dart';
 import 'package:dazel/src/bazelify/pubspec.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
@@ -54,7 +55,7 @@ void main() {
       'name: silly_monkey',
       webApps: [
         new DartWebApplication(
-          name: 'web/index',
+          name: targetForAppPath('web/index.html'),
           package: 'silly_monkey',
           entryPoint: new HtmlEntryPoint(
               htmlFile: 'web/index.html', dartFile: 'web/main.dart'),
@@ -69,13 +70,13 @@ void main() {
       'name: silly_monkey',
       webApps: [
         new DartWebApplication(
-          name: 'web/main_web',
+          name: targetForAppPath('web/main_web.html'),
           package: 'silly_monkey',
           entryPoint: new HtmlEntryPoint(
               htmlFile: 'web/index.html', dartFile: 'web/main.dart'),
         ),
         new DartWebApplication(
-          name: 'web/secondary_web',
+          name: targetForAppPath('web/secondary_web.html'),
           package: 'silly_monkey',
           entryPoint: new HtmlEntryPoint(
               htmlFile: 'web/secondary.html', dartFile: 'web/secondary.dart'),

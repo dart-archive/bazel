@@ -6,20 +6,17 @@ import 'package:path/path.dart' as p;
 
 import 'arguments.dart';
 import 'build.dart';
+import 'common.dart';
 import 'exceptions.dart';
 
 class ServeCommand extends Command {
   ServeCommand() {
-    argParser
-      ..addOption('watch',
-          allowMultiple: true,
-          defaultsTo: 'web,lib,pubspec.lock',
-          help: 'A list of files/directories to watch for changes and trigger '
-              ' builds')
-      ..addOption('target',
-          defaultsTo: '${BuildFile.ddcServeAllName}',
-          help: 'The name of the server build target to run.',
-          hide: true);
+    addAppArg(argParser, defaultsTo: BuildFile.ddcServeAllName);
+    argParser.addOption('watch',
+        allowMultiple: true,
+        defaultsTo: 'web,lib,pubspec.lock',
+        help: 'A list of files/directories to watch for changes and trigger '
+            ' builds');
   }
 
   @override
@@ -36,7 +33,7 @@ class ServeCommand extends Command {
     var serveArgs = new BazelifyServeArguments._(
         bazelExecutable: commonArgs.bazelExecutable,
         pubPackageDir: commonArgs.pubPackageDir,
-        target: argResults['target'],
+        target: targetFromAppArgs(argResults, argParser, ddc: true),
         watch: argResults != null ? argResults['watch'] as List<String> : null);
 
     await serve(serveArgs);

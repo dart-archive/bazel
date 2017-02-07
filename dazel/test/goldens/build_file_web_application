@@ -24,7 +24,7 @@ dart_library(
 )
 # Generated automatically for package:silly_monkey|web/main.dart
 dart_web_application(
-    name = "web/index",
+    name = "web__index",
     srcs = glob(["web/**"], exclude=[]),
     script_file = "web/main.dart",
     deps = [] + [
@@ -32,32 +32,32 @@ dart_web_application(
     ],
 )
 dart_ddc_bundle(
-    name = "web/index_ddc_bundle",
+    name = "web__index_ddc_bundle",
     entry_library = "web/main.dart",
     entry_module = ":silly_monkey",
     input_html = "web/index.html",
     output_dir = "web",
 )
-# A ddc specific dev_server target which serves web/index
+# A ddc specific dev_server target which serves web__index
 dev_server(
-    name = "web/index_ddc_serve",
+    name = "web__index_ddc_serve",
     data = [
-        ":web/index_ddc_bundle",
+        ":web__index_ddc_bundle",
     ],
     script_args = [
-        "--package-spec=web/index_ddc_bundle.packages",
-        "--uri-substitution=web/index.html:web/index_ddc_bundle.html",
+        "--package-spec=web__index_ddc_bundle.packages",
+        "--uri-substitution=web/index.html:web/web__index_ddc_bundle.html",
     ],
 )
 
-# A ddc specific dev_server target which serves web/index
+# A ddc specific dev_server target which serves web__index
 dev_server(
     name = "__ddc_serve_all",
     data = [
-        ":web/index_ddc_bundle",
+        ":web__index_ddc_bundle",
     ],
     script_args = [
-        "--package-spec=web/index_ddc_bundle.packages",
-        "--uri-substitution=web/index.html:web/index_ddc_bundle.html",
+        "--package-spec=web__index_ddc_bundle.packages",
+        "--uri-substitution=web/index.html:web/web__index_ddc_bundle.html",
     ],
 )
