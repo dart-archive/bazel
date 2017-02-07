@@ -57,7 +57,7 @@ class BuildFile {
     return _findHtmlEntryPoints(packageDir, searchDir)
         .map/*<DartWebApplication>*/((entryPoint) {
       return new DartWebApplication(
-        name: appPathToTarget(entryPoint.htmlFile),
+        name: targetForAppPath(entryPoint.htmlFile),
         package: package,
         entryPoint: entryPoint,
       );

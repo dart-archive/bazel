@@ -7,7 +7,6 @@ import 'package:path/path.dart' as p;
 
 import 'build.dart';
 
-/// Adds the `--app` argument to [argParser].
 void addAppArg(ArgParser argParser, {String defaultsTo}) {
   argParser.addOption('app',
       defaultsTo: defaultsTo,
@@ -38,7 +37,7 @@ String targetFromAppArgs(ArgResults argResults, ArgParser argParser,
         'Missing required argument `app`', argParser.usage);
   }
 
-  app = appPathToTarget(app);
+  app = targetForAppPath(app);
   // Slight hack here, we don't want to modify the general serve target which is
   // the default, it's already correct.
   if (ddc && app != BuildFile.ddcServeAllName) app = ddcServeTarget(app);
@@ -47,14 +46,14 @@ String targetFromAppArgs(ArgResults argResults, ArgParser argParser,
 }
 
 /// Returns the bazel target name given the path to an app (html file).
-String appPathToTarget(String appPath) {
+String targetForAppPath(String appPath) {
   // Target name doesn't have `.html`, but we want support for that for users.
   if (appPath.endsWith('.html')) appPath = p.withoutExtension(appPath);
   return p.split(appPath).join("__");
 }
 
 /// Returns the app path given a bazel target name.
-String targetToAppPath(String target) =>
+String appPathForTarget(String target) =>
     '${p.joinAll(target.split('__'))}.html';
 
 /// The name of the ddc server target corresponding to a web app target.

@@ -43,7 +43,7 @@ class BuildCommand extends Command {
         outputDir: argResults['output-dir'],
         target: app);
 
-    await timer.run('Building app `${targetToAppPath(buildArgs.target)}`',
+    await timer.run('Building app `${appPathForTarget(buildArgs.target)}`',
         () => build(buildArgs),
         printCompleteOnNewLine: true);
     timer.complete(
@@ -96,7 +96,7 @@ class BuildCommand extends Command {
   }
 
   Future<HtmlEntryPoint> _getEntryPointData(String target) {
-    var file = new File(targetToAppPath(target));
+    var file = new File(appPathForTarget(target));
     return htmlEntryPointFromFile(file, './');
   }
 
