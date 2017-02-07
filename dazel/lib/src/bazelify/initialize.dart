@@ -224,6 +224,7 @@ class _Initialize {
     await _createEmptyDir(bazelifyPath);
     await _writePackageBuildFiles(
         bazelifyPath, packagePaths, pubspecs, bazelifyConfigs);
+    await _writePackageCodegenRules(bazelifyPath, bazelifyConfigs);
   }
 
   Future<Null> _writeBazelFiles(Map<String, String> packagePaths,
@@ -289,6 +290,17 @@ class _Initialize {
     }
   }
 
+  Future<Null> _writePackageCodegenRules(
+      String bazelifyPath, Map<String, BazelifyConfig> bazelifyConfigs) async {
+    for (final package in bazelifyConfigs.keys) {
+      final buildConfig = bazelifyConfigs[package];
+      if (buildConfig.dartBuilderBinaries.isEmpty) continue;
+      final rulesFilePath = p.join(bazelifyPath, 'pub_$package.codegen.bzl');
+      final rulesFile = new CodegenRulesFile(buildConfig.dartBuilderBinaries);
+      await new File(rulesFilePath).writeAsString('$rulesFile');
+    }
+  }
+
   Future<Null> _writePackagesBzl(Map<String, String> packagePaths) async {
     final pubspec = await Pubspec.fromPackageDir(arguments.pubPackageDir);
     final macroFile = new BazelMacroFile.fromPackages(
@@ -317,9 +329,6 @@ class _Initialize {
         arguments.pubPackageDir, pubspec, bazelifyConfigs);
     final rootBuildPath = p.join(arguments.pubPackageDir, 'BUILD');
     await new File(rootBuildPath).writeAsString('$rootBuild');
-    final codegenRules = new CodegenRulesFile(bazelifyConfig, bazelifyConfigs);
-    final codegenRulesPath = p.join(arguments.pubPackageDir, 'codegen.bzl');
-    await new File(codegenRulesPath).writeAsString('$codegenRules');
   }
 
   /// Checks for the presence of an analysis_options which excludes bazel

@@ -163,12 +163,16 @@ class BuildFile {
     }
     final buildersUsed =
         libraries.expand((l) => l.builders?.keys ?? const <String>[]);
-    if (buildersUsed.isNotEmpty) {
-      var joinedBuilders = buildersUsed.map((b) => '"$b"').join(', ');
+    for (var builder in buildersUsed) {
+      var builderDefinition = bazelifyConfigs.values
+          .expand((c) => c.dartBuilderBinaries.values)
+          .firstWhere((b) => b.name == builder);
+      var builderPackage = builderDefinition.package;
       buffer
-        ..writeln('# Dazel: Using codegen.')
-        ..writeln('load(":codegen.bzl", $joinedBuilders)')
-        ..writeln();
+        ..writeln('load(')
+        ..writeln('    "//:.dazel/pub_$builderPackage.codegen.bzl",')
+        ..writeln('    "$builder",')
+        ..writeln(')');
     }
 
     // Visibility.
