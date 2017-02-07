@@ -48,6 +48,35 @@ void main() {
       ),
     });
   });
+
+  test('build.yaml can omit a targets section', () {
+    var pubspec = new Pubspec.parse(pubspecYaml);
+    var bazelifyConfig = new BazelifyConfig.parse(pubspec, buildYamlNoTargets);
+    expectDartLibraries(bazelifyConfig.dartLibraries, {
+      'example': new DartLibrary(
+        dependencies: ['a', 'b'],
+        isDefault: true,
+        name: 'example',
+        package: 'example',
+        sources: ['lib/**'],
+      ),
+    });
+    expectDartBuilderBinaries(bazelifyConfig.dartBuilderBinaries, {
+      'a': new DartBuilderBinary(
+        builderFactories: ['createBuilder'],
+        import: 'package:example/builder.dart',
+        inputExtension: '.dart',
+        name: 'a',
+        outputExtensions: [
+          '.g.dart',
+          '.json',
+        ],
+        package: 'example',
+        replacesTransformer: 'example',
+        target: 'example',
+      ),
+    });
+  });
 }
 
 var buildYaml = '''
@@ -87,6 +116,19 @@ builders:
       - .json
     replaces_transformer: example
     target: e
+''';
+
+var buildYamlNoTargets = '''
+builders:
+  a:
+    builder_factories: ["createBuilder"]
+    import: package:example/builder.dart
+    input_extension: .dart
+    output_extensions:
+      - .g.dart
+      - .json
+    replaces_transformer: example
+    target: example
 ''';
 
 var pubspecYaml = '''
