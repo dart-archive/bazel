@@ -6,6 +6,7 @@ import 'package:html/parser.dart' as html;
 import 'package:path/path.dart' as p;
 
 import 'bazelify_config.dart';
+import 'common.dart';
 import 'pubspec.dart';
 
 // These set of classes are specific to Bazelify and have limited use outside
@@ -56,7 +57,7 @@ class BuildFile {
     return _findHtmlEntryPoints(packageDir, searchDir)
         .map/*<DartWebApplication>*/((entryPoint) {
       return new DartWebApplication(
-        name: p.withoutExtension(entryPoint.htmlFile),
+        name: appPathToTarget(entryPoint.htmlFile),
         package: package,
         entryPoint: entryPoint,
       );
@@ -394,13 +395,16 @@ class DartWebApplication implements DartBuildRule {
 
   String get ddcBundleName => '${name}_ddc_bundle';
 
-  String get ddcBundleOutputHtmlPath => '$ddcBundleName.html';
+  String get ddcBundleOutputHtmlPath => '$outputDir/$ddcBundleName.html';
 
-  String get ddcServeName => '${name}_ddc_serve';
+  String get ddcServeName => ddcServeTarget(name);
 
   String get htmlFile => entryPoint.htmlFile;
 
-  String get packageSpecName => '${name}_ddc_bundle.packages';
+  // TODO: Update once we support apps outside of web.
+  String get outputDir => 'web';
+
+  String get packageSpecName => '$ddcBundleName.packages';
 
   String get scriptFile => entryPoint.dartFile;
 
@@ -437,7 +441,7 @@ class DartWebApplication implements DartBuildRule {
         '    entry_library = "$scriptFile",\n'
         '    entry_module = ":$package",\n'
         '    input_html = "$htmlFile",\n'
-        '    output_dir = "web",\n'
+        '    output_dir = "$outputDir",\n'
         ')\n';
     buffer += new DdcDevServer(name: ddcServeName, webApps: [this])
         .toRule(bazelifyConfigs);

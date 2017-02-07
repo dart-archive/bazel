@@ -9,19 +9,16 @@ import '../console.dart';
 import '../step_timer.dart';
 import 'arguments.dart';
 import 'build.dart';
+import 'common.dart';
 import 'exceptions.dart';
 
 class BuildCommand extends Command {
   BuildCommand() {
-    argParser
-      ..addOption('app',
-          help: 'The name of the app target to build, this is the name of the '
-              'html file for the app. This argument may be provided as a '
-              'positional argument as well.')
-      ..addOption('output-dir',
-          abbr: 'o',
-          defaultsTo: 'deploy',
-          help: 'The directory to output build outputs to.');
+    addAppArg(argParser);
+    argParser.addOption('output-dir',
+        abbr: 'o',
+        defaultsTo: 'deploy',
+        help: 'The directory to output build outputs to.');
   }
 
   @override
@@ -38,16 +35,7 @@ class BuildCommand extends Command {
     var commonArgs = await sharedArguments(globalResults);
     if (commonArgs == null) return;
 
-    var app = argResults['app'] as String;
-    // Support providing `app` as a positional argument.
-    if (app == null && argResults.rest.length == 1) {
-      app = argResults.rest.first;
-    } else {
-      throw new ApplicationFailedException(
-          'Missing required argument `app`:\n${argParser.usage}', 1);
-    }
-    // Target name doesn't have `.html`, but we want support for that for users.
-    if (app.endsWith('.html')) app = p.withoutExtension(app);
+    var app = targetFromAppArgs(argResults, argParser);
 
     var buildArgs = new BazelifyBuildArguments._(
         bazelExecutable: commonArgs.bazelExecutable,
@@ -55,8 +43,8 @@ class BuildCommand extends Command {
         outputDir: argResults['output-dir'],
         target: app);
 
-    await timer.run(
-        'Building app `${buildArgs.target}.html`', () => build(buildArgs),
+    await timer.run('Building app `${targetToAppPath(buildArgs.target)}`',
+        () => build(buildArgs),
         printCompleteOnNewLine: true);
     timer.complete(
         inGreen('Done! See `${buildArgs.outputDir}` dir for build output.'));
@@ -108,7 +96,7 @@ class BuildCommand extends Command {
   }
 
   Future<HtmlEntryPoint> _getEntryPointData(String target) {
-    var file = new File('$target.html');
+    var file = new File(targetToAppPath(target));
     return htmlEntryPointFromFile(file, './');
   }
 
