@@ -65,6 +65,7 @@ class BuildFile {
 
   static const ddcServeAllName = '__ddc_serve_all';
   static const _coreBzl = '$_rulesSource:core.bzl';
+  static const codegenBzl = '$_rulesSource/codegen:codegen.bzl';
   static const _rulesSource = '@io_bazel_rules_dart//dart/build_rules';
   static const _webBzl = '$_rulesSource:web.bzl';
   static const _vmBzl = '$_rulesSource:vm.bzl';
@@ -90,7 +91,7 @@ class BuildFile {
   /// Resolve and return new [BuildFile] by looking at [packageDir].
   ///
   /// The general rule of thumb is:
-  /// - Every package generates _exactly one_ dart_library
+  /// - Every package generates one or more dart_libraries
   /// - Some packages generate 1 or more dart_vm_binary or dart_web_application
   ///
   /// A `BazelifyConfig` will also be created, and added to `bazelifyConfigs`.
@@ -142,6 +143,12 @@ class BuildFile {
       buffer.writeln('# Dazel: ${libraries.length} libraries.');
       buffer.writeln('load("$_coreBzl", "dart_library")');
       buffer.writeln();
+    }
+    if (builderBinaries.isNotEmpty) {
+      buffer
+        ..writeln('# Dazel: ${builderBinaries.length} codegen binaries.')
+        ..writeln('load("$codegenBzl", "dart_codegen_binary")')
+        ..writeln();
     }
     if (webApplications.isNotEmpty) {
       buffer.writeln('# Dazel: ${webApplications.length} web apps.');
