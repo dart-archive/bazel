@@ -7,11 +7,13 @@ import 'package:path/path.dart' as p;
 import 'package:which/which.dart';
 import 'package:yaml/yaml.dart';
 
+import '../console.dart';
 import '../step_timer.dart';
 import 'arguments.dart';
 import 'bazelify_config.dart';
 import 'build.dart';
 import 'codegen_rules.dart';
+import 'exceptions.dart';
 import 'macro.dart';
 import 'pubspec.dart';
 import 'workspace.dart';
@@ -206,7 +208,7 @@ class _Initialize {
     await timer.run('Creating packages.bzl, build, and workspace',
         () => _writeBazelFiles(packagePaths, bazelifyConfigs));
     await timer.run('Scanning for analysis options', _suggestAnalyzerExcludes);
-    timer.complete('Done!');
+    timer.complete(inGreen('Done!'));
   }
 
   Future<Null> _pubGetInPackage() async {
@@ -328,7 +330,19 @@ class _Initialize {
     final rootBuild = await BuildFile.fromPackageDir(
         arguments.pubPackageDir, pubspec, bazelifyConfigs);
     final rootBuildPath = p.join(arguments.pubPackageDir, 'BUILD');
-    await new File(rootBuildPath).writeAsString('$rootBuild');
+    try {
+      await new File(rootBuildPath).writeAsString('$rootBuild');
+    } on FileSystemException catch (_) {
+      if (await FileSystemEntity.isDirectory(rootBuildPath)) {
+        throw new ApplicationFailedException(
+            'Found existing `BUILD` (or `build`) directory in your package, '
+            'please delete or rename this directory and re-run `dazel init`, '
+            'so that a BUILD file may be created.',
+            1);
+      } else {
+        rethrow;
+      }
+    }
   }
 
   /// Checks for the presence of an analysis_options which excludes bazel
