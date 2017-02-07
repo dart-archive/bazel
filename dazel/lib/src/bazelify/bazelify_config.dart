@@ -54,7 +54,8 @@ class BazelifyConfig {
     final configPath = p.join(path, 'build.yaml');
     final file = new File(configPath);
     if (await file.exists()) {
-      return new BazelifyConfig.parse(pubspec, await file.readAsString());
+      return new BazelifyConfig.parse(pubspec, await file.readAsString(),
+          includeWebSources: includeWebSources);
     } else {
       return new BazelifyConfig.useDefault(pubspec,
           includeWebSources: includeWebSources);
@@ -74,9 +75,7 @@ class BazelifyConfig {
       Iterable<String> excludeSources: const []}) {
     var name = pubspec.pubPackageName;
     var sources = ["lib/**"];
-    if (includeWebSources) {
-      sources.add("web/**");
-    }
+    if (includeWebSources) sources.add("web/**");
     dartLibraries[name] = new DartLibrary(
         dependencies: pubspec.dependencies,
         enableDdc: enableDdc,
@@ -88,7 +87,8 @@ class BazelifyConfig {
   }
 
   /// Create a [BazelifyConfig] by parsing [configYaml].
-  BazelifyConfig.parse(Pubspec pubspec, String configYaml) {
+  BazelifyConfig.parse(Pubspec pubspec, String configYaml,
+      {bool includeWebSources: false}) {
     final config = loadYaml(configYaml);
 
     final Map<String, Map> targetConfigs = config['targets'] ?? {};
@@ -128,6 +128,18 @@ class BazelifyConfig {
         package: pubspec.pubPackageName,
         sources: sources,
       );
+    }
+
+    // Add the default dart library if there are no targets discovered.
+    if (dartLibraries.isEmpty) {
+      var sources = ["lib/**"];
+      if (includeWebSources) sources.add("web/**");
+      dartLibraries[pubspec.pubPackageName] = new DartLibrary(
+          dependencies: pubspec.dependencies,
+          isDefault: true,
+          name: pubspec.pubPackageName,
+          package: pubspec.pubPackageName,
+          sources: sources);
     }
 
     if (dartLibraries.values.where((l) => l.isDefault).length != 1) {
