@@ -1,0 +1,5 @@
+targets:
+  uses_code_generation:
+    builders: ["some_builder"]
+    default: true
+    sources: ["lib/**"]

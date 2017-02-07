@@ -1,12 +1,12 @@
 builders:
   some_builder:
     builder_factories: ["someBuilder"]
-    import: "package:does_code_generation/some_builder.dart"
-    target: does_code_generation
+    import: "package:codegen_author/some_builder.dart"
+    target: codegen_author
     input_extension: ".dart"
     output_extensions: [".some_builder.dart"]
 
 targets:
-  does_code_generation:
+  codegen_author:
     default: true
     sources: ["lib/**"]
