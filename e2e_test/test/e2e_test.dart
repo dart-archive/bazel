@@ -28,15 +28,14 @@ void main() {
 
     test('dazel build', () {
       var deployDirname = 'hello_world_deploy';
-      var result = Process.runSync(
-          'pub', [
-            'run',
-            'dazel',
-            'build',
-            '-o',
-            deployDirname,
-            'web/hello_world.html',
-          ]);
+      var result = Process.runSync('pub', [
+        'run',
+        'dazel',
+        'build',
+        '-o',
+        deployDirname,
+        'web/hello_world.html',
+      ]);
       expectSuccess(result);
       var deployDir = new Directory(deployDirname);
       expect(deployDir.existsSync(), isTrue);
@@ -46,7 +45,12 @@ void main() {
     });
 
     test('ddc build', () {
-      var result = bazel(['build', ':web__hello_world_ddc_serve']);
+      var result = bazel([
+        'build',
+        ':web__hello_world_ddc_serve',
+        '--strategy=DartDevCompiler=standalone',
+        '--strategy=DartSummary=standalone',
+      ]);
       expectExists([
         'bazel-bin',
         'e2e_test.js',
