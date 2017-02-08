@@ -66,6 +66,10 @@ void main() {
         'bazel-bin',
         'web',
         'web__hello_world_ddc_bundle.html',
+      ]);
+      expectExists([
+        'bazel-bin',
+        'web',
         'web__hello_world_ddc_bundle.js',
       ]);
     });
@@ -73,7 +77,9 @@ void main() {
 }
 
 void expectExists(Iterable<String> filePathParts) {
-  expect(new File(p.joinAll(filePathParts)).existsSync(), isTrue);
+  var path = p.joinAll(filePathParts);
+  expect(new File(path).existsSync(), isTrue,
+      reason: 'Expected file at $path to exist, but it wasn\'t found.');
 }
 
 void expectSuccess(ProcessResult result) {
