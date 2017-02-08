@@ -23,12 +23,3 @@ dependencies:
 dev_dependencies:
   path: "^1.4.0"
   test: "^0.12.15+2"
-  test_descriptor: "^1.0.0"
-
-dependency_overrides:
-  # test_descriptor is not yet published, but should be soon. For now we are
-  # just using a dependency override so we can use it.
-  test:
-    git: https://github.com/dart-lang/test.git
-  test_descriptor:
-    git: https://github.com/dart-lang/test_descriptor.git

@@ -1,0 +1,9 @@
+name: e2e_test
+
+dependencies:
+  path: ^1.0.0
+
+dev_dependencies:
+  dazel:
+    path: ../dazel
+  test: ^0.12.15+2

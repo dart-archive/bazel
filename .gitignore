@@ -6,8 +6,8 @@
 **/packages/
 .dazel
 bazel-*
-workspace/pubspec.lock
-workspace/packages.bzl
-workspace/BUILD
-workspace/WORKSPACE
+e2e_test/pubspec.lock
+e2e_test/packages.bzl
+e2e_test/BUILD
+e2e_test/WORKSPACE
 **/pubspec.lock
