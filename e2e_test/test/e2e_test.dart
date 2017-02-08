@@ -17,7 +17,7 @@ void main() {
   });
 
   group('e2e test', () {
-    setUp(() {
+    setUpAll(() {
       Process.runSync('pub', ['run', 'dazel', 'init']);
     });
 
