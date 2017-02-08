@@ -12,8 +12,11 @@ cache:
     - $HOME/.pub-cache
 
 before_install:
-  - wget https://github.com/bazelbuild/bazel/releases/download/0.4.4/bazel_0.4.4-linux-x86_64.deb
-  - sudo dpkg -i bazel_0.4.4-linux-x86_64.deb
+  - if [ "$INSTALL_BAZEL" == "true" ]; then wget https://github.com/bazelbuild/bazel/releases/download/0.4.4/bazel_0.4.4-linux-x86_64.deb; sudo dpkg -i bazel_0.4.4-linux-x86_64.deb; fi
+
+env:
+  - TEST_GROUP=e2e_tests INSTALL_BAZEL=true
+  - TEST_GROUP=unit_tests INSTALL_BAZEL=false
 
 script:
   - ./tool/presubmit.sh
