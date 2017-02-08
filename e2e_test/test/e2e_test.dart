@@ -7,22 +7,17 @@ import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
-  group('setup test', () {
-    test('dazel init', () {
-      expectSuccess(Process.runSync('pub', ['run', 'dazel', 'init']));
-
-      bazel(['version']);
-      bazel(['clean']);
-    });
-  });
-
   group('e2e test', () {
     setUpAll(() {
-      Process.runSync('pub', ['run', 'dazel', 'init']);
+      expectSuccess(Process.runSync('pub', ['run', 'dazel', 'init']));
     });
 
     tearDown(() {
       bazel(['clean']);
+    });
+
+    test('bazel version', () {
+      bazel(['version']);
     });
 
     test('bazel run', () {
