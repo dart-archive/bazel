@@ -207,7 +207,10 @@ class _Initialize {
         () => _createDazelDir(packagePaths, pubspecs, bazelifyConfigs));
     await timer.run('Creating packages.bzl, build, and workspace',
         () => _writeBazelFiles(packagePaths, bazelifyConfigs));
-    await timer.run('Scanning for analysis options', _suggestAnalyzerExcludes);
+    await timer.run('Scanning for analysis options', _suggestAnalyzerExcludes,
+        printCompleteOnNewLine: true);
+    await timer.run('Scanning for .gitignore options', _suggestGitIgnoreOptions,
+        printCompleteOnNewLine: true);
     timer.complete(inGreen('Done!'));
   }
 
@@ -352,7 +355,10 @@ class _Initialize {
   /// analysis options exist but does not include 'bazel-*' in the excluded
   /// files a help message will be printed.
   Future<Null> _suggestAnalyzerExcludes() async {
-    final analysisOptionsFile = await _findAnalysisOptions();
+    final analysisOptionsFile = await _findConfigFile([
+      '.analysis_options',
+      'analysis_options.yaml',
+    ]);
     final exampleExclude = '''
 analyzer:
   strong-mode: true
@@ -370,32 +376,64 @@ analyzer:
       final excludes =
           analyzerConfig == null ? null : analyzerConfig['exclude'];
       if (excludes == null || !excludes.contains('bazel-*')) {
-        print('Bazel will create directories with symlinked dart files which '
+        print(inYellow(
+            'Bazel will create directories with symlinked dart files which '
             'will impact the analysis server.\n'
             'We recommend you add `bazel-*` to the excluded files in your '
             'analysis options.\n'
             'Found analysis options at:\n'
             '${p.absolute(analysisOptionsFile.path)}\n\nFor example:\n'
-            '$exampleExclude');
+            '$exampleExclude'));
       }
+    }
+  }
+
+  Future<Null> _suggestGitIgnoreOptions() async {
+    final gitIgnoreFile = await _findConfigFile(['.gitignore']);
+    // If no gitignore just return, they probably are not using git at all.
+    if (gitIgnoreFile == null) return;
+
+    var expectedLines = ['.dazel', 'bazel-*', 'BUILD', 'WORKSPACE'];
+    var packageRelativeToGitignore = p.relative(arguments.pubPackageDir,
+        from: p.dirname(gitIgnoreFile.path));
+    for (var line in await gitIgnoreFile.readAsLines()) {
+      expectedLines.remove(line);
+      if (line.startsWith(packageRelativeToGitignore)) {
+        expectedLines
+            .remove(line.substring(packageRelativeToGitignore.length + 1));
+      }
+    }
+    if (expectedLines.isNotEmpty) {
+      var message = new StringBuffer()
+        ..writeln('It is recommended that you add the following lines to your '
+            '`${p.relative(gitIgnoreFile.path, from: arguments.pubPackageDir)}` '
+            'file :')
+        ..writeln('');
+      for (var line in expectedLines) {
+        message.writeln(p.normalize(p.join(packageRelativeToGitignore, line)));
+      }
+      message
+        ..writeln('')
+        ..writeln('These are directories created by bazel and dazel, and '
+            'should not be checked in.');
+      print(inYellow('$message'));
     }
   }
 
   /// Searchs up in directories starting with the pubPackageDir until a
   /// '.analysis_options' or 'analysis_options.yaml' is found, or null if no
   /// such file exists.
-  Future<File> _findAnalysisOptions() async {
-    File analysisOptionsFile;
+  Future<File> _findConfigFile(List<String> supportedFileNames) async {
+    File file;
     var searchPath = arguments.pubPackageDir;
-    while (analysisOptionsFile == null) {
-      analysisOptionsFile ??=
-          await _findExistingFile(p.join(searchPath, '.analysis_options'));
-      analysisOptionsFile ??=
-          await _findExistingFile(p.join(searchPath, 'analysis_options.yaml'));
+    while (file == null) {
+      for (var fileName in supportedFileNames) {
+        file ??= await _findExistingFile(p.join(searchPath, fileName));
+      }
       if (searchPath == p.dirname(searchPath)) break;
       searchPath = p.dirname(searchPath);
     }
-    return analysisOptionsFile;
+    return file;
   }
 
   /// Returns a [File] if it exists at [path], otherwise return null.
