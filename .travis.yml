@@ -11,9 +11,9 @@ cache:
   directories:
     - $HOME/.pub-cache
 
-before_install:
-  - wget https://github.com/bazelbuild/bazel/releases/download/0.4.4/bazel_0.4.4-linux-x86_64.deb
-  - sudo dpkg -i bazel_0.4.4-linux-x86_64.deb
+env:
+  - TEST_GROUP=e2e_tests
+  - TEST_GROUP=unit_tests
 
 script:
   - ./tool/presubmit.sh
