@@ -16,5 +16,4 @@ before_install:
   - sudo dpkg -i bazel_0.4.4-linux-x86_64.deb
 
 script:
-  - ./tool/presubmit.dart
-  - cd dazel && pub get && pub run test
+  - ./tool/presubmit.sh

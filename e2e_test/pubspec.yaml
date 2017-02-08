@@ -1,12 +1,13 @@
-name: bazel_workspace
+name: e2e_test
 
 dependencies:
   angular2: any
-  path: any
 
 dev_dependencies:
   dazel:
     path: ../dazel
+  path: ^1.0.0
+  test: ^0.12.15+2
 
 dependency_overrides:
   # Until angular2 is published with a newer build
