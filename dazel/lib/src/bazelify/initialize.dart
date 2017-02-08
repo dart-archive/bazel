@@ -420,9 +420,8 @@ analyzer:
     }
   }
 
-  /// Searchs up in directories starting with the pubPackageDir until a
-  /// '.analysis_options' or 'analysis_options.yaml' is found, or null if no
-  /// such file exists.
+  /// Searchs up in directories starting with the pubPackageDir until one of
+  /// [supportedFileNames] is found, or null if no such file exists.
   Future<File> _findConfigFile(List<String> supportedFileNames) async {
     File file;
     var searchPath = arguments.pubPackageDir;
