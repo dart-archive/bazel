@@ -6,13 +6,22 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
-main() {
-  group('e2e test', () {
-    /// This is bad and we should feel bad
+void main() {
+  group('setup test', () {
     test('dazel init', () {
       expectSuccess(Process.runSync('pub', ['run', 'dazel', 'init']));
 
       bazel(['version']);
+      bazel(['clean']);
+    });
+  });
+
+  group('e2e test', () {
+    setUp(() {
+      Process.runSync('pub', ['run', 'dazel', 'init']);
+    });
+
+    tearDown(() {
       bazel(['clean']);
     });
 
@@ -23,24 +32,51 @@ main() {
     });
 
     test('dazel build', () {
-      var deployDirname = 'ng2_deploy';
-      var result = Process.runSync('pub',
-          ['run', 'dazel', 'build', '-o', deployDirname, 'web/angular.html']);
+      var deployDirname = 'hello_world_deploy';
+      var result = Process.runSync(
+          'pub', [
+            'run',
+            'dazel',
+            'build',
+            '-o',
+            deployDirname,
+            'web/hello_world.html',
+          ]);
       expectSuccess(result);
       var deployDir = new Directory(deployDirname);
       expect(deployDir.existsSync(), isTrue);
-      void expectExists(Iterable<String> filePathParts) {
-        var path = p.joinAll([deployDirname]..addAll(filePathParts));
-        expect(new File(path).existsSync(), isTrue);
-      }
-      expectExists(['web', 'angular_main.dart.js']);
-      expectExists(['web', 'packages/angular2/angular2.dart']);
+      expectExists([deployDirname, 'web', 'hello_world.dart.js']);
+      expectExists([deployDirname, 'web', 'packages/path/path.dart']);
       deployDir.deleteSync(recursive: true);
+    });
+
+    test('ddc build', () {
+      var result = bazel(['build', ':web__hello_world_ddc_serve']);
+      expectExists([
+        'bazel-bin',
+        'e2e_test.js',
+      ]);
+      expectExists([
+        'bazel-bin',
+        'external',
+        'pub_path',
+        'path.js',
+      ]);
+      expectExists([
+        'bazel-bin',
+        'web',
+        'web__hello_world_ddc_bundle.html',
+        'web__hello_world_ddc_bundle.js',
+      ]);
     });
   });
 }
 
-expectSuccess(ProcessResult result) {
+void expectExists(Iterable<String> filePathParts) {
+  expect(new File(p.joinAll(filePathParts)).existsSync(), isTrue);
+}
+
+void expectSuccess(ProcessResult result) {
   expect(result.exitCode, 0, reason: 'ERROR: ${result.stderr}');
   print(result.stdout);
 }
