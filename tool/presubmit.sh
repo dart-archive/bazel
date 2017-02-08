@@ -4,8 +4,6 @@
 set -e
 
 e2e_tests () {
-
-  #if [ "$TRAVIS" == "true" ]; then wget https://github.com/bazelbuild/bazel/releases/download/0.4.4/bazel_0.4.4-linux-x86_64.deb; sudo dpkg -i bazel_0.4.4-linux-x86_64.deb; fi
   echo "Running e2e tests"
   pushd e2e_test
   pub upgrade
