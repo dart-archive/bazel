@@ -370,20 +370,25 @@ analyzer:
           p.join(arguments.pubPackageDir, 'analysis_options.yaml');
       await new File(analysisOptionsPath).writeAsString(exampleExclude);
     } else {
-      final analysisOptions =
-          loadYaml(await analysisOptionsFile.readAsString());
-      final analyzerConfig = analysisOptions['analyzer'];
-      final excludes =
-          analyzerConfig == null ? null : analyzerConfig['exclude'];
-      if (excludes == null || !excludes.contains('bazel-*')) {
-        print(inYellow(
-            'Bazel will create directories with symlinked dart files which '
-            'will impact the analysis server.\n'
-            'We recommend you add `bazel-*` to the excluded files in your '
-            'analysis options.\n'
-            'Found analysis options at:\n'
-            '${p.absolute(analysisOptionsFile.path)}\n\nFor example:\n'
-            '$exampleExclude'));
+      try {
+        final analysisOptions =
+            loadYaml(await analysisOptionsFile.readAsString()) ?? {};
+        final analyzerConfig = analysisOptions['analyzer'] ?? {};
+        final excludes = analyzerConfig['exclude'];
+        if (excludes == null || !excludes.contains('bazel-*')) {
+          print(inYellow(
+              'Bazel will create directories with symlinked dart files which '
+              'will impact the analysis server.\n'
+              'We recommend you add `bazel-*` to the excluded files in your '
+              'analysis options.\n'
+              'Found analysis options at:\n'
+              '${p.absolute(analysisOptionsFile.path)}\n\nFor example:\n'
+              '$exampleExclude'));
+        }
+      } on YamlException catch (e) {
+        print(inRed('Found invalid analysis options file at '
+            '${analysisOptionsFile.path}:'));
+        print(inRed('$e'));
       }
     }
   }
