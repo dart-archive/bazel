@@ -27,8 +27,7 @@ class SummaryResolvers implements Resolvers {
   final String _sourcesFile;
   final String _packagePath;
   final Map<String, String> _packageMap;
-  final _priming = new Completer();
-  bool _startedPriming = false;
+  Future<Null> _priming;
 
   factory SummaryResolvers(
       SummaryOptions options, Map<String, String> packageMap) {
@@ -46,24 +45,18 @@ class SummaryResolvers implements Resolvers {
 
   @override
   Future<ReleasableResolver> get(BuildStep buildStep) async {
-    await _primeWithSources(buildStep.readAsString);
+    await (_priming ??= _primeWithSources(buildStep.readAsString));
     var entryPoints = [buildStep.inputId];
     await _assetResolver.addAssets(entryPoints, buildStep.readAsString);
     return new AnalysisResolver(_context, entryPoints);
   }
 
   Future<Null> _primeWithSources(ReadAsset readAsset) async {
-    if (!_startedPriming) {
-      _startedPriming = true;
-      var sourceFiles = await new File(_sourcesFile).readAsLines();
-      var assets = findAssetIds(sourceFiles, _packagePath, _packageMap)
-          .map((asset) => new AssetId(asset.package, asset.path))
-          .toList();
-      await _assetResolver.addAssets(assets, readAsset);
-      _priming.complete();
-    } else {
-      await _priming.future;
-    }
+    var sourceFiles = await new File(_sourcesFile).readAsLines();
+    var assets = findAssetIds(sourceFiles, _packagePath, _packageMap)
+        .map((asset) => new AssetId(asset.package, asset.path))
+        .toList();
+    await _assetResolver.addAssets(assets, readAsset);
   }
 }
 
