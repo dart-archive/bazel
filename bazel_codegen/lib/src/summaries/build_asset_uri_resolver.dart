@@ -17,10 +17,10 @@ typedef Future<String> ReadAsset(AssetId assetId);
 class BuildAssetUriResolver implements UriResolver {
   final _knownAssets = <Uri, Source>{};
 
-  /// Read all [assets] using the [read] function up front and cache them as a
-  /// [Source].
+  /// Read all [assets] with the extension '.dart' using the [read] function up
+  /// front and cache them as a [Source].
   Future<Null> addAssets(Iterable<AssetId> assets, ReadAsset read) async {
-    for (var asset in assets) {
+    for (var asset in assets.where((asset) => asset.path.endsWith('.dart'))) {
       var uri = assetUri(asset);
       if (!_knownAssets.containsKey(uri)) {
         _knownAssets[uri] = new AssetSource(asset, await read(asset));
