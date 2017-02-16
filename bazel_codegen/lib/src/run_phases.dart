@@ -150,21 +150,12 @@ Future<IOSinkLogHandle> _runBuilders(List<BuilderFactory> builders,
   }
   for (var builder in builders.map((f) => f(builderArgs))) {
     try {
-      await runZoned(() async {
-        if (inputSrcs.isNotEmpty) {
-          await timings.trackOperation(
-              'Generating files: $builder',
-              () => runBuilder(builder, inputSrcs, reader, writer, resolvers,
-                  logger: logger));
-        }
-      }, zoneSpecification:
-          new ZoneSpecification(print: (self, parent, zone, message) {
-        if (isWorker) {
-          logger.info(message);
-        } else {
-          parent.print(zone, message);
-        }
-      }));
+      if (inputSrcs.isNotEmpty) {
+        await timings.trackOperation(
+            'Generating files: $builder',
+            () => runBuilder(builder, inputSrcs, reader, writer, resolvers,
+                logger: logger));
+      }
     } catch (e, s) {
       logger.severe(
           'Caught error during code generation step '

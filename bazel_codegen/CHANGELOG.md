@@ -5,6 +5,7 @@
   files can still cause an error - but this case we'd expect to fail.
 - Fix a bug where failure to read an asset during the Resolvers.get call would
   cause the entire process to hang.
+- Rely on the print capturing from package:build
 
 # 0.0.2
 
