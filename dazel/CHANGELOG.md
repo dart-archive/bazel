@@ -1,3 +1,11 @@
+## 0.3.2
+
+* Add suggestions for .gitignore
+* Allow empty `target` in `build.yaml`
+* Upgrade to latest rules_dart - previous versions were broken
+* More specific error message when `build\` exists
+* Limited codegen support
+
 ## 0.3.1
 
 * Bug fix: Bump the dependency on _bazel_codegen since 0.0.1 is broken
