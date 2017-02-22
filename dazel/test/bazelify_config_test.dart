@@ -1,14 +1,14 @@
 import 'package:test/test.dart';
 
-import 'package:dazel/src/bazelify/bazelify_config.dart';
 import 'package:dazel/src/bazelify/build.dart';
 import 'package:dazel/src/bazelify/pubspec.dart';
+import 'package:dazel/src/config/build_config.dart';
 
 void main() {
   test('build.yaml can be parsed', () {
     var pubspec = new Pubspec.parse(pubspecYaml);
-    var bazelifyConfig = new BazelifyConfig.parse(pubspec, buildYaml);
-    expectDartLibraries(bazelifyConfig.dartLibraries, {
+    var buildConfig = new BuildConfig.parse(pubspec, buildYaml);
+    expectDartLibraries(buildConfig.dartLibraries, {
       'a': new DartLibrary(
         builders: {
           'b:b': {},
@@ -32,7 +32,7 @@ void main() {
         sources: ['lib/e.dart', 'lib/src/e/**'],
       )
     });
-    expectDartBuilderBinaries(bazelifyConfig.dartBuilderBinaries, {
+    expectDartBuilderBinaries(buildConfig.dartBuilderBinaries, {
       'h': new DartBuilderBinary(
         builderFactories: ['createBuilder'],
         import: 'package:example/e.dart',
@@ -51,8 +51,8 @@ void main() {
 
   test('build.yaml can omit a targets section', () {
     var pubspec = new Pubspec.parse(pubspecYaml);
-    var bazelifyConfig = new BazelifyConfig.parse(pubspec, buildYamlNoTargets);
-    expectDartLibraries(bazelifyConfig.dartLibraries, {
+    var buildConfig = new BuildConfig.parse(pubspec, buildYamlNoTargets);
+    expectDartLibraries(buildConfig.dartLibraries, {
       'example': new DartLibrary(
         dependencies: ['a', 'b'],
         isDefault: true,
@@ -61,7 +61,7 @@ void main() {
         sources: ['lib/**'],
       ),
     });
-    expectDartBuilderBinaries(bazelifyConfig.dartBuilderBinaries, {
+    expectDartBuilderBinaries(buildConfig.dartBuilderBinaries, {
       'a': new DartBuilderBinary(
         builderFactories: ['createBuilder'],
         import: 'package:example/builder.dart',

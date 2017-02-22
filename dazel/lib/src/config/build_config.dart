@@ -4,11 +4,11 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
-import 'build.dart';
-import 'pubspec.dart';
+import '../bazelify/build.dart';
+import '../bazelify/pubspec.dart';
 
 /// The parsed values from a `build.yaml` file.
-class BazelifyConfig {
+class BuildConfig {
   /// Supported values for the `platforms` attribute.
   static const _allPlatforms = const [_vmPlatform, _webPlatform];
   static const _vmPlatform = 'vm';
@@ -46,18 +46,18 @@ class BazelifyConfig {
   static const _replacesTransformer = 'replaces_transformer';
   static const _target = 'target';
 
-  /// Returns a parsed [BazelifyConfig] file in [path], if one exists.
+  /// Returns a parsed [BuildConfig] file in [path], if one exists.
   ///
   /// Otherwise uses the default setup.
-  static Future<BazelifyConfig> fromPackageDir(Pubspec pubspec, String path,
+  static Future<BuildConfig> fromPackageDir(Pubspec pubspec, String path,
       {bool includeWebSources: false}) async {
     final configPath = p.join(path, 'build.yaml');
     final file = new File(configPath);
     if (await file.exists()) {
-      return new BazelifyConfig.parse(pubspec, await file.readAsString(),
+      return new BuildConfig.parse(pubspec, await file.readAsString(),
           includeWebSources: includeWebSources);
     } else {
-      return new BazelifyConfig.useDefault(pubspec,
+      return new BuildConfig.useDefault(pubspec,
           includeWebSources: includeWebSources);
     }
   }
@@ -69,7 +69,7 @@ class BazelifyConfig {
   final dartLibraries = <String, DartLibrary>{};
 
   /// The default config if you have no `build.yaml` file.
-  BazelifyConfig.useDefault(Pubspec pubspec,
+  BuildConfig.useDefault(Pubspec pubspec,
       {bool includeWebSources: false,
       bool enableDdc: true,
       Iterable<String> excludeSources: const []}) {
@@ -86,8 +86,8 @@ class BazelifyConfig {
         excludeSources: excludeSources);
   }
 
-  /// Create a [BazelifyConfig] by parsing [configYaml].
-  BazelifyConfig.parse(Pubspec pubspec, String configYaml,
+  /// Create a [BuildConfig] by parsing [configYaml].
+  BuildConfig.parse(Pubspec pubspec, String configYaml,
       {bool includeWebSources: false}) {
     final config = loadYaml(configYaml);
 

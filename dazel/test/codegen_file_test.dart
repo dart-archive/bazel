@@ -4,9 +4,9 @@
 
 import 'dart:io';
 
-import 'package:dazel/src/bazelify/bazelify_config.dart';
 import 'package:dazel/src/bazelify/codegen_rules.dart';
 import 'package:dazel/src/bazelify/pubspec.dart';
+import 'package:dazel/src/config/build_config.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -19,7 +19,7 @@ void main() {
     final codegenAuthorPath = 'test/projects/codegen_author';
     final codegenAuthorPubspec =
         await Pubspec.fromPackageDir(codegenAuthorPath);
-    final codegenAuthorConfig = await BazelifyConfig.fromPackageDir(
+    final codegenAuthorConfig = await BuildConfig.fromPackageDir(
         codegenAuthorPubspec, codegenAuthorPath);
     final codegenRules =
         new CodegenRulesFile(codegenAuthorConfig.dartBuilderBinaries);
