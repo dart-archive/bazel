@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dazel/src/bazelify/bazelify_config.dart';
 import 'package:dazel/src/bazelify/build.dart';
 import 'package:dazel/src/bazelify/common.dart';
 import 'package:dazel/src/bazelify/pubspec.dart';
+import 'package:dazel/src/config/build_config.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -16,11 +16,11 @@ void main() {
   BuildFile createBuildFile(String pubspecYaml,
       {bool enableDdc: true,
       Iterable<String> excludeSources: const [],
-      Map<String, BazelifyConfig> extraConfigs: const {},
+      Map<String, BuildConfig> extraConfigs: const {},
       Iterable<DartWebApplication> webApps: const [],
       Iterable<DartVmBinary> binaries: const []}) {
     final pubspec = new Pubspec.parse(pubspecYaml);
-    final bazelConfig = new BazelifyConfig.useDefault(pubspec,
+    final bazelConfig = new BuildConfig.useDefault(pubspec,
         enableDdc: enableDdc,
         excludeSources: excludeSources,
         includeWebSources: webApps.isNotEmpty);
@@ -38,9 +38,9 @@ void main() {
 
   test('should generate a simple library with dependencies', () {
     final pathPubspec = new Pubspec.parse('name: path');
-    final pathBazelifyConfig = new BazelifyConfig.useDefault(pathPubspec);
+    final pathBuildConfig = new BuildConfig.useDefault(pathPubspec);
     final extraConfigs = {
-      pathPubspec.pubPackageName: pathBazelifyConfig,
+      pathPubspec.pubPackageName: pathBuildConfig,
     };
     final yaml = '''
         name: silly_monkey
@@ -104,17 +104,17 @@ void main() {
 
   group('fromPackageDir', () {
     Future<BuildFile> loadBuildFileFromDir(String packageDir,
-        {Map<String, BazelifyConfig> extraConfigs: const {},
+        {Map<String, BuildConfig> extraConfigs: const {},
         bool includeWebSources: false}) async {
       packageDir = p.normalize(packageDir);
       final pubspec = await Pubspec.fromPackageDir(packageDir);
-      final bazelifyConfig = await BazelifyConfig.fromPackageDir(
+      final buildConfig = await BuildConfig.fromPackageDir(
           pubspec, packageDir,
           includeWebSources: includeWebSources);
-      final bazelifyConfigs = {
-        pubspec.pubPackageName: bazelifyConfig,
+      final buildConfigs = {
+        pubspec.pubPackageName: buildConfig,
       }..addAll(extraConfigs);
-      return BuildFile.fromPackageDir(packageDir, pubspec, bazelifyConfigs);
+      return BuildFile.fromPackageDir(packageDir, pubspec, buildConfigs);
     }
 
     test('should generate a simple library with no dependencies', () async {
@@ -124,9 +124,9 @@ void main() {
 
     test('should generate a simple library with dependencies', () async {
       final pathPubspec = new Pubspec.parse('name: path');
-      final pathBazelifyConfig = new BazelifyConfig.useDefault(pathPubspec);
+      final pathBuildConfig = new BuildConfig.useDefault(pathPubspec);
       var extraConfigs = {
-        pathPubspec.pubPackageName: pathBazelifyConfig,
+        pathPubspec.pubPackageName: pathBuildConfig,
       };
       final build = await loadBuildFileFromDir('test/projects/simple_with_deps',
           extraConfigs: extraConfigs);
@@ -159,7 +159,7 @@ void main() {
       final codegenAuthorPath = 'test/projects/codegen_author';
       final codegenAuthorPubspec =
           await Pubspec.fromPackageDir(codegenAuthorPath);
-      final codegenAuthorConfig = await BazelifyConfig.fromPackageDir(
+      final codegenAuthorConfig = await BuildConfig.fromPackageDir(
           codegenAuthorPubspec, codegenAuthorPath);
       final extraConfigs = {'codegen_author': codegenAuthorConfig};
       final build = await loadBuildFileFromDir('test/projects/codegen_consumer',
