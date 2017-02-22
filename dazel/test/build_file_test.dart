@@ -25,8 +25,11 @@ void main() {
         enableDdc: enableDdc,
         excludeSources: excludeSources,
         includeWebSources: webApps.isNotEmpty);
-    final buildConfigs = new BuildConfigSet(buildConfig, extraConfigs);
-    return new BuildFile(buildConfigs, webApps: webApps, binaries: binaries);
+    var allConfigs = {pubspec.pubPackageName: buildConfig}
+      ..addAll(extraConfigs);
+    final buildConfigs = new BuildConfigSet(buildConfig, allConfigs);
+    return new BuildFile(pubspec.pubPackageName, buildConfigs,
+        webApps: webApps, binaries: binaries);
   }
 
   test('should generate a simple library with no dependencies', () {
@@ -108,7 +111,9 @@ void main() {
       final pubspec = await Pubspec.fromPackageDir(packageDir);
       final buildConfig = await BuildConfig.fromPackageDir(pubspec, packageDir,
           includeWebSources: includeWebSources);
-      final buildConfigs = new BuildConfigSet(buildConfig, extraConfigs);
+      var allConfigs = {pubspec.pubPackageName: buildConfig}
+        ..addAll(extraConfigs);
+      final buildConfigs = new BuildConfigSet(buildConfig, allConfigs);
       return BuildFile.fromPackageDir(packageDir, pubspec, buildConfigs);
     }
 
