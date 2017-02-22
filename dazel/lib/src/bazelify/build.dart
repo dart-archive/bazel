@@ -212,8 +212,8 @@ class BuildFile {
 /// Returns a `String` representing the list of bazel targets from
 /// `dependencies` using `buildConfigs` to find default target names when not
 /// supplied explicitly.
-String depsToBazelTargetsString(Iterable<String> dependencies,
-    Map<String, BuildConfig> buildConfigs) {
+String depsToBazelTargetsString(
+    Iterable<String> dependencies, Map<String, BuildConfig> buildConfigs) {
   var targets = new Set<String>();
   for (var dep in dependencies) {
     var parts = dep.split(':');

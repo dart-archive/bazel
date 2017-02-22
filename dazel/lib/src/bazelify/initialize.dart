@@ -323,12 +323,11 @@ class _Initialize {
     await new File(workspaceFile).writeAsString('$workspace');
   }
 
-  Future<Null> _writeBuildFile(
-      Map<String, BuildConfig> buildConfigs) async {
+  Future<Null> _writeBuildFile(Map<String, BuildConfig> buildConfigs) async {
     final packagePath = arguments.pubPackageDir;
     final pubspec = await Pubspec.fromPackageDir(packagePath);
-    final buildConfig = await BuildConfig
-        .fromPackageDir(pubspec, packagePath, includeWebSources: true);
+    final buildConfig = await BuildConfig.fromPackageDir(pubspec, packagePath,
+        includeWebSources: true);
     buildConfigs[pubspec.pubPackageName] = buildConfig;
     final rootBuild = await BuildFile.fromPackageDir(
         arguments.pubPackageDir, pubspec, buildConfigs);
