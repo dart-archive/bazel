@@ -5,6 +5,7 @@ import 'package:dazel/src/bazelify/build.dart';
 import 'package:dazel/src/bazelify/common.dart';
 import 'package:dazel/src/bazelify/pubspec.dart';
 import 'package:dazel/src/config/build_config.dart';
+import 'package:dazel/src/config/config_set.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -20,15 +21,12 @@ void main() {
       Iterable<DartWebApplication> webApps: const [],
       Iterable<DartVmBinary> binaries: const []}) {
     final pubspec = new Pubspec.parse(pubspecYaml);
-    final bazelConfig = new BuildConfig.useDefault(pubspec,
+    final buildConfig = new BuildConfig.useDefault(pubspec,
         enableDdc: enableDdc,
         excludeSources: excludeSources,
         includeWebSources: webApps.isNotEmpty);
-    final bazelConfigs = {
-      pubspec.pubPackageName: bazelConfig,
-    }..addAll(extraConfigs);
-    return new BuildFile(bazelConfig, bazelConfigs,
-        webApps: webApps, binaries: binaries);
+    final buildConfigs = new BuildConfigSet(buildConfig, extraConfigs);
+    return new BuildFile(buildConfigs, webApps: webApps, binaries: binaries);
   }
 
   test('should generate a simple library with no dependencies', () {
@@ -108,12 +106,9 @@ void main() {
         bool includeWebSources: false}) async {
       packageDir = p.normalize(packageDir);
       final pubspec = await Pubspec.fromPackageDir(packageDir);
-      final buildConfig = await BuildConfig.fromPackageDir(
-          pubspec, packageDir,
+      final buildConfig = await BuildConfig.fromPackageDir(pubspec, packageDir,
           includeWebSources: includeWebSources);
-      final buildConfigs = {
-        pubspec.pubPackageName: buildConfig,
-      }..addAll(extraConfigs);
+      final buildConfigs = new BuildConfigSet(buildConfig, extraConfigs);
       return BuildFile.fromPackageDir(packageDir, pubspec, buildConfigs);
     }
 

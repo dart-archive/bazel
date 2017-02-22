@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:which/which.dart';
 import 'package:yaml/yaml.dart';
 
-import '../config/build_config.dart';
+import '../config/config_set.dart';
 import '../console.dart';
 import '../step_timer.dart';
 import 'arguments.dart';
@@ -202,7 +202,8 @@ class _Initialize {
     await timer.run('Running pub get', _pubGetInPackage);
     final packagePaths = await _readPackagePaths();
     final pubspecs = await _readPubspecs(packagePaths);
-    final buildConfigs = await _readBuildConfigs(packagePaths, pubspecs);
+    final buildConfigs = await BuildConfigSet.forPackages(
+        arguments.pubPackageDir, packagePaths, pubspecs);
     await timer.run('Creating .dazel directory',
         () => _createDazelDir(packagePaths, pubspecs, buildConfigs));
     await timer.run('Creating packages.bzl, build, and workspace',
@@ -221,10 +222,8 @@ class _Initialize {
     Directory.current = previousDirectory;
   }
 
-  Future<Null> _createDazelDir(
-      Map<String, String> packagePaths,
-      Map<String, Pubspec> pubspecs,
-      Map<String, BuildConfig> buildConfigs) async {
+  Future<Null> _createDazelDir(Map<String, String> packagePaths,
+      Map<String, Pubspec> pubspecs, BuildConfigSet buildConfigs) async {
     final bazelifyPath = p.join(arguments.pubPackageDir, '.dazel');
     await _createEmptyDir(bazelifyPath);
     await _writePackageBuildFiles(
@@ -232,8 +231,8 @@ class _Initialize {
     await _writePackageCodegenRules(bazelifyPath, buildConfigs);
   }
 
-  Future<Null> _writeBazelFiles(Map<String, String> packagePaths,
-      Map<String, BuildConfig> buildConfigs) async {
+  Future<Null> _writeBazelFiles(
+      Map<String, String> packagePaths, BuildConfigSet buildConfigs) async {
     await _writePackagesBzl(packagePaths);
     await _writeWorkspaceFile();
     await _writeBuildFile(buildConfigs);
@@ -252,16 +251,6 @@ class _Initialize {
       packagePaths[package] = localPath;
     }
     return packagePaths;
-  }
-
-  Future<Map<String, BuildConfig>> _readBuildConfigs(
-      Map<String, String> packagePaths, Map<String, Pubspec> pubspecs) async {
-    final buildConfigs = <String, BuildConfig>{};
-    for (var package in packagePaths.keys) {
-      buildConfigs[package] = await BuildConfig.fromPackageDir(
-          pubspecs[package], packagePaths[package]);
-    }
-    return buildConfigs;
   }
 
   Future<Map<String, Pubspec>> _readPubspecs(
@@ -285,7 +274,7 @@ class _Initialize {
       String bazelifyPath,
       Map<String, String> packagePaths,
       Map<String, Pubspec> pubspecs,
-      Map<String, BuildConfig> buildConfigs) async {
+      BuildConfigSet buildConfigs) async {
     for (final package in packagePaths.keys) {
       final buildFilePath = p.join(bazelifyPath, 'pub_$package.BUILD');
       final packageDir = packagePaths[package];
@@ -296,9 +285,9 @@ class _Initialize {
   }
 
   Future<Null> _writePackageCodegenRules(
-      String bazelifyPath, Map<String, BuildConfig> buildConfigs) async {
-    for (final package in buildConfigs.keys) {
-      final buildConfig = buildConfigs[package];
+      String bazelifyPath, BuildConfigSet buildConfigs) async {
+    for (final package in buildConfigs.dependencies.keys) {
+      final buildConfig = buildConfigs.dependencies[package];
       if (buildConfig.dartBuilderBinaries.isEmpty) continue;
       final rulesFilePath = p.join(bazelifyPath, 'pub_$package.codegen.bzl');
       final rulesFile = new CodegenRulesFile(buildConfig.dartBuilderBinaries);
@@ -323,12 +312,9 @@ class _Initialize {
     await new File(workspaceFile).writeAsString('$workspace');
   }
 
-  Future<Null> _writeBuildFile(Map<String, BuildConfig> buildConfigs) async {
+  Future<Null> _writeBuildFile(BuildConfigSet buildConfigs) async {
     final packagePath = arguments.pubPackageDir;
     final pubspec = await Pubspec.fromPackageDir(packagePath);
-    final buildConfig = await BuildConfig.fromPackageDir(pubspec, packagePath,
-        includeWebSources: true);
-    buildConfigs[pubspec.pubPackageName] = buildConfig;
     final rootBuild = await BuildFile.fromPackageDir(
         arguments.pubPackageDir, pubspec, buildConfigs);
     final rootBuildPath = p.join(arguments.pubPackageDir, 'BUILD');
