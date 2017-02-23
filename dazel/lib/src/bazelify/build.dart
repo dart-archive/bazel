@@ -97,10 +97,7 @@ class BuildFile {
   /// - Some packages generate 1 or more dart_vm_binary or dart_web_application
   static Future<BuildFile> fromPackageDir(
       String packageDir, Pubspec pubspec, BuildConfigSet buildConfigs) async {
-    final packageName = pubspec.pubPackageName;
-    final buildConfig = buildConfigs.local.packageName == packageName
-        ? buildConfigs.local
-        : buildConfigs.dependencies[packageName];
+    final buildConfig = buildConfigs[pubspec.pubPackageName];
 
     final binDir = new Directory(p.join(packageDir, 'bin'));
     final webDir = new Directory(p.join(packageDir, 'web'));

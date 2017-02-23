@@ -16,6 +16,9 @@ class BuildConfigSet {
           await _readBuildConfigs(dependencyPaths, dependencyPubspecs));
 
   BuildConfigSet(this.local, this.dependencies);
+
+  BuildConfig operator [](String packageName) =>
+      packageName == local.packageName ? local : dependencies[packageName];
 }
 
 /// Returns a Map from packageName to the [BuildConfig] for the package.
