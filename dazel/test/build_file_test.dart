@@ -25,10 +25,8 @@ void main() {
         enableDdc: enableDdc,
         excludeSources: excludeSources,
         includeWebSources: webApps.isNotEmpty);
-    var allConfigs = {pubspec.pubPackageName: buildConfig}
-      ..addAll(extraConfigs);
-    final buildConfigs = new BuildConfigSet(buildConfig, allConfigs);
-    return new BuildFile(pubspec.pubPackageName, buildConfigs,
+    final buildConfigs = new BuildConfigSet(buildConfig, extraConfigs);
+    return new BuildFile(buildConfig, buildConfigs,
         webApps: webApps, binaries: binaries);
   }
 
