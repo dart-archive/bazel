@@ -142,7 +142,7 @@ class InitCommand extends Command {
 /// Where to retrieve the `rules_dart`.
 abstract class DartRulesSource {
   /// The default version of [DartRulesSource] if not otherwise specified.
-  static const DartRulesSource stable = const DartRulesSource.tag('v0.4.0');
+  static const DartRulesSource stable = const DartRulesSource.tag('v0.4.1');
 
   /// Use a git [commit].
   const factory DartRulesSource.commit(String commit) = _GitCommitRulesSource;
@@ -224,16 +224,16 @@ class _Initialize {
 
   Future<Null> _createDazelDir(Map<String, String> packagePaths,
       Map<String, Pubspec> pubspecs, BuildConfigSet buildConfigs) async {
-    final bazelifyPath = p.join(arguments.pubPackageDir, '.dazel');
-    await _createEmptyDir(bazelifyPath);
+    final dazelDir = p.join(arguments.pubPackageDir, '.dazel');
+    await _createEmptyDir(dazelDir);
     await _writePackageBuildFiles(
-        bazelifyPath, packagePaths, pubspecs, buildConfigs);
-    await _writePackageCodegenRules(bazelifyPath, buildConfigs);
+        dazelDir, packagePaths, pubspecs, buildConfigs);
+    await _writePackageCodegenRules(dazelDir, buildConfigs);
   }
 
   Future<Null> _writeBazelFiles(
       Map<String, String> packagePaths, BuildConfigSet buildConfigs) async {
-    await _writePackagesBzl(packagePaths);
+    await _writePackagesBzl(packagePaths, buildConfigs);
     await _writeWorkspaceFile();
     await _writeBuildFile(buildConfigs);
   }
@@ -271,12 +271,12 @@ class _Initialize {
   }
 
   Future<Null> _writePackageBuildFiles(
-      String bazelifyPath,
+      String dazelDir,
       Map<String, String> packagePaths,
       Map<String, Pubspec> pubspecs,
       BuildConfigSet buildConfigs) async {
     for (final package in packagePaths.keys) {
-      final buildFilePath = p.join(bazelifyPath, 'pub_$package.BUILD');
+      final buildFilePath = p.join(dazelDir, 'pub_$package.BUILD');
       final packageDir = packagePaths[package];
       var buildFile = await BuildFile.fromPackageDir(
           packageDir, pubspecs[package], buildConfigs);
@@ -285,21 +285,27 @@ class _Initialize {
   }
 
   Future<Null> _writePackageCodegenRules(
-      String bazelifyPath, BuildConfigSet buildConfigs) async {
+      String dazelDir, BuildConfigSet buildConfigs) async {
+    if (!buildConfigs.hasCodegen) return;
+    final codegenDir = p.join(dazelDir, 'codegen');
+    await _createEmptyDir(codegenDir);
+    await new File(p.join(codegenDir, 'BUILD')).writeAsString('#EMPTY\n');
     for (final package in buildConfigs.dependencies.keys) {
       final buildConfig = buildConfigs.dependencies[package];
       if (buildConfig.dartBuilderBinaries.isEmpty) continue;
-      final rulesFilePath = p.join(bazelifyPath, 'pub_$package.codegen.bzl');
+      final rulesFilePath = p.join(codegenDir, 'pub_$package.codegen.bzl');
       final rulesFile = new CodegenRulesFile(buildConfig.dartBuilderBinaries);
       await new File(rulesFilePath).writeAsString('$rulesFile');
     }
   }
 
-  Future<Null> _writePackagesBzl(Map<String, String> packagePaths) async {
+  Future<Null> _writePackagesBzl(
+      Map<String, String> packagePaths, BuildConfigSet buildConfigs) async {
     final pubspec = await Pubspec.fromPackageDir(arguments.pubPackageDir);
     final macroFile = new BazelMacroFile.fromPackages(
       pubspec.pubPackageName,
       packagePaths.keys,
+      buildConfigs,
       (package) => packagePaths[package],
     );
     final packagesBzl = p.join(arguments.pubPackageDir, 'packages.bzl');

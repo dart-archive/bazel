@@ -1,3 +1,8 @@
+## 0.3.3
+
+* Add support for doing codegen in external packages
+* Upgrade rules_dart 0.4.1
+
 ## 0.3.2
 
 * Add suggestions for .gitignore

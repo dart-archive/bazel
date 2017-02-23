@@ -170,7 +170,7 @@ class BuildFile {
       var builderPackage = builderDefinition.package;
       buffer
         ..writeln('load(')
-        ..writeln('    "//:.dazel/pub_$builderPackage.codegen.bzl",')
+        ..writeln('    "@dazel_codegen//:pub_$builderPackage.codegen.bzl",')
         ..writeln('    "$builder",')
         ..writeln(')');
     }

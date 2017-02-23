@@ -19,7 +19,12 @@ class BuildConfigSet {
 
   BuildConfig operator [](String packageName) =>
       packageName == local.packageName ? local : dependencies[packageName];
+
+  bool get hasCodegen =>
+      _hasCodegen(local) || dependencies.values.any(_hasCodegen);
 }
+
+bool _hasCodegen(BuildConfig config) => config.dartBuilderBinaries.isNotEmpty;
 
 /// Returns a Map from packageName to the [BuildConfig] for the package.
 Future<Map<String, BuildConfig>> _readBuildConfigs(
