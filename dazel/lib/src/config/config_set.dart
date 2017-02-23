@@ -18,6 +18,7 @@ class BuildConfigSet {
   BuildConfigSet(this.local, this.dependencies);
 }
 
+/// Returns a Map from packageName to the [BuildConfig] for the package.
 Future<Map<String, BuildConfig>> _readBuildConfigs(
     Map<String, String> packagePaths, Map<String, Pubspec> pubspecs) async {
   final buildConfigs = <String, BuildConfig>{};
