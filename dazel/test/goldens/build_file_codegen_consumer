@@ -5,7 +5,7 @@
 load("@io_bazel_rules_dart//dart/build_rules:core.bzl", "dart_library")
 
 load(
-    "//:.dazel/pub_codegen_author.codegen.bzl",
+    "@dazel_codegen//:pub_codegen_author.codegen.bzl",
     "some_builder",
 )
 package(default_visibility = ["//visibility:public"])
