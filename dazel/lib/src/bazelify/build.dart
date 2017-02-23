@@ -72,12 +72,11 @@ class BuildFile {
   static const _webBzl = '$_rulesSource:web.bzl';
   static const _vmBzl = '$_rulesSource:vm.bzl';
 
-  final String packageName;
+  /// The [BuildConfig] for this specific package.
+  final BuildConfig buildConfig;
 
   /// All the `BuildConfig`s that are known, by package name.
   final BuildConfigSet buildConfigs;
-
-  BuildConfig get buildConfig => buildConfigs.dependencies[packageName];
 
   /// Dart libraries.
   Iterable<DartLibrary> get libraries => buildConfig.dartLibraries.values;
@@ -98,6 +97,11 @@ class BuildFile {
   /// - Some packages generate 1 or more dart_vm_binary or dart_web_application
   static Future<BuildFile> fromPackageDir(
       String packageDir, Pubspec pubspec, BuildConfigSet buildConfigs) async {
+    final packageName = pubspec.pubPackageName;
+    final buildConfig = buildConfigs.local.packageName == packageName
+        ? buildConfigs.local
+        : buildConfigs.dependencies[packageName];
+
     final binDir = new Directory(p.join(packageDir, 'bin'));
     final webDir = new Directory(p.join(packageDir, 'web'));
     Iterable<DartVmBinary> binaries = const [];
@@ -112,7 +116,7 @@ class BuildFile {
               .toList();
     }
     return new BuildFile(
-      pubspec.pubPackageName,
+      buildConfig,
       buildConfigs,
       binaries: binaries,
       webApps: webApps,
@@ -121,7 +125,7 @@ class BuildFile {
 
   /// Creates a new [BuildFile].
   BuildFile(
-    this.packageName,
+    this.buildConfig,
     this.buildConfigs, {
     Iterable<DartVmBinary> binaries: const [],
     Iterable<DartWebApplication> webApps: const [],
