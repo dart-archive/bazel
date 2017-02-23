@@ -62,6 +62,8 @@ class BuildConfig {
     }
   }
 
+  final String packageName;
+
   /// All the `builders` defined in a `build.yaml` file.
   final dartBuilderBinaries = <String, DartBuilderBinary>{};
 
@@ -72,15 +74,15 @@ class BuildConfig {
   BuildConfig.useDefault(Pubspec pubspec,
       {bool includeWebSources: false,
       bool enableDdc: true,
-      Iterable<String> excludeSources: const []}) {
-    var name = pubspec.pubPackageName;
+      Iterable<String> excludeSources: const []})
+      : packageName = pubspec.pubPackageName {
     var sources = ["lib/**"];
     if (includeWebSources) sources.add("web/**");
-    dartLibraries[name] = new DartLibrary(
+    dartLibraries[packageName] = new DartLibrary(
         dependencies: pubspec.dependencies,
         enableDdc: enableDdc,
         isDefault: true,
-        name: name,
+        name: packageName,
         package: pubspec.pubPackageName,
         sources: sources,
         excludeSources: excludeSources);
@@ -88,7 +90,8 @@ class BuildConfig {
 
   /// Create a [BuildConfig] by parsing [configYaml].
   BuildConfig.parse(Pubspec pubspec, String configYaml,
-      {bool includeWebSources: false}) {
+      {bool includeWebSources: false})
+      : packageName = pubspec.pubPackageName {
     final config = loadYaml(configYaml);
 
     final Map<String, Map> targetConfigs = config['targets'] ?? {};
@@ -125,7 +128,7 @@ class BuildConfig {
         generateFor: generateFor,
         isDefault: isDefault,
         name: targetName,
-        package: pubspec.pubPackageName,
+        package: packageName,
         sources: sources,
       );
     }

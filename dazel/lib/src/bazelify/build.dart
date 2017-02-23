@@ -6,6 +6,7 @@ import 'package:html/parser.dart' as html;
 import 'package:path/path.dart' as p;
 
 import '../config/build_config.dart';
+import '../config/config_set.dart';
 import 'common.dart';
 import 'pubspec.dart';
 
@@ -71,11 +72,11 @@ class BuildFile {
   static const _webBzl = '$_rulesSource:web.bzl';
   static const _vmBzl = '$_rulesSource:vm.bzl';
 
-  /// The parsed `build.yaml` file.
+  /// The [BuildConfig] for this specific package.
   final BuildConfig buildConfig;
 
   /// All the `BuildConfig`s that are known, by package name.
-  final Map<String, BuildConfig> buildConfigs;
+  final BuildConfigSet buildConfigs;
 
   /// Dart libraries.
   Iterable<DartLibrary> get libraries => buildConfig.dartLibraries.values;
@@ -94,10 +95,8 @@ class BuildFile {
   /// The general rule of thumb is:
   /// - Every package generates one or more dart_libraries
   /// - Some packages generate 1 or more dart_vm_binary or dart_web_application
-  ///
-  /// A `BuildConfig` will also be created, and added to `buildConfigs`.
-  static Future<BuildFile> fromPackageDir(String packageDir, Pubspec pubspec,
-      Map<String, BuildConfig> buildConfigs) async {
+  static Future<BuildFile> fromPackageDir(
+      String packageDir, Pubspec pubspec, BuildConfigSet buildConfigs) async {
     final buildConfig = buildConfigs[pubspec.pubPackageName];
 
     final binDir = new Directory(p.join(packageDir, 'bin'));
@@ -165,7 +164,7 @@ class BuildFile {
     final buildersUsed =
         libraries.expand((l) => l.builders?.keys ?? const <String>[]);
     for (var builder in buildersUsed) {
-      var builderDefinition = buildConfigs.values
+      var builderDefinition = buildConfigs.dependencies.values
           .expand((c) => c.dartBuilderBinaries.values)
           .firstWhere((b) => b.name == builder);
       var builderPackage = builderDefinition.package;
@@ -213,7 +212,7 @@ class BuildFile {
 /// `dependencies` using `buildConfigs` to find default target names when not
 /// supplied explicitly.
 String depsToBazelTargetsString(
-    Iterable<String> dependencies, Map<String, BuildConfig> buildConfigs) {
+    Iterable<String> dependencies, BuildConfigSet buildConfigs) {
   var targets = new Set<String>();
   for (var dep in dependencies) {
     var parts = dep.split(':');
@@ -224,7 +223,7 @@ String depsToBazelTargetsString(
     var package = parts[0];
     var target = parts.length > 1
         ? parts[1]
-        : buildConfigs[package].defaultDartLibrary.name;
+        : buildConfigs.dependencies[package].defaultDartLibrary.name;
     if (package.isEmpty) {
       targets.add(':$target');
     } else {
@@ -253,7 +252,7 @@ abstract class DartBuildRule {
   Iterable<String> get sources;
 
   /// Convert to a dart_rule(...) string.
-  String toRule(Map<String, BuildConfig> buildConfigs);
+  String toRule(BuildConfigSet buildConfigs);
 }
 
 /// A `dart_library` definition.
@@ -301,7 +300,7 @@ class DartLibrary implements DartBuildRule {
       this.sources: const ['lib/**']});
 
   @override
-  String toRule(Map<String, BuildConfig> buildConfigs) {
+  String toRule(BuildConfigSet buildConfigs) {
     var rule = new StringBuffer();
     var generatedTargets = <String>[];
     for (var builderName in builders.keys) {
@@ -376,7 +375,7 @@ class DartVmBinary implements DartBuildRule {
       this.sources: const ['bin/**']});
 
   @override
-  String toRule(Map<String, BuildConfig> buildConfigs,
+  String toRule(BuildConfigSet buildConfigs,
       {Iterable<DartLibrary> includeLibraries: const []}) {
     String buffer =
         '# Generated automatically for package:$package|$scriptFile\n'
@@ -443,7 +442,7 @@ class DartWebApplication implements DartBuildRule {
       this.entryPoint});
 
   @override
-  String toRule(Map<String, BuildConfig> buildConfigs,
+  String toRule(BuildConfigSet buildConfigs,
       {Iterable<DartLibrary> includeLibraries: const []}) {
     String buffer =
         '# Generated automatically for package:$package|$scriptFile\n'
@@ -591,8 +590,7 @@ class DartBuilderBinary implements DartBuildRule {
       this.target});
 
   @override
-  String toRule(Map<String, BuildConfig> buildConfigs) =>
-      'dart_codegen_binary(\n'
+  String toRule(BuildConfigSet buildConfigs) => 'dart_codegen_binary(\n'
       '    name = "$name",\n'
       '    srcs = [],\n'
       '    builder_import = "$import",\n'
