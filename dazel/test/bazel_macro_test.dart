@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:dazel/src/bazelify/macro.dart';
+import 'package:dazel/src/bazelify/pubspec.dart';
+import 'package:dazel/src/config/build_config.dart';
+import 'package:dazel/src/config/config_set.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -29,6 +32,8 @@ void main() {
         [
           'path',
         ],
+        new BuildConfigSet(
+            new BuildConfig.useDefault(new Pubspec.parse('name: foo')), {}),
         (package) => 'some/path/to/.pub_cache/$package-0.0.0');
     expect(
       packagesBzl.toString(),
