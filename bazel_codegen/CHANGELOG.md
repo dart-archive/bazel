@@ -1,6 +1,8 @@
-# 0.1.0-dev
+# 0.1.0
 
 - Wrap generation in Chain.capture and print full asynchronous stack traces
+- **BREAKING** `bazelGenerate` and `noArgs` have been dropped. These are unused
+  from the template file in `rules_dart` which is the supported approach.
 
 # 0.0.3
 
