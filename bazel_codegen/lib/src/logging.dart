@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:logging/logging.dart';
+import 'package:stack_trace/stack_trace.dart';
 
 /// A handle on a [Logger] which writes logs to an [IOSink] incrementally.
 ///
@@ -79,7 +80,9 @@ Logger _createLogger() {
 String _logMessage(LogRecord record) {
   var buffer = new StringBuffer('[${record.level}]: ${record.message}');
   if (record.error != null) buffer.write('\n${record.error}');
-  if (record.stackTrace != null) buffer.write('\n${record.stackTrace}');
+  if (record.stackTrace != null) {
+    buffer.write('\n${new Chain.forTrace(record.stackTrace).terse}');
+  }
   return buffer.toString();
 }
 

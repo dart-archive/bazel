@@ -1,3 +1,7 @@
+# 0.1.0-dev
+
+- Wrap generation in Chain.capture and print full asynchronous stack traces
+
 # 0.0.3
 
 - Only read '.dart' files as sources for the Resolver. This avoids a problem

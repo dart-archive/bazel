@@ -4,6 +4,7 @@
 import 'dart:async';
 
 import 'package:build/build.dart';
+import 'package:stack_trace/stack_trace.dart';
 
 import 'src/run_phases.dart';
 
@@ -46,11 +47,13 @@ Future bazelGenerate(BuilderFactory builderFactory, List<String> args,
 /// declared outputs.
 Future bazelGenerateMulti(List<BuilderFactory> builders, List<String> args,
     {Map<String, String> defaultContent: const {}}) {
-  if (_isWorker(args)) {
-    return generateAsWorker(builders, defaultContent);
-  } else {
-    return generateSingleBuild(builders, args, defaultContent);
-  }
+  return Chain.capture(() {
+    if (_isWorker(args)) {
+      return generateAsWorker(builders, defaultContent);
+    } else {
+      return generateSingleBuild(builders, args, defaultContent);
+    }
+  });
 }
 
 /// Whether generation is running in worker mode.
