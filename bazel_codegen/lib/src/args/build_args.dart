@@ -56,7 +56,7 @@ Map<String, Level> _optionToLogLevel = {
 };
 
 /// Parsed arguments for code generator binaries.
-class Options {
+class BuildArgs {
   final List<String> rootDirs;
   final String packagePath;
   final String outDir;
@@ -71,7 +71,7 @@ class Options {
   final bool useSummaries;
   final List<String> additionalArgs;
 
-  Options._(
+  BuildArgs._(
       this.rootDirs,
       this.packagePath,
       this.outDir,
@@ -86,7 +86,7 @@ class Options {
       this.useSummaries: true,
       this.additionalArgs});
 
-  factory Options.parse(List<String> args, {bool isWorker}) {
+  factory BuildArgs.parse(List<String> args, {bool isWorker}) {
     // When not running as a worker, but that mode is supported, then we get
     // just this arg which points at a file containing the arguments.
     if (args.length == 1 && args.first.startsWith('@')) {
@@ -110,8 +110,17 @@ class Options {
     final help = argResults[_helpParam];
     final useSummaries = argResults[_summariesParam];
 
-    return new Options._(rootDirs, packagePath, outDir, logPath, inputExtension,
-        outputExtensions, packageMapPath, srcsPath, help, logLevel,
+    return new BuildArgs._(
+        rootDirs,
+        packagePath,
+        outDir,
+        logPath,
+        inputExtension,
+        outputExtensions,
+        packageMapPath,
+        srcsPath,
+        help,
+        logLevel,
         additionalArgs: argResults.rest,
         isWorker: isWorker,
         useSummaries: useSummaries);
