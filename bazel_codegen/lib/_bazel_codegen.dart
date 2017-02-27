@@ -53,8 +53,10 @@ Future bazelGenerateMulti(List<BuilderFactory> builders, List<String> args,
     } else {
       return generateSingleBuild(builders, args, defaultContent);
     }
-  });
+  }, when: _useChain(args));
 }
 
 /// Whether generation is running in worker mode.
 bool _isWorker(Iterable<String> args) => args.contains('--persistent_worker');
+
+bool _useChain(Iterable<String> args) => args.contains('--async_stack_trace');
