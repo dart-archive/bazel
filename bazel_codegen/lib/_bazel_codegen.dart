@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:build/build.dart';
 import 'package:stack_trace/stack_trace.dart';
 
+import 'src/args/startup_args.dart';
 import 'src/run_phases.dart';
 
 typedef Builder BuilderFactory(List<String> args);
@@ -30,8 +31,8 @@ Future bazelGenerate(BuilderFactory builderFactory, List<String> args,
 /// Runs [builders] to generate files.
 ///
 /// This should be typically invoked with [args] from a dart_codegen build
-/// rule, but see `arg_parser.dart` for expected arguments. Any arguments not
-/// recognized by `arg_parser.dart` will be passed to each [BuilderFactory].
+/// rule, but see `build_args.dart` for expected arguments. Any arguments not
+/// recognized by `build_args.dart` will be passed to each [BuilderFactory].
 ///
 /// Builders are invoked sequentially. The input files in the arguments are
 /// assumed to be primary inputs for the first builder. The outputs for each
@@ -47,16 +48,12 @@ Future bazelGenerate(BuilderFactory builderFactory, List<String> args,
 /// declared outputs.
 Future bazelGenerateMulti(List<BuilderFactory> builders, List<String> args,
     {Map<String, String> defaultContent: const {}}) {
+  var options = new StartupArgs.parse(args);
   return Chain.capture(() {
-    if (_isWorker(args)) {
+    if (options.persistentWorker) {
       return generateAsWorker(builders, defaultContent);
     } else {
-      return generateSingleBuild(builders, args, defaultContent);
+      return generateSingleBuild(builders, options.buildArgs, defaultContent);
     }
-  }, when: _useChain(args));
+  }, when: options.asyncStackTrace);
 }
-
-/// Whether generation is running in worker mode.
-bool _isWorker(Iterable<String> args) => args.contains('--persistent_worker');
-
-bool _useChain(Iterable<String> args) => args.contains('--async_stack_trace');

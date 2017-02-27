@@ -10,7 +10,7 @@ import 'package:build_barback/build_barback.dart';
 import 'package:path/path.dart' as p;
 
 import '../_bazel_codegen.dart';
-import 'arg_parser.dart';
+import 'args/build_args.dart';
 import 'assets/asset_filter.dart';
 import 'assets/asset_reader.dart';
 import 'assets/asset_writer.dart';
@@ -31,10 +31,10 @@ Future generateSingleBuild(List<BuilderFactory> builders, List<String> args,
   var timings = new CodegenTiming()..start();
   IOSinkLogHandle logger;
 
-  var options = _parseOptions(args);
+  var buildArgs = _parseArgs(args);
 
   try {
-    logger = await _runBuilders(builders, options, defaultContent, timings);
+    logger = await _runBuilders(builders, buildArgs, defaultContent, timings);
   } catch (e, s) {
     stderr.writeln("Dart Codegen failed with:\n$e\n$s");
     exitCode = EXIT_CODE_ERROR;
@@ -66,21 +66,22 @@ class _CodegenWorker extends AsyncWorkerLoop {
   @override
   Future<WorkResponse> performRequest(WorkRequest request) async {
     IOSinkLogHandle logHandle;
-    var options = _parseOptions(request.arguments);
+    var buildArgs = _parseArgs(request.arguments);
     try {
       numRuns++;
       var timings = new CodegenTiming()..start();
 
       var bazelRelativeInputs = request.inputs
-          .map((input) => _bazelRelativePath(input.path, options.rootDirs));
+          .map((input) => _bazelRelativePath(input.path, buildArgs.rootDirs));
 
-      logHandle = await _runBuilders(builders, options, defaultContent, timings,
+      logHandle = await _runBuilders(
+          builders, buildArgs, defaultContent, timings,
           isWorker: true, validInputs: new Set()..addAll(bazelRelativeInputs));
       var logger = logHandle.logger;
       logger.info(
           'Completed in worker mode, this worker has ran $numRuns builds');
       await logHandle.close();
-      var message = _loggerMessage(logHandle, options.logPath);
+      var message = _loggerMessage(logHandle, buildArgs.logPath);
 
       var response = new WorkResponse()
         ..exitCode = logHandle.errorCount == 0 ? EXIT_CODE_OK : EXIT_CODE_ERROR;
@@ -95,19 +96,23 @@ class _CodegenWorker extends AsyncWorkerLoop {
   }
 }
 
-/// Runs [builders] to generate files using [options].
+/// Runs [builders] to generate files using [buildArgs].
 ///
 /// When there are multiple builders, the outputs of each are assumed to be
 /// primary inputs to the next builder sequentially.
 ///
 /// The [timings] instance must already be started.
-Future<IOSinkLogHandle> _runBuilders(List<BuilderFactory> builders,
-    Options options, Map<String, String> defaultContent, CodegenTiming timings,
-    {bool isWorker: false, Set<String> validInputs}) async {
+Future<IOSinkLogHandle> _runBuilders(
+    List<BuilderFactory> builders,
+    BuildArgs buildArgs,
+    Map<String, String> defaultContent,
+    CodegenTiming timings,
+    {bool isWorker: false,
+    Set<String> validInputs}) async {
   assert(timings.isRunning);
 
   final srcPaths = await timings.trackOperation('Collecting input srcs', () {
-    return new File(options.srcsPath).readAsLines();
+    return new File(buildArgs.srcsPath).readAsLines();
   });
   if (srcPaths.isEmpty) {
     throw new CodegenError('No input files to process.');
@@ -115,24 +120,24 @@ Future<IOSinkLogHandle> _runBuilders(List<BuilderFactory> builders,
 
   final packageMap =
       await timings.trackOperation('Reading package map', () async {
-    var lines = await new File(options.packageMapPath).readAsLines();
+    var lines = await new File(buildArgs.packageMapPath).readAsLines();
     return new Map<String, String>.fromIterable(
         lines.map((line) => line.split(':')),
         key: (l) => l[0],
         value: (l) => l[1]);
   });
 
-  final writer = new BazelAssetWriter(options.outDir, packageMap,
+  final writer = new BazelAssetWriter(buildArgs.outDir, packageMap,
       validInputs: validInputs);
   final reader = new BazelAssetReader(
-      options.packagePath, options.rootDirs, packageMap,
+      buildArgs.packagePath, buildArgs.rootDirs, packageMap,
       assetFilter: new AssetFilter(validInputs, packageMap, writer));
   final srcAssets = reader
       .findAssetIds(srcPaths)
-      .where((id) => id.path.endsWith(options.inputExtension))
+      .where((id) => id.path.endsWith(buildArgs.inputExtension))
       .toList();
-  var logHandle = new IOSinkLogHandle.toFile(options.logPath,
-      printLevel: options.logLevel, printToStdErr: !options.isWorker);
+  var logHandle = new IOSinkLogHandle.toFile(buildArgs.logPath,
+      printLevel: buildArgs.logLevel, printToStdErr: !buildArgs.isWorker);
   var logger = logHandle.logger;
 
   var allWrittenAssets = new Set<AssetId>();
@@ -140,13 +145,13 @@ Future<IOSinkLogHandle> _runBuilders(List<BuilderFactory> builders,
   var inputSrcs = new Set<AssetId>()..addAll(srcAssets);
   Resolvers resolvers;
   List<String> builderArgs;
-  if (options.useSummaries) {
-    var summaryOptions = new SummaryOptions.fromArgs(options.additionalArgs);
+  if (buildArgs.useSummaries) {
+    var summaryOptions = new SummaryOptions.fromArgs(buildArgs.additionalArgs);
     resolvers = new SummaryResolvers(summaryOptions, packageMap);
     builderArgs = summaryOptions.additionalArgs;
   } else {
     resolvers = const BarbackResolvers();
-    builderArgs = options.additionalArgs;
+    builderArgs = buildArgs.additionalArgs;
   }
   for (var builder in builders.map((f) => f(builderArgs))) {
     try {
@@ -159,7 +164,7 @@ Future<IOSinkLogHandle> _runBuilders(List<BuilderFactory> builders,
     } catch (e, s) {
       logger.severe(
           'Caught error during code generation step '
-          '$builder on ${options.packagePath}',
+          '$builder on ${buildArgs.packagePath}',
           e,
           s);
     }
@@ -181,11 +186,11 @@ Future<IOSinkLogHandle> _runBuilders(List<BuilderFactory> builders,
     var writes = <Future>[];
     // Check all expected outputs were written or create w/provided default.
     for (var assetId in srcAssets) {
-      for (var extension in options.outputExtensions) {
+      for (var extension in buildArgs.outputExtensions) {
         var expectedAssetId = new AssetId(
             assetId.package,
             assetId.path.substring(
-                    0, assetId.path.length - options.inputExtension.length) +
+                    0, assetId.path.length - buildArgs.inputExtension.length) +
                 extension);
         if (allWrittenAssets.contains(expectedAssetId)) continue;
 
@@ -209,14 +214,14 @@ Future<IOSinkLogHandle> _runBuilders(List<BuilderFactory> builders,
   return logHandle;
 }
 
-/// Parse [Options] from [args].
-Options _parseOptions(List<String> args) {
-  var options = new Options.parse(args);
-  if (options.help) {
-    options.printUsage();
+/// Parse [BuildArgs] from [args].
+BuildArgs _parseArgs(List<String> args) {
+  var buildArgs = new BuildArgs.parse(args);
+  if (buildArgs.help) {
+    buildArgs.printUsage();
     return null;
   }
-  return options;
+  return buildArgs;
 }
 
 /// Builds a message about warnings/errors given a [IOSinkLogHandle].
