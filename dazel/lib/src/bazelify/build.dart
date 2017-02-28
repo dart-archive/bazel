@@ -570,12 +570,6 @@ class DartBuilderBinary implements DartBuildRule {
   /// these extensions must be output.
   final Iterable<String> outputExtensions;
 
-  /// The name of a transformer (as it appears in a pubspec.yaml) that this
-  /// builder replaces.
-  ///
-  /// May be null.
-  final String replacesTransformer;
-
   /// The name of the dart_library target that contains `import`.
   final String target;
 
@@ -586,7 +580,6 @@ class DartBuilderBinary implements DartBuildRule {
       this.name,
       this.outputExtensions,
       this.package,
-      this.replacesTransformer,
       this.target});
 
   @override
@@ -605,7 +598,6 @@ class DartBuilderBinary implements DartBuildRule {
       'name: $name\n'
       'outputExtensions: $outputExtensions\n'
       'package: $package\n'
-      'replacesTransformer: $replacesTransformer\n'
       'target: $target';
 
   String toCodegenRule() {
