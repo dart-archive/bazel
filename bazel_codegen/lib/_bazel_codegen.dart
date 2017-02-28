@@ -11,23 +11,6 @@ import 'src/run_phases.dart';
 
 typedef Builder BuilderFactory(List<String> args);
 
-/// Wrap [builder] as a [BuilderFactory] that expects no arguments.
-///
-/// If any unexpected arguments are passed throws a StateError.
-BuilderFactory noArgs(Builder builder) => (List<String> args) {
-      if (args?.isNotEmpty == true) {
-        throw new StateError('No arguments should be passed to this builder.');
-      }
-      return builder;
-    };
-
-/// Runs a single Builder to generate files.
-///
-/// See [bazelGenerateMulti] for more details.
-Future bazelGenerate(BuilderFactory builderFactory, List<String> args,
-        {Map<String, String> defaultContent: const {}}) =>
-    bazelGenerateMulti([builderFactory], args, defaultContent: defaultContent);
-
 /// Runs [builders] to generate files.
 ///
 /// This should be typically invoked with [args] from a dart_codegen build
