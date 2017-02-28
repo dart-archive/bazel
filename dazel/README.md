@@ -85,7 +85,7 @@ analyzer:
 
 Customizing the build behavior of a package is done  by creating a `build.yaml`
 file, which describes your configuration. Any packages that use code generation
-(or uses Transformers when running with `pub`) will need to use a `build.yaml`
+(or use Transformers when running with `pub`) will need to use a `build.yaml`
 to set this up. This includes packages which are dependencies.
 
 ## Splitting your package into multiple targets
