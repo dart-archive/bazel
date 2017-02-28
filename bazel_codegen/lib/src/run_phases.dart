@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:analyzer/src/generated/engine.dart' show AnalysisEngine;
 import 'package:bazel_worker/bazel_worker.dart';
 import 'package:build/build.dart';
 import 'package:build_barback/build_barback.dart';
@@ -180,6 +181,10 @@ Future<IOSinkLogHandle> _runBuilders(
     allWrittenAssets.addAll(writer.assetsWritten);
     writer.assetsWritten.clear();
   }
+
+  // Technically we don't always have to do this, but better safe than sorry.
+  timings.trackOperation('Clearing analysis engine cache',
+      () => AnalysisEngine.instance.clearCaches());
 
   await timings.trackOperation('Checking outputs and writing defaults',
       () async {
