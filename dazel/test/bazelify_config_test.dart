@@ -43,7 +43,6 @@ void main() {
           '.json',
         ],
         package: 'example',
-        replacesTransformer: 'example',
         target: 'e',
       ),
     });
@@ -72,7 +71,6 @@ void main() {
           '.json',
         ],
         package: 'example',
-        replacesTransformer: 'example',
         target: 'example',
       ),
     });
@@ -114,7 +112,6 @@ builders:
     output_extensions:
       - .g.dart
       - .json
-    replaces_transformer: example
     target: e
 ''';
 
@@ -127,7 +124,6 @@ builders:
     output_extensions:
       - .g.dart
       - .json
-    replaces_transformer: example
     target: example
 ''';
 
@@ -160,7 +156,6 @@ class _DartBuilderBinaryMatcher extends Matcher {
       item.name == _expected.name &&
       equals(item.outputExtensions).matches(_expected.outputExtensions, _) &&
       item.package == _expected.package &&
-      item.replacesTransformer == _expected.replacesTransformer &&
       item.target == _expected.target;
 
   @override

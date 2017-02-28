@@ -36,14 +36,12 @@ class BuildConfig {
     _import,
     _inputExtension,
     _outputExtensions,
-    _replacesTransformer,
     _target,
   ];
   static const _builderFactories = 'builder_factories';
   static const _import = 'import';
   static const _inputExtension = 'input_extension';
   static const _outputExtensions = 'output_extensions';
-  static const _replacesTransformer = 'replaces_transformer';
   static const _target = 'target';
 
   /// Returns a parsed [BuildConfig] file in [path], if one exists.
@@ -162,9 +160,6 @@ class BuildConfig {
       final inputExtension = _readStringOrThrow(builderConfig, _inputExtension);
       final outputExtensions =
           _readListOfStringsOrThrow(builderConfig, _outputExtensions);
-      final replacesTransformer = _readStringOrThrow(
-          builderConfig, _replacesTransformer,
-          allowNull: true);
       final target = _readStringOrThrow(builderConfig, _target);
 
       dartBuilderBinaries[builderName] = new DartBuilderBinary(
@@ -174,7 +169,6 @@ class BuildConfig {
         name: builderName,
         outputExtensions: outputExtensions,
         package: pubspec.pubPackageName,
-        replacesTransformer: replacesTransformer,
         target: target,
       );
     }
