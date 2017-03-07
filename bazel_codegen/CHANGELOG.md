@@ -1,3 +1,8 @@
+# 0.1.1
+
+- Throw an exception when attempting to do resolution on an input file that is
+  also included in a dependency when using summaries.
+
 # 0.1.0
 
 - Wrap generation in Chain.capture and print full asynchronous stack traces
