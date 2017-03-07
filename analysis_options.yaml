@@ -2,7 +2,7 @@ analyzer:
   strong-mode: true
   exclude:
     - 'bazel-*/**'
-linter: 
+linter:
   rules:
     - avoid_empty_else
     - comment_references
