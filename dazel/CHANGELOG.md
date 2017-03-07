@@ -1,3 +1,9 @@
+## 0.3.4
+
+* Add support for using a local Dart SDK
+* Bump to latest `_bazel_codegen`
+* Upgrade to rules_dart 0.4.2
+
 ## 0.3.3
 
 * Add support for doing codegen in external packages
