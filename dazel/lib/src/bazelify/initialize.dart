@@ -29,6 +29,12 @@ class BazelifyInitArguments extends BazelifyArguments {
   /// If `null` implicitly defaults to your PATH.
   final String pubExecutable;
 
+  /// A path to a locally installed Dart SDK.
+  ///
+  /// If `null` the SDK will be downloaded according to the version used in
+  /// `rules_dart`.
+  final String localSdk;
+
   /// Create a new set of arguments for how to run `bazelify init`.
   ///
   /// Will be executed locally to where [pubPackageDir] is. For example,
@@ -50,6 +56,7 @@ class BazelifyInitArguments extends BazelifyArguments {
     String bazelExecutable,
     this.dartRulesSource: DartRulesSource.stable,
     this.pubExecutable,
+    this.localSdk,
     String pubPackageDir,
   })
       : super(bazelExecutable: bazelExecutable, pubPackageDir: pubPackageDir);
@@ -69,6 +76,11 @@ class InitCommand extends Command {
       ..addOption(
         'rules-tag',
         help: 'A tagged version on dart-lang/rules_dart to use.',
+      )
+      ..addOption(
+        'local-sdk',
+        help: 'A path to a Dart sdk installed locally. Should be used rarely '
+            'since rules_dart has tight version contraints against the SDK.',
       )
       ..addOption(
         'pub',
@@ -133,6 +145,7 @@ class InitCommand extends Command {
         bazelExecutable: commonArgs.bazelExecutable,
         dartRulesSource: source,
         pubExecutable: pubResolved,
+        localSdk: argResults['local-sdk'],
         pubPackageDir: commonArgs.pubPackageDir);
 
     await new _Initialize(initArgs).run();
@@ -142,7 +155,7 @@ class InitCommand extends Command {
 /// Where to retrieve the `rules_dart`.
 abstract class DartRulesSource {
   /// The default version of [DartRulesSource] if not otherwise specified.
-  static const DartRulesSource stable = const DartRulesSource.tag('v0.4.1');
+  static const DartRulesSource stable = const DartRulesSource.tag('v0.4.2');
 
   /// Use a git [commit].
   const factory DartRulesSource.commit(String commit) = _GitCommitRulesSource;
@@ -314,7 +327,8 @@ class _Initialize {
 
   Future<Null> _writeWorkspaceFile() async {
     final workspaceFile = p.join(arguments.pubPackageDir, 'WORKSPACE');
-    final workspace = new Workspace.fromDartSource(arguments.dartRulesSource);
+    final workspace = new Workspace.fromDartSource(
+        arguments.dartRulesSource, arguments.localSdk);
     await new File(workspaceFile).writeAsString('$workspace');
   }
 
