@@ -1,3 +1,7 @@
+## 0.3.5
+
+* Update to rules_dart 0.4.3
+
 ## 0.3.4
 
 * Add support for using a local Dart SDK
