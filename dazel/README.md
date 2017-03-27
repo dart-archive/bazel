@@ -12,6 +12,23 @@ adding a `dev_dependency` on the `dazel` package.
 
 [pub_run]: https://www.dartlang.org/tools/pub/cmd/pub-run
 
+# Compatibility
+
+`dazel` is experimental and not all use cases work with the build rules.
+
+- [x] Simple binaries (no transformers)
+- [x] Simple web apps dev with DDC
+- [x] Simple codegen specified with `build.yaml`
+- [ ] Building deployable apps with Dart2Js
+- [ ] Angular2 support
+- [ ] Windows support
+- [ ] 'Automatic' codegen based on dependencies
+
+Some use cases are not a match for `dazel` and will not get support.
+
+- Transformers requiring rewriting files (incompatible with `package:build`)
+- Reading Transformer configuration
+
 # Usage
 
 ## Setup
