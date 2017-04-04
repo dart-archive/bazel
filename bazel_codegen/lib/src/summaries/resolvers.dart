@@ -83,9 +83,6 @@ class AnalysisResolver implements ReleasableResolver {
     var uri = assetUri(assetId);
     var source = _analysisContext.sourceFactory.forUri2(uri);
     if (source == null) throw 'missing source for $uri';
-    if (_assetIds.contains(assetId) && source is! AssetSource) {
-      throw '$uri is an input and should not be a src in a dependency';
-    }
     var kind = _analysisContext.computeKindOf(source);
     if (kind != SourceKind.LIBRARY) return null;
     var library = _analysisContext.computeLibraryElement(source);
