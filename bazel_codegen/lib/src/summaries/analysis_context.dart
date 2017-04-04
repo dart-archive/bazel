@@ -29,7 +29,10 @@ AnalysisContext summaryAnalysisContext(
   var summaryResolver =
       new InSummaryUriResolver(PhysicalResourceProvider.INSTANCE, summaryData);
 
-  var resolvers = [sdkResolver, summaryResolver]..addAll(additionalResolvers);
+  var resolvers = []
+    ..addAll(additionalResolvers)
+    ..add(sdkResolver)
+    ..add(summaryResolver);
   var sourceFactory = new SourceFactory(resolvers);
 
   var context = AnalysisEngine.instance.createAnalysisContext();
