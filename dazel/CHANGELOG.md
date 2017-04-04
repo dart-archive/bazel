@@ -1,3 +1,7 @@
+## 0.3.6-dev
+
+* Update to \_bazel_codegen 0.1.2
+
 ## 0.3.5
 
 * Update to rules_dart 0.4.3
