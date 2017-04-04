@@ -1,3 +1,8 @@
+# 0.1.2
+
+- Give priority to reading inputs directly rather than resolving through a
+  summary if they are duplicated.
+
 # 0.1.1
 
 - Throw an exception when attempting to do resolution on an input file that is
