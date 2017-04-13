@@ -129,9 +129,13 @@ Future<IOSinkLogHandle> _runBuilders(
         value: (l) => l[1]);
   });
 
+  final packageName = packageMap.keys
+      .firstWhere((name) => packageMap[name] == buildArgs.packagePath);
+
   final writer = new BazelAssetWriter(buildArgs.outDir, packageMap,
       validInputs: validInputs);
-  final reader = new BazelAssetReader(buildArgs.rootDirs, packageMap,
+  final reader = new BazelAssetReader(
+      packageName, buildArgs.rootDirs, packageMap,
       assetFilter: new AssetFilter(validInputs, packageMap, writer));
   final srcAssets = findAssetIds(srcPaths, buildArgs.packagePath, packageMap)
       .where((id) => id.path.endsWith(buildArgs.inputExtension))

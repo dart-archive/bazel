@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'package:glob/glob.dart';
 
 class BazelFileSystem {
   final String workspaceDir;
@@ -31,6 +32,17 @@ class BazelFileSystem {
   //TODO(nbosch) replace with async version
   String readAsStringSync(String path, {Encoding encoding: UTF8}) =>
       _fileForPath(path).readAsStringSync(encoding: encoding ?? UTF8);
+
+  Iterable<String> findAssets(String packagePath, Glob glob) sync* {
+    for (var searchPath in searchPaths) {
+      var fullPath = p.join(workspaceDir, searchPath, packagePath);
+      if (!new Directory(fullPath).existsSync()) continue;
+      yield* glob
+          .listSync(root: fullPath)
+          .map((e) => e.path)
+          .map((path) => p.relative(path, from: fullPath));
+    }
+  }
 
   File _fileForPath(String path) {
     for (var searchPath in searchPaths) {
