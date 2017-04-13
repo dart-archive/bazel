@@ -19,3 +19,8 @@ dependencies:
 
 dev_dependencies:
   test: ^0.12.15+2
+  test_descriptor: ^1.0.0
+
+dependency_overrides:
+  build:
+    path: ../../pkg-build/build

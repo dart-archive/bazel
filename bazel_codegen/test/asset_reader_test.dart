@@ -15,6 +15,7 @@ void main() {
   const packageName = 'test.package.test_package';
   const packageMap = const {packageName: packagePath};
   final f1AssetId = new AssetId(packageName, 'lib/filename1.dart');
+  final f2AssetId = new AssetId(packageName, 'lib/filename2.dart');
   BazelAssetReader reader;
   FakeFileSystem fileSystem;
 
@@ -52,9 +53,8 @@ void main() {
   });
 
   test('findAssets', () async {
-    fileSystem.nextFindAssets = ['lib/foo.dart'];
-    expect(reader.findAssets(new Glob('lib/*.dart')),
-        [new AssetId(packageName, 'lib/foo.dart')]);
+    fileSystem.nextFindAssets = ['lib/filename1.dart', 'lib/filename2.dart'];
+    expect(reader.findAssets(new Glob('lib/*.dart')), [f1AssetId, f2AssetId]);
   });
 }
 
