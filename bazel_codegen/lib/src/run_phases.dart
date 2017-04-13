@@ -15,6 +15,7 @@ import 'args/build_args.dart';
 import 'assets/asset_filter.dart';
 import 'assets/asset_reader.dart';
 import 'assets/asset_writer.dart';
+import 'assets/path_translation.dart';
 import 'errors.dart';
 import 'logging.dart';
 import 'summaries/summaries.dart';
@@ -130,11 +131,9 @@ Future<IOSinkLogHandle> _runBuilders(
 
   final writer = new BazelAssetWriter(buildArgs.outDir, packageMap,
       validInputs: validInputs);
-  final reader = new BazelAssetReader(
-      buildArgs.packagePath, buildArgs.rootDirs, packageMap,
+  final reader = new BazelAssetReader(buildArgs.rootDirs, packageMap,
       assetFilter: new AssetFilter(validInputs, packageMap, writer));
-  final srcAssets = reader
-      .findAssetIds(srcPaths)
+  final srcAssets = findAssetIds(srcPaths, buildArgs.packagePath, packageMap)
       .where((id) => id.path.endsWith(buildArgs.inputExtension))
       .toList();
   var logHandle = new IOSinkLogHandle.toFile(buildArgs.logPath,
