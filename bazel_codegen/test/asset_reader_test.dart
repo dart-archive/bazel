@@ -4,6 +4,7 @@
 import 'dart:io';
 
 import 'package:build/build.dart';
+import 'package:glob/glob.dart';
 import 'package:test/test.dart';
 
 import 'package:_bazel_codegen/src/assets/asset_reader.dart';
@@ -14,12 +15,13 @@ void main() {
   const packageName = 'test.package.test_package';
   const packageMap = const {packageName: packagePath};
   final f1AssetId = new AssetId(packageName, 'lib/filename1.dart');
+  final f2AssetId = new AssetId(packageName, 'lib/filename2.dart');
   BazelAssetReader reader;
   FakeFileSystem fileSystem;
 
   setUp(() {
     fileSystem = new FakeFileSystem();
-    reader = new BazelAssetReader.forTest(packageMap, fileSystem);
+    reader = new BazelAssetReader.forTest(packageName, packageMap, fileSystem);
   });
 
   test('hasInput', () async {
@@ -49,6 +51,11 @@ void main() {
     expect(fileSystem.calls, isNotEmpty);
     expect(fileSystem.calls.single.memberName, equals(#readAsBytesSync));
   });
+
+  test('findAssets', () async {
+    fileSystem.nextFindAssets = ['lib/filename1.dart', 'lib/filename2.dart'];
+    expect(reader.findAssets(new Glob('lib/*.dart')), [f1AssetId, f2AssetId]);
+  });
 }
 
 @proxy
@@ -57,6 +64,7 @@ class FakeFileSystem implements BazelFileSystem {
 
   bool nextExistsReturn = false;
   Object nextFileContents = 'Fake File Contents';
+  Iterable<String> nextFindAssets = const [];
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
@@ -66,6 +74,8 @@ class FakeFileSystem implements BazelFileSystem {
     } else if (invocation.memberName == #readAsStringSync ||
         invocation.memberName == #readAsBytesSync) {
       return nextFileContents;
+    } else if (invocation.memberName == #findAssets) {
+      return nextFindAssets;
     }
     return null;
   }

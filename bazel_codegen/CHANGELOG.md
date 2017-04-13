@@ -1,3 +1,7 @@
+# 0.1.3
+
+- Upgrade to build 0.8.0, implement findAssets api
+
 # 0.1.2
 
 - Give priority to reading inputs directly rather than resolving through a

@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:build/build.dart';
+import 'package:glob/glob.dart';
 import 'package:path/path.dart' as p;
 
 import '../errors.dart';
@@ -12,6 +13,8 @@ import 'asset_filter.dart';
 import 'file_system.dart';
 
 class BazelAssetReader implements AssetReader {
+  final String rootPackageName;
+
   /// The bazel specific file system.
   ///
   /// Responsible for knowing where bazel stores source and generated files on
@@ -26,12 +29,14 @@ class BazelAssetReader implements AssetReader {
 
   int numAssetsReadFromDisk = 0;
 
-  BazelAssetReader(Iterable<String> rootDirs, this._packageMap,
+  BazelAssetReader(
+      this.rootPackageName, Iterable<String> rootDirs, this._packageMap,
       {AssetFilter assetFilter})
       : _fileSystem = new BazelFileSystem('.', rootDirs),
         _assetFilter = assetFilter;
 
-  BazelAssetReader.forTest(this._packageMap, this._fileSystem)
+  BazelAssetReader.forTest(
+      this.rootPackageName, this._packageMap, this._fileSystem)
       : _assetFilter = const _AllowAllAssets();
 
   @override
@@ -74,6 +79,12 @@ class BazelAssetReader implements AssetReader {
 
     return _fileSystem.existsSync(filePath);
   }
+
+  @override
+  Iterable<AssetId> findAssets(Glob glob) => _fileSystem
+      .findAssets(_packageMap[rootPackageName], glob)
+      .map((path) => new AssetId(rootPackageName, path))
+      .where(_assetFilter.isValid);
 }
 
 class _AllowAllAssets implements AssetFilter {
