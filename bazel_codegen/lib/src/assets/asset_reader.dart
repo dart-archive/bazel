@@ -10,12 +10,8 @@ import 'package:path/path.dart' as p;
 import '../errors.dart';
 import 'asset_filter.dart';
 import 'file_system.dart';
-import 'path_translation.dart' as path_translation;
 
 class BazelAssetReader implements AssetReader {
-  /// The path to the package we are currently processing.
-  final String packagePath;
-
   /// The bazel specific file system.
   ///
   /// Responsible for knowing where bazel stores source and generated files on
@@ -30,28 +26,13 @@ class BazelAssetReader implements AssetReader {
 
   int numAssetsReadFromDisk = 0;
 
-  BazelAssetReader._(
-      this.packagePath, Iterable<String> rootDirs, this._packageMap,
+  BazelAssetReader(Iterable<String> rootDirs, this._packageMap,
       {AssetFilter assetFilter})
       : _fileSystem = new BazelFileSystem('.', rootDirs),
         _assetFilter = assetFilter;
 
-  factory BazelAssetReader(String packagePath, Iterable<String> rootDirs,
-      Map<String, String> packageMap,
-      {AssetFilter assetFilter}) {
-    if (packagePath.endsWith('/')) {
-      packagePath = packagePath.substring(0, packagePath.length - 1);
-    }
-    return new BazelAssetReader._(packagePath, rootDirs, packageMap,
-        assetFilter: assetFilter);
-  }
-
-  BazelAssetReader.forTest(this.packagePath, this._packageMap, this._fileSystem)
+  BazelAssetReader.forTest(this._packageMap, this._fileSystem)
       : _assetFilter = const _AllowAllAssets();
-
-  /// Peform package name resolution and turn file paths into [AssetId]s.
-  Iterable<AssetId> findAssetIds(Iterable<String> assetPaths) =>
-      path_translation.findAssetIds(assetPaths, packagePath, _packageMap);
 
   @override
   Future<List<int>> readAsBytes(AssetId id) async {

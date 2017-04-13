@@ -14,21 +14,12 @@ void main() {
   const packageName = 'test.package.test_package';
   const packageMap = const {packageName: packagePath};
   final f1AssetId = new AssetId(packageName, 'lib/filename1.dart');
-  final f2AssetId = new AssetId(packageName, 'lib/src/filename2.dart');
   BazelAssetReader reader;
   FakeFileSystem fileSystem;
 
   setUp(() {
     fileSystem = new FakeFileSystem();
-    reader = new BazelAssetReader.forTest(packagePath, packageMap, fileSystem);
-  });
-
-  test('findAssetids tranlsates paths', () {
-    final translatedAssets = reader.findAssetIds([
-      'test/package/test_package/lib/filename1.dart',
-      'test/package/test_package/lib/src/filename2.dart',
-    ]);
-    expect(translatedAssets, equals([f1AssetId, f2AssetId]));
+    reader = new BazelAssetReader.forTest(packageMap, fileSystem);
   });
 
   test('hasInput', () async {
