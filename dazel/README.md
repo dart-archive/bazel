@@ -61,7 +61,7 @@ You can `bazel run` files in `bin/`:
 $ bazel run :hello_bin
 ```
 
-You can also run a development sever for your web application:
+You can also run a development server for your web application:
 
 ```bash
 # Assume you have web/main.dart, and web/index.html.
