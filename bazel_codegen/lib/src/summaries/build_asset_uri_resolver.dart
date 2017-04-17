@@ -85,6 +85,9 @@ class AssetSource implements Source {
 
   @override
   bool exists() => true;
+
+  @override
+  String toString() => 'AssetSource[$_assetId]';
 }
 
 Uri assetUri(AssetId assetId) => assetId.path.startsWith('lib/')
