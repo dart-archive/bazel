@@ -1,6 +1,7 @@
-# 0.1.4-dev
+# 0.1.4
 
 - Add a `toString()` on AssetSource.
+- Run analysis in Strong mode when using summaries
 
 # 0.1.3
 
