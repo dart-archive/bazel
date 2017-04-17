@@ -1,3 +1,7 @@
+# 0.1.4-dev
+
+- Add a `toString()` on AssetSource.
+
 # 0.1.3
 
 - Upgrade to build 0.8.0, implement findAssets api
