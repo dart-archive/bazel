@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 import 'package:analyzer/src/context/context.dart' show AnalysisContextImpl;
 import 'package:analyzer/src/generated/engine.dart'
-    show AnalysisContext, AnalysisEngine;
+    show AnalysisContext, AnalysisEngine, AnalysisOptionsImpl;
 import 'package:analyzer/src/generated/source.dart';
 import 'package:analyzer/src/summary/package_bundle_reader.dart'
     show InSummaryUriResolver, InputPackagesResultProvider, SummaryDataStore;
@@ -39,6 +39,7 @@ AnalysisContext summaryAnalysisContext(
   context.sourceFactory = sourceFactory;
   (context as AnalysisContextImpl).resultProvider =
       new InputPackagesResultProvider(context, summaryData);
+  context.analysisOptions = new AnalysisOptionsImpl()..strongMode = true;
 
   return context;
 }
