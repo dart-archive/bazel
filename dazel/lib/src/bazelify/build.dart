@@ -56,6 +56,7 @@ class BuildFile {
   static Stream<DartWebApplication> _findWebApps(
       String package, String packageDir, String searchDir) {
     return _findHtmlEntryPoints(packageDir, searchDir)
+        .where((entryPoint) => entryPoint != null)
         .map/*<DartWebApplication>*/((entryPoint) {
       return new DartWebApplication(
         name: targetForAppPath(entryPoint.htmlFile),
