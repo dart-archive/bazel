@@ -24,16 +24,16 @@ void main() {
     reader = new BazelAssetReader.forTest(packageName, packageMap, fileSystem);
   });
 
-  test('hasInput', () async {
+  test('canRead', () async {
     final nonLoadedId = f1AssetId.changeExtension('.dne');
     fileSystem.nextExistsReturn = true;
-    expect(await reader.hasInput(nonLoadedId), isTrue);
+    expect(await reader.canRead(nonLoadedId), isTrue);
     expect(fileSystem.calls, isNotEmpty);
     expect(fileSystem.calls.single.memberName, equals(#existsSync));
 
     final otherUnloadedId = f1AssetId.changeExtension('.broken.link');
     fileSystem.nextExistsReturn = false;
-    expect(await reader.hasInput(otherUnloadedId), isFalse);
+    expect(await reader.canRead(otherUnloadedId), isFalse);
   });
 
   test('readAsString', () async {

@@ -1,3 +1,7 @@
+# 0.1.5
+
+- Support for build 0.9.0
+
 # 0.1.4
 
 - Add a `toString()` on AssetSource.
