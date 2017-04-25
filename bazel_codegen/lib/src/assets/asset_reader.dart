@@ -70,7 +70,7 @@ class BazelAssetReader implements AssetReader {
   }
 
   @override
-  Future<bool> hasInput(AssetId id) async {
+  Future<bool> canRead(AssetId id) async {
     final packagePath = _packageMap[id.package];
     if (packagePath == null) return false;
 
