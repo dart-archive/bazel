@@ -174,9 +174,7 @@ Future<IOSinkLogHandle> _runBuilders(
     }
 
     // Set outputs as inputs into the next builder
-    inputSrcs
-      ..clear()
-      ..addAll(writer.assetsWritten);
+    inputSrcs.addAll(writer.assetsWritten);
     validInputs?.addAll(writer.assetsWritten
         .map((id) => p.join(packageMap[id.package], id.path)));
 

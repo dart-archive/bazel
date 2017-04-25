@@ -1,3 +1,9 @@
+# 0.1.6
+
+- Allow 'side' outputs from a builder. When multiple builders are chained the
+  inputs to builders are no longer limited to only the outputs from the previous
+  builder.
+
 # 0.1.5
 
 - Support for build 0.9.0
