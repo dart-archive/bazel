@@ -8,8 +8,7 @@ import 'dart:io';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/src/generated/engine.dart' show AnalysisContext;
 import 'package:analyzer/src/generated/source.dart' show SourceKind;
-import 'package:build/build.dart'
-    show Resolvers, Resolver, ReleasableResolver, BuildStep, AssetId;
+import 'package:build/build.dart';
 
 import '../assets/path_translation.dart';
 import 'analysis_context.dart';
@@ -53,9 +52,7 @@ class SummaryResolvers implements Resolvers {
 
   Future<Null> _primeWithSources(ReadAsset readAsset) async {
     var sourceFiles = await new File(_sourcesFile).readAsLines();
-    var assets = findAssetIds(sourceFiles, _packagePath, _packageMap)
-        .map((asset) => new AssetId(asset.package, asset.path))
-        .toList();
+    var assets = findAssetIds(sourceFiles, _packagePath, _packageMap);
     await _assetResolver.addAssets(assets, readAsset);
   }
 }
