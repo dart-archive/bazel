@@ -16,6 +16,7 @@ typedef Future<String> ReadAsset(AssetId assetId);
 /// assets may change during a build process.
 class BuildAssetUriResolver implements UriResolver {
   final _knownAssets = <Uri, Source>{};
+  final _uriByAssetId = <AssetId, Uri>{};
 
   /// Read all [assets] with the extension '.dart' using the [read] function up
   /// front and cache them as a [Source].
@@ -24,6 +25,7 @@ class BuildAssetUriResolver implements UriResolver {
       var uri = assetUri(asset);
       if (!_knownAssets.containsKey(uri)) {
         _knownAssets[uri] = new AssetSource(asset, await read(asset));
+        _uriByAssetId[asset] = uri;
       }
     }
   }
@@ -33,7 +35,11 @@ class BuildAssetUriResolver implements UriResolver {
 
   @override
   Uri restoreAbsolute(Source source) {
-    throw new UnimplementedError();
+    var parts = source.fullName.split('|');
+    if (parts.length != 2) return null;
+    var package = parts[0].split('/').last;
+    var id = new AssetId(package, parts[1]);
+    return _uriByAssetId[id];
   }
 }
 

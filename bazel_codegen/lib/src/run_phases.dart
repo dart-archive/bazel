@@ -186,6 +186,10 @@ Future<IOSinkLogHandle> _runBuilders(
   // Technically we don't always have to do this, but better safe than sorry.
   timings.trackOperation('Clearing analysis engine cache',
       () => AnalysisEngine.instance.clearCaches());
+  if (resolvers is SummaryResolvers) {
+    timings.trackOperation('Disposing the analysisDriver',
+        () => (resolvers as SummaryResolvers).driver.dispose());
+  }
 
   await timings.trackOperation('Checking outputs and writing defaults',
       () async {
