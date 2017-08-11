@@ -66,17 +66,16 @@ class AnalysisResolver implements ReleasableResolver {
 
   AnalysisResolver(this._analysisDriver, this._assetIds);
 
-  @override
-
   /// Nothing to do in this impl, eventually [_analysisDriver.dispose()] should
   /// be called but not until the driver is done being used.
+  @override
   void release() {}
 
   @override
   Future<bool> isLibrary(AssetId assetId) async {
     var uri = assetUri(assetId);
-    // var source = _analysisDriver.sourceFactory.forUri2(uri);
-    return // source != null &&
+    var source = _analysisDriver.sourceFactory.forUri2(uri);
+    return source != null &&
         (await _analysisDriver.getSourceKind(uri.toString())) ==
             SourceKind.LIBRARY;
   }

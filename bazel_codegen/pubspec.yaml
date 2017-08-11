@@ -5,7 +5,7 @@ homepage: https://github.com/dart-lang/bazel
 version: 0.1.6
 
 environment:
-  sdk: ">=1.25.0-dev.7.0 <2.0.0"
+  sdk: ">=1.8.0 <2.0.0"
 
 dependencies:
   # Not released!!!
