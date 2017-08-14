@@ -1,3 +1,7 @@
+# 0.1.7
+
+- Upgrade to `package:build` v0.10
+
 # 0.1.6
 
 - Allow 'side' outputs from a builder. When multiple builders are chained the

@@ -68,7 +68,7 @@ class AnalysisResolver implements ReleasableResolver {
   void release() => _analysisContext.dispose();
 
   @override
-  bool isLibrary(AssetId assetId) {
+  Future<bool> isLibrary(AssetId assetId) async {
     var uri = assetUri(assetId);
     var source = _analysisContext.sourceFactory.forUri2(uri);
     return source != null &&
@@ -76,7 +76,7 @@ class AnalysisResolver implements ReleasableResolver {
   }
 
   @override
-  LibraryElement getLibrary(AssetId assetId) {
+  Future<LibraryElement> libraryFor(AssetId assetId) async {
     var uri = assetUri(assetId);
     var source = _analysisContext.sourceFactory.forUri2(uri);
     if (source == null) throw 'missing source for $uri';
@@ -88,20 +88,20 @@ class AnalysisResolver implements ReleasableResolver {
   }
 
   @override
-  List<LibraryElement> get libraries {
+  Stream<LibraryElement> get libraries async* {
     var allLibraries = new Set<LibraryElement>();
     var uncheckedLibraries = new Queue<LibraryElement>();
-    uncheckedLibraries.addAll(_assetIds.map(getLibrary));
+    uncheckedLibraries.addAll(await Future.wait(_assetIds.map(libraryFor)));
     while (uncheckedLibraries.isNotEmpty) {
       var library = uncheckedLibraries.removeFirst();
       allLibraries.add(library);
+      yield library;
       uncheckedLibraries.addAll(library.importedLibraries
           .where((library) => !allLibraries.contains(library)));
     }
-    return allLibraries.toList();
   }
 
   @override
-  LibraryElement getLibraryByName(String name) =>
-      libraries.firstWhere((library) => library.name == name, orElse: null);
+  Future<LibraryElement> findLibraryByName(String name) => libraries
+      .firstWhere((library) => library.name == name, defaultValue: () => null);
 }
