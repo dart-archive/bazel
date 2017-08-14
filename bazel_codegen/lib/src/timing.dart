@@ -28,16 +28,13 @@ class CodegenTiming {
   /// [writeLogSummary] will output the total time elapsed by all operations
   /// with the same [description] in the order in which they were first
   /// executed.
-  dynamic/*=T*/ trackOperation/*<T>*/(
-          String description, dynamic/*=T*/ operation()) =>
-      _trackTiming(
-          operation, _watches.putIfAbsent(description, () => new Stopwatch()));
+  T trackOperation<T>(String description, T operation()) => _trackTiming(
+      operation, _watches.putIfAbsent(description, () => new Stopwatch()));
 
   /// Tracks [operation] that should be totaled using [watch].
   ///
   /// This method expects that [operation] will not return a [Stream].
-  dynamic/*=T*/ _trackTiming/*<T>*/(
-      dynamic/*=T*/ operation(), Stopwatch watch) {
+  T _trackTiming<T>(T operation(), Stopwatch watch) {
     assert(isRunning);
     watch.start();
     final retVal = operation();
@@ -46,7 +43,7 @@ class CodegenTiming {
         assert(isRunning);
         watch.stop();
         return operationValue;
-      }) as dynamic/*=T*/;
+      }) as T;
     } else {
       watch.stop();
       return retVal;
