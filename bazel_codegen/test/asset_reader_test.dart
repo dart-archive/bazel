@@ -1,6 +1,7 @@
 // Copyright (c) 2017, the Dart project authors. Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+import 'dart:async';
 import 'dart:io';
 
 import 'package:build/build.dart';
@@ -29,7 +30,7 @@ void main() {
     fileSystem.nextExistsReturn = true;
     expect(await reader.canRead(nonLoadedId), isTrue);
     expect(fileSystem.calls, isNotEmpty);
-    expect(fileSystem.calls.single.memberName, equals(#existsSync));
+    expect(fileSystem.calls.single.memberName, equals(#exists));
 
     final otherUnloadedId = f1AssetId.changeExtension('.broken.link');
     fileSystem.nextExistsReturn = false;
@@ -37,19 +38,19 @@ void main() {
   });
 
   test('readAsString', () async {
-    final contents = 'Test File Contents';
-    fileSystem.nextFileContents = contents;
-    expect(await reader.readAsString(f1AssetId), equals(contents));
+    final content = 'Test File Contents';
+    fileSystem.nextFile = new FakeFile()..content = content;
+    expect(await reader.readAsString(f1AssetId), equals(content));
     expect(fileSystem.calls, isNotEmpty);
-    expect(fileSystem.calls.single.memberName, equals(#readAsStringSync));
+    expect(fileSystem.calls.single.memberName, equals(#find));
   });
 
   test('readAsBytes', () async {
-    final contents = [1, 2, 3];
-    fileSystem.nextFileContents = contents;
-    expect(await reader.readAsBytes(f1AssetId), equals(contents));
+    final content = [1, 2, 3];
+    fileSystem.nextFile = new FakeFile()..content = content;
+    expect(await reader.readAsBytes(f1AssetId), equals(content));
     expect(fileSystem.calls, isNotEmpty);
-    expect(fileSystem.calls.single.memberName, equals(#readAsBytesSync));
+    expect(fileSystem.calls.single.memberName, equals(#find));
   });
 
   test('findAssets', () async {
@@ -63,19 +64,32 @@ class FakeFileSystem implements BazelFileSystem {
   final calls = <Invocation>[];
 
   bool nextExistsReturn = false;
-  Object nextFileContents = 'Fake File Contents';
+  File nextFile = new FakeFile();
   Iterable<String> nextFindAssets = const [];
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
     calls.add(invocation);
-    if (invocation.memberName == #existsSync) {
-      return nextExistsReturn;
-    } else if (invocation.memberName == #readAsStringSync ||
-        invocation.memberName == #readAsBytesSync) {
-      return nextFileContents;
+    if (invocation.memberName == #exists) {
+      return new Future.value(nextExistsReturn);
+    } else if (invocation.memberName == #find) {
+      return new Future.value(nextFile);
     } else if (invocation.memberName == #findAssets) {
       return nextFindAssets;
+    }
+    return null;
+  }
+}
+
+@proxy
+class FakeFile implements File {
+  Object content = 'Fake File Contents';
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #readAsString ||
+        invocation.memberName == #readAsBytes) {
+      return content;
     }
     return null;
   }

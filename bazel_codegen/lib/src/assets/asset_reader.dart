@@ -43,22 +43,14 @@ class BazelAssetReader implements AssetReader {
   Future<List<int>> readAsBytes(AssetId id) async {
     final filePath = _filePathForId(id);
     numAssetsReadFromDisk++;
-    final bytes = _fileSystem.readAsBytesSync(filePath);
-    if (bytes == null) {
-      throw new CodegenError('Could not find $id at $filePath');
-    }
-    return bytes;
+    return (await _fileSystem.find(filePath)).readAsBytes();
   }
 
   @override
   Future<String> readAsString(AssetId id, {Encoding encoding: UTF8}) async {
     final filePath = _filePathForId(id);
     numAssetsReadFromDisk++;
-    final contents = _fileSystem.readAsStringSync(filePath, encoding: encoding);
-    if (contents == null) {
-      throw new CodegenError('Could not find $id at $filePath');
-    }
-    return contents;
+    return (await _fileSystem.find(filePath)).readAsString(encoding: encoding);
   }
 
   String _filePathForId(AssetId id) {
@@ -77,7 +69,7 @@ class BazelAssetReader implements AssetReader {
     final filePath = p.join(packagePath, id.path);
     if (!_assetFilter.isValid(id)) return false;
 
-    return _fileSystem.existsSync(filePath);
+    return _fileSystem.exists(filePath);
   }
 
   @override
