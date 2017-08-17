@@ -16,7 +16,7 @@ class BazelFileSystem {
     if (searchPaths == null) throw new ArgumentError();
   }
 
-  //TODO(nbosch) replace with async version
+  //TODO; replace with async version
   bool existsSync(String path) {
     for (var searchPath in searchPaths) {
       var f = new File(p.join(workspaceDir, searchPath, path));
@@ -25,11 +25,11 @@ class BazelFileSystem {
     return false;
   }
 
-  //TODO(nbosch) replace with async version
+  //TODO; replace with async version
   List<int> readAsBytesSync(String path) =>
       _fileForPath(path).readAsBytesSync();
 
-  //TODO(nbosch) replace with async version
+  //TODO; replace with async version
   String readAsStringSync(String path, {Encoding encoding: UTF8}) =>
       _fileForPath(path).readAsStringSync(encoding: encoding ?? UTF8);
 

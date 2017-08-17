@@ -34,7 +34,7 @@ class IOSinkLogHandle {
     _logSubscription = logger.onRecord.listen((logRecord) {
       var level = logRecord.level;
       var message = logRecord.message;
-      // TODO(jakemac): Come up with a real fix for this. The Resolver from code
+      // TODO; Come up with a real fix for this. The Resolver from code
       // transformers logs errors on missing files, but we don't really want to
       // error in that case, especially for generated files. For now we just
       // lower these to info messages.
