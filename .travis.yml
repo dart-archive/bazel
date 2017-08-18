@@ -11,6 +11,10 @@ cache:
   directories:
     - $HOME/.pub-cache
 
+# Only building master means that we don't run two builds for each pull request.
+branches:
+  only: [master]
+
 before_install:
   - if [ "$INSTALL_BAZEL" == "true" ]; then wget https://github.com/bazelbuild/bazel/releases/download/0.4.4/bazel_0.4.4-linux-x86_64.deb; sudo dpkg -i bazel_0.4.4-linux-x86_64.deb; fi
 
