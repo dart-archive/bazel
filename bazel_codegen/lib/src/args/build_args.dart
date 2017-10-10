@@ -27,7 +27,7 @@ final _argParser = new ArgParser()
   ..addOption(_buildExtensions,
       allowMultiple: true,
       help: 'The file extensions to process. For each input extension add an '
-          'argument in the format "input|output1;output2"')
+          'argument in the format "input:output1;output2"')
   ..addOption(_logLevelParam,
       allowed: _optionToLogLevel.keys.toList(),
       defaultsTo: 'warning',
@@ -102,8 +102,8 @@ class BuildArgs {
     final logPath = _requiredArg(argResults, _logPathParam);
     final rawBuildExtensions = _requiredArg(argResults, _buildExtensions);
     final buildExtensions = new Map.fromIterable(rawBuildExtensions,
-        key: (e) => e.split('|').first,
-        value: (e) => e.split('|').last.split(';').toList());
+        key: (e) => e.split(':').first,
+        value: (e) => e.split(':').last.split(';').toList());
 
     final packageMapPath = _requiredArg(argResults, _packageMapParam);
     final srcsPath = _requiredArg(argResults, _srcsParam);
