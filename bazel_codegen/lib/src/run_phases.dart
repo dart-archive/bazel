@@ -138,7 +138,7 @@ Future<IOSinkLogHandle> _runBuilders(
       packageName, buildArgs.rootDirs, packageMap,
       assetFilter: new AssetFilter(validInputs, packageMap, writer));
   final srcAssets = findAssetIds(srcPaths, buildArgs.packagePath, packageMap)
-      .where((id) => id.path.endsWith(buildArgs.inputExtension))
+      .where((id) => buildArgs.buildExtensions.keys.any(id.path.endsWith))
       .toList();
   var logHandle = new IOSinkLogHandle.toFile(buildArgs.logPath,
       printLevel: buildArgs.logLevel, printToStdErr: !buildArgs.isWorker);
@@ -192,19 +192,21 @@ Future<IOSinkLogHandle> _runBuilders(
     var writes = <Future>[];
     // Check all expected outputs were written or create w/provided default.
     for (var assetId in srcAssets) {
-      for (var extension in buildArgs.outputExtensions) {
-        var expectedAssetId = new AssetId(
-            assetId.package,
-            assetId.path.substring(
-                    0, assetId.path.length - buildArgs.inputExtension.length) +
-                extension);
-        if (allWrittenAssets.contains(expectedAssetId)) continue;
+      for (var inputExtension in buildArgs.buildExtensions.keys) {
+        for (var extension in buildArgs.buildExtensions[inputExtension]) {
+          var expectedAssetId = new AssetId(
+              assetId.package,
+              assetId.path.substring(
+                      0, assetId.path.length - inputExtension.length) +
+                  extension);
+          if (allWrittenAssets.contains(expectedAssetId)) continue;
 
-        if (defaultContent.containsKey(extension)) {
-          writes.add(
-              writer.writeAsString(expectedAssetId, defaultContent[extension]));
-        } else {
-          logger.warning('Missing expected output $expectedAssetId');
+          if (defaultContent.containsKey(extension)) {
+            writes.add(writer.writeAsString(
+                expectedAssetId, defaultContent[extension]));
+          } else {
+            logger.warning('Missing expected output $expectedAssetId');
+          }
         }
       }
     }

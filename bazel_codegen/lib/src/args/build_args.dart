@@ -8,10 +8,9 @@ import 'package:logging/logging.dart';
 
 const _rootDirParam = 'root-dir';
 const _helpParam = 'help';
-const _inExtension = 'in-extension';
+const _buildExtensions = 'build-extensions';
 const _logLevelParam = 'log-level';
 const _logPathParam = 'log';
-const _outExtension = 'out-extension';
 const _outParam = 'out';
 const _packagePathParam = 'package-path';
 const _packageMapParam = 'package-map';
@@ -25,15 +24,16 @@ final _argParser = new ArgParser()
       help: 'One or more workspace directories to check when reading files.')
   ..addFlag(_helpParam,
       abbr: 'h', negatable: false, help: 'Prints this message and exits')
-  ..addOption(_inExtension, help: 'The file extension to process')
+  ..addOption(_buildExtensions,
+      allowMultiple: true,
+      help: 'The file extensions to process. For each input extension add an '
+          'argument in the format "input:output1;output2"')
   ..addOption(_logLevelParam,
       allowed: _optionToLogLevel.keys.toList(),
       defaultsTo: 'warning',
       help: 'The minimum level of log to print to the console.')
   ..addOption(_logPathParam, help: 'The full path of the logfile to write')
   ..addOption(_outParam, abbr: 'o', help: 'The directory to write into.')
-  ..addOption(_outExtension,
-      allowMultiple: true, help: 'The file extension to output')
   ..addFlag(_summariesParam,
       negatable: true,
       defaultsTo: true,
@@ -62,8 +62,7 @@ class BuildArgs {
   final String outDir;
   final Level logLevel;
   final String logPath;
-  final String inputExtension;
-  final List<String> outputExtensions;
+  final Map<String, List<String>> buildExtensions;
   final String packageMapPath;
   final String srcsPath;
   final bool help;
@@ -76,8 +75,7 @@ class BuildArgs {
       this.packagePath,
       this.outDir,
       this.logPath,
-      this.inputExtension,
-      this.outputExtensions,
+      this.buildExtensions,
       this.packageMapPath,
       this.srcsPath,
       this.help,
@@ -102,25 +100,18 @@ class BuildArgs {
         _optionToLogLevel[_requiredArg(argResults, _logLevelParam)];
 
     final logPath = _requiredArg(argResults, _logPathParam);
-    final inputExtension = _requiredArg(argResults, _inExtension);
-    final outputExtensions = _requiredArg(argResults, _outExtension);
+    final rawBuildExtensions = _requiredArg(argResults, _buildExtensions);
+    final buildExtensions = new Map.fromIterable(rawBuildExtensions,
+        key: (e) => e.split(':').first,
+        value: (e) => e.split(':').last.split(';').toList());
 
     final packageMapPath = _requiredArg(argResults, _packageMapParam);
     final srcsPath = _requiredArg(argResults, _srcsParam);
     final help = argResults[_helpParam];
     final useSummaries = argResults[_summariesParam];
 
-    return new BuildArgs._(
-        rootDirs,
-        packagePath,
-        outDir,
-        logPath,
-        inputExtension,
-        outputExtensions,
-        packageMapPath,
-        srcsPath,
-        help,
-        logLevel,
+    return new BuildArgs._(rootDirs, packagePath, outDir, logPath,
+        buildExtensions, packageMapPath, srcsPath, help, logLevel,
         additionalArgs: argResults.rest,
         isWorker: isWorker,
         useSummaries: useSummaries);
