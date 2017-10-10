@@ -1,3 +1,8 @@
+# 0.2.0
+
+- **Breaking**: CLI argument change: Replace `in-extension` and `out-extensions`
+  with `build-extensions`.
+
 # 0.1.7
 
 - Upgrade to `package:build` v0.10
