@@ -38,8 +38,8 @@ class IOSinkLogHandle {
       // transformers logs errors on missing files, but we don't really want to
       // error in that case, especially for generated files. For now we just
       // lower these to info messages.
-      if (_missingFileError(message) && level == Level.SEVERE) {
-        level = message.endsWith('.g.dart') ? Level.INFO : Level.WARNING;
+      if (_missingFileError(message) && level >= Level.WARNING) {
+        level = message.contains('.g.dart') ? Level.INFO : Level.WARNING;
       }
       var logMessage = _logMessage(logRecord);
       // Always write to the sink before stderr.
@@ -94,4 +94,5 @@ bool _shouldLog(Level actualLevel, Level minLevel) {
 
 // Detect errors about missing files from the resolver.
 bool _missingFileError(String message) =>
-    message.startsWith('Could not load asset');
+    message.startsWith('Could not load asset') ||
+    message.startsWith('Missing "part ');
