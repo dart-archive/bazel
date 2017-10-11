@@ -29,15 +29,7 @@ Future generateSingleBuild(List<BuilderFactory> builders, List<String> args,
   var buildArgs = _parseArgs(args);
 
   try {
-    final srcPaths = await timings.trackOperation('Collecting input srcs', () {
-      return new File(buildArgs.srcsPath).readAsLines();
-    });
-    if (srcPaths.isEmpty) {
-      throw new CodegenError('No input files to process.');
-    }
-    final packageMap = await _packageMap(buildArgs, timings);
-    logger = await runBuilders(
-        builders, buildArgs, defaultContent, srcPaths, packageMap, timings);
+    logger = await _runBuilders(builders, buildArgs, defaultContent, timings);
   } catch (e, s) {
     stderr.writeln("Dart Codegen failed with:\n$e\n$s");
     exitCode = EXIT_CODE_ERROR;
@@ -87,16 +79,8 @@ class _CodegenWorker extends AsyncWorkerLoop {
       var bazelRelativeInputs = request.inputs
           .map((input) => _bazelRelativePath(input.path, buildArgs.rootDirs));
 
-      final srcPaths =
-          await timings.trackOperation('Collecting input srcs', () {
-        return new File(buildArgs.srcsPath).readAsLines();
-      });
-      if (srcPaths.isEmpty) {
-        throw new CodegenError('No input files to process.');
-      }
-      final packageMap = await _packageMap(buildArgs, timings);
-      logHandle = await runBuilders(
-          builders, buildArgs, defaultContent, srcPaths, packageMap, timings,
+      logHandle = await _runBuilders(
+          builders, buildArgs, defaultContent, timings,
           isWorker: true, validInputs: new Set()..addAll(bazelRelativeInputs));
       var logger = logHandle.logger;
       logger.info(
@@ -115,6 +99,31 @@ class _CodegenWorker extends AsyncWorkerLoop {
         ..output = "Dart Codegen worker failed with:\n$e\n$s";
     }
   }
+}
+
+/// Sets up resources and runs [builders] then fills in default content.
+///
+/// When there are multiple builders, the outputs of each are assumed to be
+/// primary inputs to the next builder sequentially.
+///
+/// The [timings] instance must already be started.
+Future<IOSinkLogHandle> _runBuilders(
+    List<BuilderFactory> builders,
+    BuildArgs buildArgs,
+    Map<String, String> defaultContent,
+    CodegenTiming timings,
+    {bool isWorker: false,
+    Set<String> validInputs}) async {
+  final srcPaths = await timings.trackOperation('Collecting input srcs', () {
+    return new File(buildArgs.srcsPath).readAsLines();
+  });
+  if (srcPaths.isEmpty) {
+    throw new CodegenError('No input files to process.');
+  }
+  final packageMap = await _packageMap(buildArgs, timings);
+  return runBuilders(
+      builders, buildArgs, defaultContent, srcPaths, packageMap, timings,
+      isWorker: isWorker, validInputs: validInputs);
 }
 
 /// Parse [BuildArgs] from [args].
