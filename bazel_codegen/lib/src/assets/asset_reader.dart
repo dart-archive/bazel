@@ -27,7 +27,9 @@ class BazelAssetReader implements AssetReader {
   /// Maps package names to path in the bazel file system.
   final Map<String, String> _packageMap;
 
-  int numAssetsReadFromDisk = 0;
+  /// The number of times the [_fileSystem] is hit to read a file.
+  int get fileReadCount => _fileReadCount;
+  int _fileReadCount = 0;
 
   BazelAssetReader(
       this._rootPackage, Iterable<String> rootDirs, this._packageMap,
@@ -42,14 +44,14 @@ class BazelAssetReader implements AssetReader {
   @override
   Future<List<int>> readAsBytes(AssetId id) async {
     final filePath = _filePathForId(id);
-    numAssetsReadFromDisk++;
+    _fileReadCount++;
     return (await _fileSystem.find(filePath)).readAsBytes();
   }
 
   @override
   Future<String> readAsString(AssetId id, {Encoding encoding: UTF8}) async {
     final filePath = _filePathForId(id);
-    numAssetsReadFromDisk++;
+    _fileReadCount++;
     return (await _fileSystem.find(filePath)).readAsString(encoding: encoding);
   }
 
