@@ -6,65 +6,46 @@ import 'dart:async';
 
 import 'package:analyzer/src/generated/engine.dart' show AnalysisEngine;
 import 'package:build/build.dart';
-import 'package:build_barback/build_barback.dart';
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 
 import '../_bazel_codegen.dart';
 import 'args/build_args.dart';
-import 'assets/asset_filter.dart';
 import 'assets/asset_reader.dart';
 import 'assets/asset_writer.dart';
 import 'assets/path_translation.dart';
-import 'logging.dart';
-import 'summaries/summaries.dart';
 import 'timing.dart';
 
-/// Runs [builders] to generate files using [buildArgs] and fills in missing
-/// outputs with default content.
+/// Runs [builders] to generate files and fills in missing outputs with default
+/// content.
 ///
 /// When there are multiple builders, the outputs of each are assumed to be
 /// primary inputs to the next builder sequentially.
 ///
 /// The [timings] instance must already be started.
-Future<IOSinkLogHandle> runBuilders(
+Future<Null> runBuilders(
     List<BuilderFactory> builders,
     BuildArgs buildArgs,
     Map<String, String> defaultContent,
     List<String> srcPaths,
     Map<String, String> packageMap,
     CodegenTiming timings,
+    BazelAssetWriter writer,
+    BazelAssetReader reader,
+    Logger logger,
+    Resolvers resolvers,
+    List<String> builderArgs,
     {bool isWorker: false,
     Set<String> validInputs}) async {
   assert(timings.isRunning);
 
-  final packageName = packageMap.keys
-      .firstWhere((name) => packageMap[name] == buildArgs.packagePath);
-
-  final writer = new BazelAssetWriter(buildArgs.outDir, packageMap,
-      validInputs: validInputs);
-  final reader = new BazelAssetReader(
-      packageName, buildArgs.rootDirs, packageMap,
-      assetFilter: new AssetFilter(validInputs, packageMap, writer));
   final srcAssets = findAssetIds(srcPaths, buildArgs.packagePath, packageMap)
       .where((id) => buildArgs.buildExtensions.keys.any(id.path.endsWith))
       .toList();
-  var logHandle = new IOSinkLogHandle.toFile(buildArgs.logPath,
-      printLevel: buildArgs.logLevel, printToStdErr: !buildArgs.isWorker);
-  var logger = logHandle.logger;
 
   var allWrittenAssets = new Set<AssetId>();
 
   var inputSrcs = new Set<AssetId>()..addAll(srcAssets);
-  Resolvers resolvers;
-  List<String> builderArgs;
-  if (buildArgs.useSummaries) {
-    var summaryOptions = new SummaryOptions.fromArgs(buildArgs.additionalArgs);
-    resolvers = new SummaryResolvers(summaryOptions, packageMap);
-    builderArgs = summaryOptions.additionalArgs;
-  } else {
-    resolvers = const BarbackResolvers();
-    builderArgs = buildArgs.additionalArgs;
-  }
   for (var builder in builders.map((f) => f(builderArgs))) {
     try {
       if (inputSrcs.isNotEmpty) {
@@ -126,6 +107,4 @@ Future<IOSinkLogHandle> runBuilders(
     ..writeLogSummary(logger);
 
   logger.info('Read ${reader.numAssetsReadFromDisk} files from disk');
-
-  return logHandle;
 }

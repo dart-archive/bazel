@@ -5,13 +5,19 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bazel_worker/bazel_worker.dart';
+import 'package:build/build.dart';
+import 'package:build_barback/build_barback.dart';
 import 'package:path/path.dart' as p;
 
 import '../_bazel_codegen.dart';
 import 'args/build_args.dart';
+import 'assets/asset_filter.dart';
+import 'assets/asset_reader.dart';
+import 'assets/asset_writer.dart';
 import 'errors.dart';
 import 'logging.dart';
 import 'run_builders.dart';
+import 'summaries/summaries.dart';
 import 'timing.dart';
 
 /// Runs builds as a worker.
@@ -114,6 +120,8 @@ Future<IOSinkLogHandle> _runBuilders(
     CodegenTiming timings,
     {bool isWorker: false,
     Set<String> validInputs}) async {
+  assert(timings.isRunning);
+
   final srcPaths = await timings.trackOperation('Collecting input srcs', () {
     return new File(buildArgs.srcsPath).readAsLines();
   });
@@ -121,9 +129,30 @@ Future<IOSinkLogHandle> _runBuilders(
     throw new CodegenError('No input files to process.');
   }
   final packageMap = await _packageMap(buildArgs, timings);
-  return runBuilders(
-      builders, buildArgs, defaultContent, srcPaths, packageMap, timings,
+
+  final packageName = packageMap.keys
+      .firstWhere((name) => packageMap[name] == buildArgs.packagePath);
+  final writer = new BazelAssetWriter(buildArgs.outDir, packageMap,
+      validInputs: validInputs);
+  final reader = new BazelAssetReader(
+      packageName, buildArgs.rootDirs, packageMap,
+      assetFilter: new AssetFilter(validInputs, packageMap, writer));
+  var logHandle = new IOSinkLogHandle.toFile(buildArgs.logPath,
+      printLevel: buildArgs.logLevel, printToStdErr: !buildArgs.isWorker);
+  Resolvers resolvers;
+  List<String> builderArgs;
+  if (buildArgs.useSummaries) {
+    var summaryOptions = new SummaryOptions.fromArgs(buildArgs.additionalArgs);
+    resolvers = new SummaryResolvers(summaryOptions, packageMap);
+    builderArgs = summaryOptions.additionalArgs;
+  } else {
+    resolvers = const BarbackResolvers();
+    builderArgs = buildArgs.additionalArgs;
+  }
+  await runBuilders(builders, buildArgs, defaultContent, srcPaths, packageMap,
+      timings, writer, reader, logHandle.logger, resolvers, builderArgs,
       isWorker: isWorker, validInputs: validInputs);
+  return logHandle;
 }
 
 /// Parse [BuildArgs] from [args].
