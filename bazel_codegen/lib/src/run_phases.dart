@@ -149,9 +149,21 @@ Future<IOSinkLogHandle> _runBuilders(
     resolvers = const BarbackResolvers();
     builderArgs = buildArgs.additionalArgs;
   }
-  await runBuilders(builders, buildArgs, defaultContent, srcPaths, packageMap,
-      timings, writer, reader, logHandle.logger, resolvers, builderArgs,
-      isWorker: isWorker, validInputs: validInputs);
+  await runBuilders(
+      builders,
+      buildArgs.packagePath,
+      buildArgs.buildExtensions,
+      defaultContent,
+      srcPaths,
+      packageMap,
+      timings,
+      writer,
+      reader,
+      logHandle.logger,
+      resolvers,
+      builderArgs,
+      isWorker: isWorker,
+      validInputs: validInputs);
   return logHandle;
 }
 
