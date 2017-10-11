@@ -106,5 +106,5 @@ Future<Null> runBuilders(
     ..stop()
     ..writeLogSummary(logger);
 
-  logger.info('Read ${reader.numAssetsReadFromDisk} files from disk');
+  logger.info('Read ${reader.fileReadCount} files from disk');
 }
