@@ -13,7 +13,7 @@ import 'asset_filter.dart';
 import 'file_system.dart';
 
 class BazelAssetReader implements AssetReader {
-  final String rootPackageName;
+  final String _rootPackage;
 
   /// The bazel specific file system.
   ///
@@ -30,13 +30,13 @@ class BazelAssetReader implements AssetReader {
   int numAssetsReadFromDisk = 0;
 
   BazelAssetReader(
-      this.rootPackageName, Iterable<String> rootDirs, this._packageMap,
+      this._rootPackage, Iterable<String> rootDirs, this._packageMap,
       {AssetFilter assetFilter})
       : _fileSystem = new BazelFileSystem('.', rootDirs),
         _assetFilter = assetFilter;
 
   BazelAssetReader.forTest(
-      this.rootPackageName, this._packageMap, this._fileSystem)
+      this._rootPackage, this._packageMap, this._fileSystem)
       : _assetFilter = const _AllowAllAssets();
 
   @override
@@ -74,8 +74,8 @@ class BazelAssetReader implements AssetReader {
 
   @override
   Iterable<AssetId> findAssets(Glob glob) => _fileSystem
-      .findAssets(_packageMap[rootPackageName], glob)
-      .map((path) => new AssetId(rootPackageName, path))
+      .findAssets(_packageMap[_rootPackage], glob)
+      .map((path) => new AssetId(_rootPackage, path))
       .where(_assetFilter.isValid);
 }
 
