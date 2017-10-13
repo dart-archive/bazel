@@ -6,7 +6,7 @@ version: 0.3.6-dev
 
 # NOTE: We require a generated .packages file in order to use this package.
 environment:
-  sdk: "> 1.19.0"
+  sdk: "> 1.19.0 <2.0.0"
 
 dependencies:
   archive: ^1.0.0
