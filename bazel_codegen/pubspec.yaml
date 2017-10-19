@@ -2,7 +2,7 @@ name: _bazel_codegen
 description: Bazel code generation runner
 author: Dart Team <misc@dartlang.org>
 homepage: https://github.com/dart-lang/bazel
-version: 0.2.0
+version: 0.2.1-dev
 
 environment:
   sdk: ">=1.21.1 <2.0.0"
