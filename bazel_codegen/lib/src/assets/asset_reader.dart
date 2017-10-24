@@ -79,10 +79,15 @@ class BazelAssetReader implements AssetReader {
       .findAssets(_packageMap[_rootPackage], glob)
       .map((path) => new AssetId(_rootPackage, path))
       .where(_assetFilter.isValid);
+
+  void startPhase(AssetWriterSpy assetWriter) =>
+      _assetFilter.startPhase(assetWriter);
 }
 
 class _AllowAllAssets implements AssetFilter {
   const _AllowAllAssets();
   @override
   bool isValid(AssetId id) => true;
+  @override
+  void startPhase(AssetWriterSpy assetWriter) {}
 }

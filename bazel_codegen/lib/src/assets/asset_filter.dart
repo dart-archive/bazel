@@ -5,8 +5,6 @@ import 'package:build/build.dart';
 
 import 'package:path/path.dart' as p;
 
-import 'asset_writer.dart';
-
 /// A filter for determining whether an Asset can be read during the active
 /// phase.
 ///
@@ -16,11 +14,12 @@ import 'asset_writer.dart';
 class AssetFilter {
   final Set<String> _knownValidAssets;
   final Map<String, String> _packageMap;
-  final BazelAssetWriter _assetWriter;
+  AssetWriterSpy _assetWriter;
 
-  AssetFilter(this._knownValidAssets, this._packageMap, this._assetWriter);
+  AssetFilter(this._knownValidAssets, this._packageMap);
 
   bool isValid(AssetId id) {
+    assert(_assetWriter != null);
     if (_knownValidAssets != null) {
       var packagePath = _packageMap[id.package];
       if (packagePath == null) return false;
@@ -28,4 +27,6 @@ class AssetFilter {
     }
     return !_assetWriter.assetsWritten.contains(id);
   }
+
+  void startPhase(AssetWriterSpy assetWriter) => _assetWriter = assetWriter;
 }

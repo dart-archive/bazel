@@ -136,7 +136,7 @@ Future<IOSinkLogHandle> _runBuilders(
       validInputs: validInputs);
   final reader = new BazelAssetReader(
       packageName, buildArgs.rootDirs, packageMap,
-      assetFilter: new AssetFilter(validInputs, packageMap, writer));
+      assetFilter: new AssetFilter(validInputs, packageMap));
   var logHandle = new IOSinkLogHandle.toFile(buildArgs.logPath,
       printLevel: buildArgs.logLevel, printToStdErr: !buildArgs.isWorker);
   Resolvers resolvers;

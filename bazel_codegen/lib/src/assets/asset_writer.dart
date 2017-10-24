@@ -15,7 +15,6 @@ import '../errors.dart';
 class BazelAssetWriter implements AssetWriter {
   final String _outDir;
   final Map<String, String> _packageMap;
-  final assetsWritten = new Set<AssetId>();
 
   /// Workspace relative paths that we can't overwrite.
   final Set<String> _inputs;
@@ -26,7 +25,6 @@ class BazelAssetWriter implements AssetWriter {
   @override
   Future writeAsBytes(AssetId id, List<int> bytes) async {
     var file = _fileForId(id);
-    assetsWritten.add(id);
     await file.create(recursive: true);
     await file.writeAsBytes(bytes);
   }
@@ -35,7 +33,6 @@ class BazelAssetWriter implements AssetWriter {
   Future writeAsString(AssetId id, String contents,
       {Encoding encoding: UTF8}) async {
     var file = _fileForId(id);
-    assetsWritten.add(id);
     await file.create(recursive: true);
     await file.writeAsString(contents, encoding: encoding);
   }

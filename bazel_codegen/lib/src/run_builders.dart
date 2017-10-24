@@ -12,7 +12,6 @@ import 'package:path/path.dart' as p;
 import '../_bazel_codegen.dart';
 import 'args/build_args.dart';
 import 'assets/asset_reader.dart';
-import 'assets/asset_writer.dart';
 import 'assets/path_translation.dart';
 import 'timing.dart';
 
@@ -30,7 +29,7 @@ Future<Null> runBuilders(
     List<String> srcPaths,
     Map<String, String> packageMap,
     CodegenTiming timings,
-    BazelAssetWriter writer,
+    AssetWriter writer,
     BazelAssetReader reader,
     Logger logger,
     Resolvers resolvers,
@@ -47,11 +46,13 @@ Future<Null> runBuilders(
 
   var inputSrcs = new Set<AssetId>()..addAll(srcAssets);
   for (var builder in builders.map((f) => f(builderArgs))) {
+    var writerSpy = new AssetWriterSpy(writer);
+    reader.startPhase(writerSpy);
     try {
       if (inputSrcs.isNotEmpty) {
         await timings.trackOperation(
             'Generating files: $builder',
-            () => runBuilder(builder, inputSrcs, reader, writer, resolvers,
+            () => runBuilder(builder, inputSrcs, reader, writerSpy, resolvers,
                 logger: logger));
       }
     } catch (e, s) {
@@ -63,13 +64,12 @@ Future<Null> runBuilders(
     }
 
     // Set outputs as inputs into the next builder
-    inputSrcs.addAll(writer.assetsWritten);
-    validInputs?.addAll(writer.assetsWritten
+    inputSrcs.addAll(writerSpy.assetsWritten);
+    validInputs?.addAll(writerSpy.assetsWritten
         .map((id) => p.join(packageMap[id.package], id.path)));
 
     // Track and clear written assets.
-    allWrittenAssets.addAll(writer.assetsWritten);
-    writer.assetsWritten.clear();
+    allWrittenAssets.addAll(writerSpy.assetsWritten);
   }
 
   // Technically we don't always have to do this, but better safe than sorry.
