@@ -10,7 +10,6 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 
 import '../_bazel_codegen.dart';
-import 'args/build_args.dart';
 import 'assets/asset_reader.dart';
 import 'assets/path_translation.dart';
 import 'timing.dart';
@@ -24,7 +23,8 @@ import 'timing.dart';
 /// The [timings] instance must already be started.
 Future<Null> runBuilders(
     List<BuilderFactory> builders,
-    BuildArgs buildArgs,
+    String packagePath,
+    Map<String, List<String>> buildExtensions,
     Map<String, String> defaultContent,
     List<String> srcPaths,
     Map<String, String> packageMap,
@@ -38,8 +38,8 @@ Future<Null> runBuilders(
     Set<String> validInputs}) async {
   assert(timings.isRunning);
 
-  final srcAssets = findAssetIds(srcPaths, buildArgs.packagePath, packageMap)
-      .where((id) => buildArgs.buildExtensions.keys.any(id.path.endsWith))
+  final srcAssets = findAssetIds(srcPaths, packagePath, packageMap)
+      .where((id) => buildExtensions.keys.any(id.path.endsWith))
       .toList();
 
   var allWrittenAssets = new Set<AssetId>();
@@ -58,7 +58,7 @@ Future<Null> runBuilders(
     } catch (e, s) {
       logger.severe(
           'Caught error during code generation step '
-          '$builder on ${buildArgs.packagePath}',
+          '$builder on $packagePath',
           e,
           s);
     }
@@ -81,8 +81,8 @@ Future<Null> runBuilders(
     var writes = <Future>[];
     // Check all expected outputs were written or create w/provided default.
     for (var assetId in srcAssets) {
-      for (var inputExtension in buildArgs.buildExtensions.keys) {
-        for (var extension in buildArgs.buildExtensions[inputExtension]) {
+      for (var inputExtension in buildExtensions.keys) {
+        for (var extension in buildExtensions[inputExtension]) {
           var expectedAssetId = new AssetId(
               assetId.package,
               assetId.path.substring(
