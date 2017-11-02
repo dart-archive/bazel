@@ -1,3 +1,7 @@
+# 0.2.1
+
+- Update to build 0.11.0, update interface for `findAssets`.
+
 # 0.2.0
 
 - **Breaking**: CLI argument change: Replace `in-extension` and `out-extensions`

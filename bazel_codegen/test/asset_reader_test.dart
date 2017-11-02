@@ -55,7 +55,8 @@ void main() {
 
   test('findAssets', () async {
     fileSystem.nextFindAssets = ['lib/filename1.dart', 'lib/filename2.dart'];
-    expect(reader.findAssets(new Glob('lib/*.dart')), [f1AssetId, f2AssetId]);
+    expect(await reader.findAssets(new Glob('lib/*.dart')).toList(),
+        [f1AssetId, f2AssetId]);
   });
 }
 

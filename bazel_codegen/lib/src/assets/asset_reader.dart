@@ -75,10 +75,10 @@ class BazelAssetReader implements AssetReader {
   }
 
   @override
-  Iterable<AssetId> findAssets(Glob glob) => _fileSystem
+  Stream<AssetId> findAssets(Glob glob) => new Stream.fromIterable(_fileSystem
       .findAssets(_packageMap[_rootPackage], glob)
       .map((path) => new AssetId(_rootPackage, path))
-      .where(_assetFilter.isValid);
+      .where(_assetFilter.isValid));
 
   void startPhase(AssetWriterSpy assetWriter) =>
       _assetFilter.startPhase(assetWriter);
