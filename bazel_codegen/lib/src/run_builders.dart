@@ -9,7 +9,6 @@ import 'package:build/build.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 
-import '../_bazel_codegen.dart';
 import 'assets/asset_reader.dart';
 import 'assets/path_translation.dart';
 import 'timing.dart';
@@ -33,7 +32,7 @@ Future<Null> runBuilders(
     BazelAssetReader reader,
     Logger logger,
     Resolvers resolvers,
-    List<String> builderArgs,
+    BuilderOptions builderOptions,
     {bool isWorker: false,
     Set<String> validInputs}) async {
   assert(timings.isRunning);
@@ -45,7 +44,7 @@ Future<Null> runBuilders(
   var allWrittenAssets = new Set<AssetId>();
 
   var inputSrcs = new Set<AssetId>()..addAll(srcAssets);
-  for (var builder in builders.map((f) => f(builderArgs))) {
+  for (var builder in builders.map((f) => f(builderOptions))) {
     var writerSpy = new AssetWriterSpy(writer);
     reader.startPhase(writerSpy);
     try {

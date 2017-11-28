@@ -1,3 +1,10 @@
+# 0.3.0
+
+## Breaking Changes
+
+- Drop `BuilderFactory` in favor of the typedef from `package:build`. The
+  factories now take a `BuilderOptions` argument rather than `List<String>`.
+
 # 0.2.1
 
 - Update to build 0.11.0, update interface for `findAssets`.
