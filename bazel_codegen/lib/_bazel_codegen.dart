@@ -9,8 +9,6 @@ import 'package:stack_trace/stack_trace.dart';
 import 'src/args/startup_args.dart';
 import 'src/run_phases.dart';
 
-typedef Builder BuilderFactory(List<String> args);
-
 /// Runs [builders] to generate files.
 ///
 /// This should be typically invoked with [args] from a dart_codegen build

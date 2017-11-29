@@ -9,8 +9,8 @@ import 'package:build/build.dart';
 import 'package:build_barback/build_barback.dart';
 import 'package:path/path.dart' as p;
 
-import '../_bazel_codegen.dart';
 import 'args/build_args.dart';
+import 'args/builder_options.dart';
 import 'assets/asset_filter.dart';
 import 'assets/asset_reader.dart';
 import 'assets/asset_writer.dart';
@@ -161,7 +161,7 @@ Future<IOSinkLogHandle> _runBuilders(
       reader,
       logHandle.logger,
       resolvers,
-      builderArgs,
+      optionsFromArgs(builderArgs),
       isWorker: isWorker,
       validInputs: validInputs);
   return logHandle;
