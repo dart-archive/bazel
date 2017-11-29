@@ -39,7 +39,7 @@ void main() {
         reader,
         logger,
         const BarbackResolvers(),
-        [],
+        const BuilderOptions(const {}),
       );
       expect(writer.assets.keys,
           contains(new AssetId('foo', 'lib/source.txt.copy')));
