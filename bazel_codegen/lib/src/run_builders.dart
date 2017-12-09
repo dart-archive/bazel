@@ -82,6 +82,8 @@ Future<Null> runBuilders(
     for (var assetId in srcAssets) {
       for (var inputExtension in buildExtensions.keys) {
         for (var extension in buildExtensions[inputExtension]) {
+          if (!assetId.path.endsWith(inputExtension)) continue;
+
           var expectedAssetId = new AssetId(
               assetId.package,
               assetId.path.substring(

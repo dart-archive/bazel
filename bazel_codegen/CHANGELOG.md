@@ -1,3 +1,8 @@
+# 0.3.1
+
+- Correct expected outputs when running builders taking disjoint input
+  extensions.
+
 # 0.3.0
 
 ## Breaking Changes
