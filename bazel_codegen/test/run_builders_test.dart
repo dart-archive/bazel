@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:async';
+
 import 'package:test/test.dart';
 
 import 'package:build/build.dart';
@@ -19,11 +21,17 @@ void main() {
     InMemoryAssetWriter writer;
     InMemoryBazelAssetReader reader;
     Logger logger;
+    List<String> logs;
+
     setUp(() async {
       writer = new InMemoryAssetWriter();
       reader = new InMemoryBazelAssetReader();
       logger = new Logger('bazel_codegen_test');
+      logs = [];
+      Logger.root.clearListeners();
+      Logger.root.onRecord.listen((record) => logs.add(record.message));
     });
+
     test('happy case', () async {
       var builder = new CopyBuilder();
       reader.cacheStringAsset(new AssetId('foo', 'lib/source.txt'), 'source');
@@ -43,6 +51,33 @@ void main() {
       );
       expect(writer.assets.keys,
           contains(new AssetId('foo', 'lib/source.txt.copy')));
+    });
+
+    test('multiple input extensions expects correct outputs', () async {
+      final builderFoo =
+          new CopyBuilder(inputExtension: '.foo', extension: 'foo.copy');
+      final builderBar =
+          new CopyBuilder(inputExtension: '.bar', extension: 'bar.copy');
+      reader.cacheStringAsset(new AssetId('a', 'lib/a1.foo'), 'foo content');
+      reader.cacheStringAsset(new AssetId('a', 'lib/a2.bar'), 'bar content');
+      await runBuilders(
+        [(_) => builderFoo, (_) => builderBar],
+        'a',
+        {
+          '.foo': ['.foo.copy'],
+          '.bar': ['.bar.copy']
+        },
+        {},
+        ['a/lib/a1.foo', 'a/lib/a2.bar'],
+        {'a': 'a'},
+        new CodegenTiming()..start(),
+        writer,
+        reader,
+        logger,
+        const BarbackResolvers(),
+        const BuilderOptions(const {}),
+      );
+      expect(logs, isNot(contains(startsWith('Missing expected output'))));
     });
   });
 }
