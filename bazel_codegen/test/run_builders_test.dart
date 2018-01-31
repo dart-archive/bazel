@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:async';
-
 import 'package:test/test.dart';
 
 import 'package:build/build.dart';
@@ -33,7 +31,7 @@ void main() {
     });
 
     test('happy case', () async {
-      var builder = new CopyBuilder();
+      var builder = new TestBuilder();
       reader.cacheStringAsset(new AssetId('foo', 'lib/source.txt'), 'source');
       await runBuilders(
         [(_) => builder],
@@ -54,10 +52,10 @@ void main() {
     });
 
     test('multiple input extensions expects correct outputs', () async {
-      final builderFoo =
-          new CopyBuilder(inputExtension: '.foo', extension: 'foo.copy');
-      final builderBar =
-          new CopyBuilder(inputExtension: '.bar', extension: 'bar.copy');
+      final builderFoo = new TestBuilder(
+          buildExtensions: appendExtension('.copy', from: '.foo'));
+      final builderBar = new TestBuilder(
+          buildExtensions: appendExtension('.copy', from: '.bar'));
       reader.cacheStringAsset(new AssetId('a', 'lib/a1.foo'), 'foo content');
       reader.cacheStringAsset(new AssetId('a', 'lib/a2.bar'), 'bar content');
       await runBuilders(
