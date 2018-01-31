@@ -12,7 +12,7 @@ import '../errors.dart';
 import 'asset_filter.dart';
 import 'file_system.dart';
 
-class BazelAssetReader implements AssetReader {
+class BazelAssetReader extends AssetReader {
   final String _rootPackage;
 
   /// The bazel specific file system.
