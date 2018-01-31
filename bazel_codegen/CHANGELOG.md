@@ -1,3 +1,7 @@
+# 0.3.1+1
+
+- Expand constraint on `package:build` to allow version `0.12.x`
+
 # 0.3.1
 
 - Correct expected outputs when running builders taking disjoint input
