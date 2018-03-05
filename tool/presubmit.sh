@@ -12,13 +12,6 @@ e2e_tests () {
 }
 
 unit_tests () {
-  echo "Running bazel_codegen unit tests"
-  pushd bazel_codegen
-  pub upgrade
-  dartanalyzer --fatal-warnings lib/_bazel_codegen.dart
-  pub run test
-  popd
-
   echo "Running dazel unit tests"
   pushd dazel
   pub upgrade
